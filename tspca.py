@@ -109,35 +109,35 @@ def tscov(data, shifts = 0, weights = []):
         if weights.shape[1] > 1: raise Exception('w should have a single column')
             
         for trial in arange(trials):
-            shifted_data = multishift(data[:, :, trial], shifts)
-            ww = weights[arange(xx.shape[0]), :, trial]
-            shifted_data *= ww
-            covariance_matrix += xx.T * xx
+            shifted_trial = multishift(data[:, :, trial], shifts)
+            trial_weight = weights[arange(xx.shape[0]), :, trial]
+            shifted_trial *= trial_weight
+            covariance_matrix += shifted_trial.T * shifted_trial
         
         total_weight = sum(w[:])
     else:
         for trial in arange(trials):
-            xx = multishift(data[:, :, trial], shifts)
-            covariance_matrix += xx.T * xx
+            shifted_trial = multishift(data[:, :, trial], shifts)
+            covariance_matrix += shifted_trial.T * shifted_trial
             
-        total_weight = xx.shape[0] * trials
+        total_weight = shifted_trial.shape[0] * trials
 
     return covariance_matrix, total_weight
     
 
-def fold(x, epochsize):
+def fold(data, epochsize):
     """docstring for fold"""
-    return transpose(reshape(x, (epochsize, x.shape[0]/epochsize, x.shape[1])), (0, 2, 1))
+    return transpose(reshape(data, (epochsize, data.shape[0]/epochsize, data.shape[1])), (0, 2, 1))
 
 
-def unfold(x):
+def unfold(data):
     """docstring for unfold"""
-    [m, n, p] = x.shape
+    [samples, channels, trials] = data.shape
     
-    if p > 1:
-        return reshape(transpose(x, (0, 2, 1)), (m*p, n))
+    if trials > 1:
+        return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels))
     else:
-        return x
+        return data
 
 def demean(data, weights = []):
     """docstring for demean"""
