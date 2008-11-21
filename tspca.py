@@ -25,17 +25,17 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
         c = tscov(x, shifts, w);
         
     # PCA matrix
-    [topcs, evs] = pcarot(c)
+    [topcs, eigenvalues] = pcarot(c)
     
     # truncate
     if not keep:
         topcs = topcs[:, r_[1:keep+1]]
-        evs = evs[r_[1:keep+1]]
+        eigenvalues = eigenvalues[r_[1:keep+1]]
         
     if not threshold:
         ii = where(evs/evs[0] > threshold)
         topcs = topcs[:, ii]
-        evs = evs[ii]
+        eigenvalues = eigenvalues[ii]
     
     # apply PCA matrix to time-shifted data    
     z = zeros(idx.size, topcs.shape[2], o)
@@ -139,78 +139,33 @@ def unfold(x):
     else:
         return x
 
-def demean(x, w=[]):
+def demean(data, weights = []):
     """docstring for demean"""
-    [time, channels, trials] = x.shape # m n o
-    x = unfold(x)
+    [time, channels, trials] = data.shape # m n o
+    data = unfold(data)
     
-    if not w:
-        mn = mean(x,0)
-        y = x - mn
+    if not weights:
+        mean = mean(data, 0)
+        demeaned_data = data - mean
     else:
-        w = unfold(w)
+        weights = unfold(weights)
         
-        if w.shape[0] != x.shape[0]:
-            raise Exception('X and W should have same nrows & npages')
+        if weights.shape[0] != data.shape[0]:
+            raise Exception('data and W should have same nrows & npages')
         
-        if w.shape[1] == 1:
-            mn = sum(x * w) / sum(w,0)
-        elif w.shape[1] == channels:
-            mn = sum(x * w) / sum(w,0)
+        if weights.shape[1] == 1:
+            mean = sum(data * weights) / sum(weights, 0)
+        elif weights.shape[1] == channels:
+            mean = sum(data * weights) / sum(weights, 0)
         else:
-            raise Exception('W should have same number of cols as X, or else 1')
+            raise Exception('weights should have same number of cols as data, or else 1')
         
-        y = x - mn
+        demeaned_data = data - mean
     
-    y = fold(y, m)
+    demeaned_data = fold(demeaned_data, time)
     
-    return y, mn
+    return demeaned_data, mean
 
-def vecadd(x,v):
-    """docstring for vecadd"""
-    [m,n,o] = x.shape
-    x = unfold(x)
-    
-    [mm,nn] = x.shape
-    if v.size == 1:
-        x += v
-    elif v.shape[0] == 1:
-        if v.shape[1] != nn:
-            raise Exception('V should have same number of columns as X')
-        x += v
-    elif v.shape[1] == 1:
-        if v.shape[0] != mm:
-            raise Exception("V should have same number of rows as X")
-        x += v
-    
-    return fold(x,m)
-
-def vecmult(x,v):
-    """docstring for vecmult"""
-    [m,n,o] = x.shape
-    x = unfold(x)
-    
-    [mm,nn] = x.shape
-    [mv,nv] = v.shape
-    
-    if mv == mm:
-        if nv == nn:
-            x *= v
-        elif nv == 1:
-            x *= v
-        else:
-            raise Exception('V should be a row vector')
-    elif nv == nn:
-        if mv == mm:
-            x *= v
-        elif mv == 1:
-            x *= v
-        else:
-            raise Exception('V should be a column vector')
-    else:
-        raise Exception('V and X should have the same number of rows or columns')
-    
-    return fold(x,m)
 
 def normcol(x, w=[]):
     """docstring for normcol"""
