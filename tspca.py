@@ -46,25 +46,27 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
     return [z, idx]
         
 
-def multishift(x, shifts, amplitudes=[]):
-    """multishift"""
+def multishift(data, shifts, amplitudes=[]):
+    """apply multiple shifts to an array"""
     if min(shifts) > 0: raise Exception('shifts should be non-negative')
         
     shifts = shifts.T
-    nshifts = shifts.size
+    shifts_length = shifts.size
     
     # array of shift indices
-    N = x.shape[0] - max(shifts)
-    shiftarray = (ones((N, nshifts)) * shifts) + r_[1:N+1].T
-    [m, n, o] = x.shape
-    z = zeros((N, n*nshifts, o))
     
-    if amplitudes:
-        for k in arange(o):
-            for j in arange(n):
-                y = x[:, j+1] # this might be x[:, j+2]
-                z[:, j*nshifts+1:j*nshifts+nshifts,k] = (y[shiftarray] * amplitudes)
+    [time, channels, trials] = data.shape # m, n, o
     
+    N = time - max(shifts)
+    shiftarray = (ones((N, shifts_length)) * shifts) + r_[ 1:N+1 ].T
+    
+    z = zeros((N, channels * nshifts, trials))
+    
+    for trial in arange(trials):
+        for channel in arange(channels):
+            y = data[:, channel]
+            z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = y[shiftarray] * amplitudes
+                
     return z
                     
 
