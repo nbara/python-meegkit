@@ -71,21 +71,28 @@ def multishift(data, shifts, amplitudes=[]):
                     
 
 def pcarot(cov, keep=[]):
-    """docstring for pcarot"""
+    """PCA rotation from covariance
     
-    if not keep:
-        keep = cov.shape[0]
+    topcs: PCA rotation matrix
+    eigenvalues: PCA eigenvalues
     
-    [V, S] = linalg.eig(cov)[0]
-    V = V.real
-    S = S.real
+    cov: covariance matrix
+    keep: number of components to keep [default: all]
+    """
     
-    [eigenvalues, idx] = sort(diag(S).T)
-    eigenvalues = fliplr(idx)
-    topcs = V[:,idx]
+    if not keep: keep = cov.shape[0]
+    
+    eigenvalues, eigenvector = linalg.eig(cov)
+        
+    idx = argsort(eigenvalues.real)[::-1] # reverse sort ev order
+    eigenvalues = sort(eigenvalues.real)[::-1]
+    
+    topcs = eigenvector.real[:, idx]
     
     eigenvalues = eigenvalues[r_[0:keep]]
-    topcs = topcs[:,r_[0:keep]]
+    topcs = topcs[:, r_[0:keep]]
+    
+    return topcs, eigenvalues
     
 
 def tscov(x, shifts=0, w=[]):
@@ -134,7 +141,7 @@ def unfold(x):
 
 def demean(x, w=[]):
     """docstring for demean"""
-    [m,n,o] = x.shape
+    [time, channels, trials] = x.shape # m n o
     x = unfold(x)
     
     if not w:
@@ -148,16 +155,16 @@ def demean(x, w=[]):
         
         if w.shape[1] == 1:
             mn = sum(x * w) / sum(w,0)
-        elif w.shape[1] == n:
+        elif w.shape[1] == channels:
             mn = sum(x * w) / sum(w,0)
         else:
-            raise Exception('W should have same number of cols ans X, or else 1')
+            raise Exception('W should have same number of cols as X, or else 1')
         
         y = x - mn
     
     y = fold(y, m)
     
-    return [y, mn]
+    return y, mn
 
 def vecadd(x,v):
     """docstring for vecadd"""
