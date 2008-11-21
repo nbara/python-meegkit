@@ -141,7 +141,7 @@ def unfold(data):
 
 def demean(data, weights = []):
     """docstring for demean"""
-    [time, channels, trials] = data.shape # m n o
+    [samples, channels, trials] = data.shape
     data = unfold(data)
     
     if not weights:
@@ -150,8 +150,8 @@ def demean(data, weights = []):
     else:
         weights = unfold(weights)
         
-        if weights.shape[0] != data.shape[0]:
-            raise Exception('data and W should have same nrows & npages')
+        if weights.shape[0] != samples:
+            raise Exception('data and weights should have same nrows & npages')
         
         if weights.shape[1] == 1:
             mean = sum(data * weights) / sum(weights, 0)
@@ -162,43 +162,43 @@ def demean(data, weights = []):
         
         demeaned_data = data - mean
     
-    demeaned_data = fold(demeaned_data, time)
+    demeaned_data = fold(demeaned_data, samples)
     
     return demeaned_data, mean
 
 
-def normcol(x, w=[]):
+def normcol(x, weights = []):
     """docstring for normcol"""
-    if x.ndim == 3:
-        [m,n,o] = x.shape
-        x = unfold(x)
-        if w == []:
-            y = normcol(x)
-            y = fold(y,m)
+    if data.ndim == 3:
+        samples, channels, trials = data.shape
+        data = unfold(data)
+        if not weights:
+            y = normcol(data)
+            y = fold(y, samples)
         else:
-            if w.shape[0] != m:
+            if weights.shape[0] != samples:
                 raise Exception('weight matrix should have same ncols as data')
-            if w.ndim == 2 and w.shape[1] == 1:
-                w = tile(w, (1,m,o))
-            if w.shape != x.shape:
+            if weights.ndim == 2 and weights.shape[1] == 1:
+                weights = tile(weights, (1, samples, trials))
+            if weights.shape != data.shape:
                 raise Exception('weight should have same size as data')
-            w = unfold(w)
-            y = normcol(x, w)
-            y = fold(y,m)
+            w = unfold(weights)
+            y = normcol(data, weights)
+            y = fold(y, samples)
     else:
-        [m,n] = x.shape
-        if w == []:
-            y = x * ((sum(x ** 2) / m) ** -0.5)
+        samples, channels = data.shape
+        if not w:
+            y = data * ((sum(data ** 2) / samples) ** -0.5)
         else:
-            if w.shape[0] != x.shape[0]:
+            if weights.shape[0] != data.shape[0]:
                 raise Exception('weight matrix should have same ncols as data')
-            if w.ndim == 2 and w.shape[1] == 1:
-                w = tile(w, (1, n))
-            if w.shape != x.shape:
+            if weights.ndim == 2 and w.shape[1] == 1:
+                weights = tile(weights, (1, channels))
+            if weights.shape != data.shape:
                 raise Exception('weight should have same size as data')
-            if w.shape[1] == 1:
-                w = tile(w,(1,n))
-            y = x * (sum((x ** 2) * w) / sum(w)) ** -0.5
+            if weights.shape[1] == 1:
+                weights = tile(weights, (1, channels))
+            y = data * (sum((data ** 2) * weights) / sum(weights)) ** -0.5
         
     return y
 
