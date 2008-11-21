@@ -167,14 +167,13 @@ def demean(data, weights = []):
     return demeaned_data, mean
 
 
-def normcol(x, weights = []):
+def normcol(data, weights = []):
     """docstring for normcol"""
     if data.ndim == 3:
         samples, channels, trials = data.shape
         data = unfold(data)
         if not weights:
-            y = normcol(data)
-            y = fold(y, samples)
+            normalized_data = fold(normcol(data), samples)
         else:
             if weights.shape[0] != samples:
                 raise Exception('weight matrix should have same ncols as data')
@@ -183,12 +182,11 @@ def normcol(x, weights = []):
             if weights.shape != data.shape:
                 raise Exception('weight should have same size as data')
             w = unfold(weights)
-            y = normcol(data, weights)
-            y = fold(y, samples)
+            normalized_data = fold(normcol(data, weights), samples)
     else:
         samples, channels = data.shape
         if not w:
-            y = data * ((sum(data ** 2) / samples) ** -0.5)
+            normalized_data = data * ((sum(data ** 2) / samples) ** -0.5)
         else:
             if weights.shape[0] != data.shape[0]:
                 raise Exception('weight matrix should have same ncols as data')
@@ -198,9 +196,9 @@ def normcol(x, weights = []):
                 raise Exception('weight should have same size as data')
             if weights.shape[1] == 1:
                 weights = tile(weights, (1, channels))
-            y = data * (sum((data ** 2) * weights) / sum(weights)) ** -0.5
+            normalized_data = data * (sum((data ** 2) * weights) / sum(weights)) ** -0.5
         
-    return y
+    return normalized_data
 
 def regcov(cxy,cyy,keep=[],threshold=[]):
     """docstring for regcov"""
