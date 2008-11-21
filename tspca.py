@@ -3,45 +3,45 @@ from numpy.random import permutation
 import scipy as Sci
 import scipy.linalg
 
-def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
+def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
     """TSPCA"""
     
-    [m, n, o] = x.shape
+    samples, channels, trials = data.shape
     
-    # offset of z relative to x
+    # offset of z relative to data
     offset = max(0, -min(shifts, 0))
     shifts += offset
-    idx = offset + (r_[1:m] - max([shifts]))
+    idx = offset + (arange(samples) - max([shifts]))
     
     # remove mean
-    x = fold(demean(unfold(x), w), m)
+    data = fold(demean(unfold(data), weights), samples)
     
     # covariance
-    if w:
-        c = tscov(x, shifts)
+    if weights:
+        c = tscov(data, shifts)
     else:
-        if sum(w) == 0:
+        if sum(weights) == 0:
             raise Exception('weights are all zero')
-        c = tscov(x, shifts, w);
+        c = tscov(data, shifts, weights);
         
     # PCA matrix
-    [topcs, eigenvalues] = pcarot(c)
+    topcs, eigenvalues = pcarot(c)
     
     # truncate
-    if not keep:
-        topcs = topcs[:, r_[1:keep+1]]
-        eigenvalues = eigenvalues[r_[1:keep+1]]
+    if keep:
+        topcs = topcs[:, arange(keep)]
+        eigenvalues = eigenvalues[arange(keep)]
         
-    if not threshold:
-        ii = where(evs/evs[0] > threshold)
+    if threshold:
+        ii = where(eigenvalues/eigenvalues[0] > threshold)
         topcs = topcs[:, ii]
         eigenvalues = eigenvalues[ii]
     
     # apply PCA matrix to time-shifted data    
-    z = zeros(idx.size, topcs.shape[2], o)
+    z = zeros(idx.size, topcs.shape[1], trials)
     
-    for k in r_[1:o+1]:
-        z[:, :, k] = multishift(x[:,:,k], shifts) * topcs
+    for trial in arange(trials):
+        z[:, :, trial] = multishift(data[:, :, trial], shifts) * topcs
         
     return [z, idx]
         
