@@ -95,34 +95,34 @@ def pcarot(cov, keep=[]):
     return topcs, eigenvalues
     
 
-def tscov(x, shifts=0, w=[]):
+def tscov(data, shifts = 0, weights = []):
     """docstring for tscov"""
     if min(shifts) < 0:
         raise Exception('shifts should be non-negative')
         
     nshifts = shifts.size
     
-    [m,n,o] = x.shape
-    c = zeros(n*shifts)
+    samples, channels, trials = data.shape
+    covariance_matrix = zeros(channels * shifts)
     
-    if w:
-        if w.shape[1] > 1: raise Exception('w should have a single column')
+    if weights:
+        if weights.shape[1] > 1: raise Exception('w should have a single column')
             
-        for k in arange(o):
-            xx = multishift(x[:,:,k], shifts)
-            ww = w[arange(xx.shape[0]), :, k]
-            xx = xx * ww
-            c = c + xx.T * xx
+        for trial in arange(trials):
+            shifted_data = multishift(data[:, :, trial], shifts)
+            ww = weights[arange(xx.shape[0]), :, trial]
+            shifted_data *= ww
+            covariance_matrix += xx.T * xx
         
-        tw = sum(w[:])
+        total_weight = sum(w[:])
     else:
-        for k in range(o):
-            xx = multishift(x[:,:,k], shifts)
-            c = c + xx.T * xx
+        for trial in arange(trials):
+            xx = multishift(data[:, :, trial], shifts)
+            covariance_matrix += xx.T * xx
             
-        tw = xx.shape[0] * o
+        total_weight = xx.shape[0] * trials
 
-    return c, tw
+    return covariance_matrix, total_weight
     
 
 def fold(x, epochsize):
