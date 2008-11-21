@@ -21,7 +21,7 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
         c = tscov(x, shifts)
     else:
         if sum(w) == 0:
-            print('weights are all zero')
+            raise Exception('weights are all zero')
         c = tscov(x, shifts, w);
         
     # PCA matrix
@@ -49,7 +49,7 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
 def multishift(x, shifts, amplitudes=[]):
     """multishift"""
     if min(shifts) > 0:
-        print('shifts should be non-negative')
+        raise Exception('shifts should be non-negative')
         
     shifts = shifts.T
     nshifts = shifts.size
@@ -89,7 +89,7 @@ def pcarot(cov, keep=[]):
 def tscov(x, shifts=0, w=[]):
     """docstring for tscov"""
     if min(shifts) < 0:
-        print('shifts should be non-negative')
+        raise Exception('shifts should be non-negative')
         
     nshifts = shifts.size
     
@@ -104,7 +104,7 @@ def tscov(x, shifts=0, w=[]):
         tw = xx.shape[0] * o
     else:
         if w.shape[1] > 1:
-            print('w shoudl have a single column')
+            raise Exception('w shoudl have a single column')
             
         for k in range(o):
             xx = multishift(x[:,:,k], shifts)
@@ -119,12 +119,10 @@ def tscov(x, shifts=0, w=[]):
 
 def fold(x, epochsize):
     """docstring for fold"""
-    if x.shape[0]/float(epochsize) > 1:
-        x = transpose(reshape(x, (epochsize, x.shape[0]/epochsize, x.shape[1])), (0, 2, 1))
-    return x
+    return transpose(reshape(x, (epochsize, x.shape[0]/epochsize, x.shape[1])), (0, 2, 1))
 
 
-def unfold(x=[]):
+def unfold(x):
     """docstring for unfold"""
     [m, n, p] = x.shape
     
@@ -145,14 +143,14 @@ def demean(x, w=[]):
         w = unfold(w)
         
         if w.shape[0] != x.shape[0]:
-            print('X and W should have same nrows & npages')
+            raise Exception('X and W should have same nrows & npages')
         
         if w.shape[1] == 1:
             mn = sum(x * w) / sum(w,0)
         elif w.shape[1] == n:
             mn = sum(x * w) / sum(w,0)
         else:
-            print('W should have same number of cols ans X, or else 1')
+            raise Exception('W should have same number of cols ans X, or else 1')
         
         y = x - mn
     
@@ -170,11 +168,11 @@ def vecadd(x,v):
         x += v
     elif v.shape[0] == 1:
         if v.shape[1] != nn:
-            print('V should have same number of columns as X')
+            raise Exception('V should have same number of columns as X')
         x += v
     elif v.shape[1] == 1:
         if v.shape[0] != mm:
-            print("V should have same number of rows as X")
+            raise Exception("V should have same number of rows as X")
         x += v
     
     return fold(x,m)
@@ -193,16 +191,16 @@ def vecmult(x,v):
         elif nv == 1:
             x *= v
         else:
-            print('V should be a row vector')
+            raise Exception('V should be a row vector')
     elif nv == nn:
         if mv == mm:
             x *= v
         elif mv == 1:
             x *= v
         else:
-            print('V should be a column vector')
+            raise Exception('V should be a column vector')
     else:
-        print('V and X should have the same number of rows or columns')
+        raise Exception('V and X should have the same number of rows or columns')
     
     return fold(x,m)
 
@@ -216,11 +214,11 @@ def normcol(x, w=[]):
             y = fold(y,m)
         else:
             if w.shape[0] != m:
-                print('weight matrix should have same ncols as data')
+                raise Exception('weight matrix should have same ncols as data')
             if w.ndim == 2 and w.shape[1] == 1:
                 w = tile(w, (1,m,o))
             if w.shape != x.shape:
-                print('weight should have same size as data')
+                raise Exception('weight should have same size as data')
             w = unfold(w)
             y = normcol(x, w)
             y = fold(y,m)
@@ -230,11 +228,11 @@ def normcol(x, w=[]):
             y = x * ((sum(x ** 2) / m) ** -0.5)
         else:
             if w.shape[0] != x.shape[0]:
-                print('weight matrix should have same ncols as data')
+                raise Exception('weight matrix should have same ncols as data')
             if w.ndim == 2 and w.shape[1] == 1:
                 w = tile(w, (1, n))
             if w.shape != x.shape:
-                print('weight should have same size as data')
+                raise Exception('weight should have same size as data')
             if w.shape[1] == 1:
                 w = tile(w,(1,n))
             y = x * (sum((x ** 2) * w) / sum(w)) ** -0.5
@@ -348,7 +346,7 @@ def tsregress(x, y, shifts = [0], keep = [], threshold = [], toobig1 = [], toobi
 def sns1(x, nneighbors, skip):
     """docstring for sns1"""
     if x.ndim > 2:
-        print('SNS1 works only with 2D matrices')
+        raise Exception('SNS1 works only with 2D matrices')
     
     [m,n] = x.shape
     
@@ -500,11 +498,11 @@ def wmean(x,w=[],dim=0):
         y = mean(x,dim)
     else:
         if x.shape[0] != w.shape[0]:
-            print 'data and weight must have same nrows'
+            raise Exception 'data and weight must have same nrows'
         if w.shape[1] == 1:
             w = tile(w,(1,x.shape(1)))
         if w.shape[1] != x.shape[1]:
-            print 'weight must have same ncols as data, or 1'
+            raise Exception 'weight must have same ncols as data, or 1'
         y = sum(x * w, dim) / sum(w,dim)
     
     return y
