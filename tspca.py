@@ -17,7 +17,7 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
     x = fold(demean(unfold(x), w), m)
     
     # covariance
-    if any(w):
+    if w:
         c = tscov(x, shifts)
     else:
         if sum(w) == 0:
@@ -28,11 +28,11 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
     [topcs, evs] = pcarot(c)
     
     # truncate
-    if not any(keep):
+    if not keep:
         topcs = topcs[:, r_[1:keep+1]]
         evs = evs[r_[1:keep+1]]
         
-    if not any(threshold):
+    if not threshold:
         ii = where(evs/evs[0] > threshold)
         topcs = topcs[:, ii]
         evs = evs[ii]
@@ -48,24 +48,24 @@ def tspca(x, shifts=[0], keep=[], threshold=[], w=[]):
 
 def multishift(x, shifts, amplitudes=[]):
     """multishift"""
-    if min(shifts) > 0:
-        raise Exception('shifts should be non-negative')
+    if min(shifts) > 0: raise Exception('shifts should be non-negative')
         
     shifts = shifts.T
     nshifts = shifts.size
     
     # array of shift indices
     N = x.shape[0] - max(shifts)
-    #shiftarray = vecadd(vecmult(ones((N, nshifts), shifts), r_[1:N+1].T))
     shiftarray = (ones((N, nshifts)) * shifts) + r_[1:N+1].T
     [m, n, o] = x.shape
     z = zeros((N, n*nshifts, o))
     
-    if not any(amplitudes):
+    if amplitudes:
         for k in arange(o):
             for j in arange(n):
                 y = x[:, j+1] # this might be x[:, j+2]
-                z[:, j*nshifts+1:j*nshifts+nshifts,k] = vecmult(y[shiftarray], amplitudes)
+                z[:, j*nshifts+1:j*nshifts+nshifts,k] = (y[shiftarray] * amplitudes)
+    
+    return z
                     
 
 def pcarot(cov, keep=[]):
@@ -96,25 +96,24 @@ def tscov(x, shifts=0, w=[]):
     [m,n,o] = x.shape
     c = zeros(n*shifts)
     
-    if not any(w):
-        for k in range(o):
-            xx = multishift(x[:,:,k], shifts)
-            c = c + xx.T * xx
+    if w:
+        if w.shape[1] > 1: raise Exception('w should have a single column')
             
-        tw = xx.shape[0] * o
-    else:
-        if w.shape[1] > 1:
-            raise Exception('w shoudl have a single column')
-            
-        for k in range(o):
+        for k in arange(o):
             xx = multishift(x[:,:,k], shifts)
             ww = w[arange(xx.shape[0]), :, k]
             xx = xx * ww
             c = c + xx.T * xx
         
         tw = sum(w[:])
-        
-    return [c, tw]
+    else:
+        for k in range(o):
+            xx = multishift(x[:,:,k], shifts)
+            c = c + xx.T * xx
+            
+        tw = xx.shape[0] * o
+
+    return c, tw
     
 
 def fold(x, epochsize):
@@ -136,7 +135,7 @@ def demean(x, w=[]):
     [m,n,o] = x.shape
     x = unfold(x)
     
-    if not w.any():
+    if not w:
         mn = mean(x,0)
         y = x - mn
     else:
@@ -261,7 +260,7 @@ def regcov(cxy,cyy,keep=[],threshold=[]):
     r = topcs.T * cxy
     
     # projection matrix from regressor PCs
-    r = vecmult(r, 1/eigenvalues.T)
+    r = (r * 1/eigenvalues.T)
     
     #projection matrix from regressors
     r = topcs * r
@@ -357,11 +356,11 @@ def sns1(x, nneighbors, skip):
         skip = 0
         
     mn = mean(x)
-    x = vecadd(x, -mn) # remove mean
+    x = (x - mn) # remove mean
     N = sqrt(sum(x ** 2))
     NN = 1 / N
     NN[where(isnan(NN))] = 0
-    x = vecmult(x, NN) # normalize
+    x = (x * NN) # normalize
     
     y = zeros(x.shape)
     
@@ -384,7 +383,7 @@ def sns1(x, nneighbors, skip):
         #if mod(k,1000) == 0:
             #[k 100 * sum(y[:,0:k] ** 2) / sum(x[:, 0:k] ** 2)]
         
-    y = vecmult(y, N)
+    y = (y * N)
     
     return y
 
@@ -437,7 +436,7 @@ def sns0(c, nneighbors, skip=0, wc=[]):
     
     # normalize
     d = sqrt(1 / diag(c))
-    c = vecmult(vecmult(c,d), d.T)
+    c = c * d * d.T
     
     for k in arange(n):
         
@@ -475,7 +474,7 @@ def tsxcov(x,y,shifts=0,w=[]):
     c = zeros((nx, ny*nshifts))
     
     if w:
-        x = fold(vecmult(unfold(x), unfold(w)), mx)
+        x = fold(unfold(x) * unfold(w), mx)
         
     # cross covariance
     for k in arange(ox):
