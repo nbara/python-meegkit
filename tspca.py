@@ -3,6 +3,80 @@ from numpy.random import permutation
 import scipy as Sci
 import scipy.linalg
 
+def tsr(data, ref, shifts = 0, weights_data = [], wref = [], keep = [], thresh = 10**-20):
+    """docstring for tsr"""
+    
+    #adjust to make shifts non-negative
+    [samples_data, channels_data, trials_data] = data.shape
+    [samples_ref,  channels_ref,  trials_ref] = ref.shape
+    
+    offset1 = max(0, -min(shifts))
+    idx = r_[ offset1:samples_data ]
+    data = data[idx, :, :]
+    if weights_data:
+        weights_data = weights_data[idx, :, :]
+    ref = ref[0:-offset1, :, :]
+    if weights_ref:
+        weights_ref = weights_ref[0:-offset1, :, :]
+    shifts += offset1
+    
+    # adjust size of x
+    offset2 = max(0, (max(shifts)))
+    idx = r_[0:samples_data-offset2]
+    data = data[idx,:,:]
+    if weights_data:
+        weights_data = weights_data[idx,:,:]
+    
+    # consolidate weights into single weight matrix
+    weights = zeros((samples_data, 1, trials_ref))
+    if not weights_data and not weights_ref:
+        weights[0:samples_data, :, :] = 1
+    elif not weights_ref:
+        weights[:, :, :] = weights_data[:, :, :]
+    elif not weights_data:
+        for trial in arange(trials_data):
+            wr = multishift(weights_ref[:, :, trial], shifts).min(1)
+            weights[:, :, trial] = wr
+    else:
+        for trial in arange(trials_data):
+            wr = multishift(wref[:, :, trial], shifts).min(1)
+            wr = min(wr, wx[0:wr.shape[0], :, trial])
+            weights[:, :, trial] = wr
+    
+    weights_data = weights
+    weights_ref = zeros((samples_ref, 1, trials_ref))
+    weights_ref[idx, :, :] = weights
+    
+    # remove weighted means
+    data, mean1 = demean(data, weights_data)
+    ref = demean(ref, weights_ref)[0]
+    
+    # equalize power of ref channels, the equalize power of the ref PCs
+    ref = normcol(ref, weights_ref)
+    ref = tspca(ref, 0, [], 10 ** -6)
+    ref = normcol(ref, weights_ref)
+    
+    #covariances and cros covariance with time-shifted refs
+    [cref, twcref] = tscov(ref, shifts, weights_ref)
+    [cxref, twcxref] = tsxcov(data, ref, shifts, weights_data)
+    
+    # regression matrix of x on time-shifted refs
+    r = regcov(cxref/twcxref, cref/twcref, keep, thresh)
+    
+    # TSPCA: clean x by removing regression on time-shifted refs
+    denoised_data = zeros((samples_data, channels_data, trials_data))
+    for trial in arange(trials_data):
+        z = multishift(ref[:, :, trial], shifts) * r
+        denoised_data[:, :, trial] = data[0:z.shape[0], :, trial] - z
+    
+    denoised_data, mean2 = demean(denoised_data, weights_data)
+    
+    idx = r_[1+offset1:samples_data-offset2]
+    mean = mean1 + mean2
+    weights = weights_ref
+    
+    return denoised_data, idx, mean, weights
+
 def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
     """TSPCA"""
     
@@ -201,7 +275,7 @@ def normcol(data, weights = []):
     return normalized_data
 
 def regcov(cxy,cyy,keep=[],threshold=[]):
-    """docstring for regcov"""
+    """regression matrix from cross covariance"""
     
     # PCA of regressor
     [topcs, eigenvalues] = pcarot(cyy)
@@ -209,7 +283,7 @@ def regcov(cxy,cyy,keep=[],threshold=[]):
     # discard negligible regressor PCs
     if keep:
         keep = max(keep, topcs.shape[1])
-        topcs = topcs[:,0:keep]
+        topcs = topcs[:, 0:keep]
         eigenvalues = eigenvalues[0:keep]
     
     if threshold:
@@ -468,82 +542,7 @@ def wmean(x,w=[],dim=0):
     
     return y
 
-def tsr(x,ref,shifts=0,wx=[],wref=[],keep=[],thresh=10**-20):
-    """docstring for tsr"""
-    
-    #adjust to make shifts non-negative
-    n0 = x.shape[0]
-    offset1 = max(0,-min(shifts))
-    idx = r_[ offset1:x.shape[0] ]
-    x = x[idx,:,:]
-    if wx:
-        wx = wx[idx,:,:]
-    ref = ref[0:-offset1,:,:]
-    if wref:
-        wref = wref[0:-offset1,:,:]
-    shifts += offset1
-    
-    # adjust size of x
-    offset2 = max(0,(max(shifts)))
-    idx = r_[0:x.shape[0]-offset2]
-    x = x[idx,:,:]
-    if wx:
-        wx = wx[idx,:,:]
-        
-    [mx,nx,ox] = x.shape
-    [mref,nref,oref] = ref.shape
-    
-    # consolidate weights into single weight matrix
-    w = zeros((mx, 1, oref))
-    if not wx and not wref:
-        w[0:mx,:,:] = 1
-    elif not wref:
-        w[:,:,:] = wx[:,:,:]
-    elif not wx:
-        for k in arange(ox):
-            wr = wref[:,:,k]
-            wr = multishift(wr, shifts)
-            wr = wr.min(1)
-            w[:,:,k] = wr
-    else:
-        for k in arange(ox):
-            wr = wref[:,:,k]
-            wr = multishift(wr, shifts)
-            wr = wr.min(1)
-            wr = min(wr, wx[0:wr.shape[0],:,k])
-            w[:,:,k] = wr
-    
-    wx = w
-    wref = zeros((mref,1,oref))
-    wref[idx,:,:] = w
-    
-    # remove weighted means
-    [x, mn1] = demean(x,wx)
-    ref = demean(ref,wref)[0]
-    
-    # equalize power of ref channels, the equalize power of the ref PCs
-    ref = normcol(ref,wref)
-    ref = tspca(ref,0,[], 10 ** -6)
-    ref = normcol(ref,wref)
-    
-    #covariances and cros covariance with time-shifted refs
-    [cref, twcref] = tscov(ref, shifts, wref)
-    [cxref, twcxref] = tsxcov(x,ref,shifts,wx)
-    
-    # regression matrix of x on time-shifted refs
-    r = regcov(cxref/twcxref, cref/twcref, keep, thresh)
-    
-    # TSPCA: clean x by removing regression on time-shifted refs
-    y = zeros((mx,nx,ox))
-    for k in arange(ox):
-        z = multishift(ref[:,:,k], shifts) * r
-        y[:,:,k] = x[0:z.shape[0],:,k] - z
-    
-    [y,mn2] = demean(y,wx)
-    
-    idx = r_[1+offset1:n0-offset2]
-    mn = mn1 + mn2
-    w = wref
+
     
     
     
