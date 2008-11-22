@@ -6,9 +6,10 @@ import scipy.linalg
 def tsr(data, ref, shifts = 0, weights_data = [], wref = [], keep = [], thresh = 10**-20):
     """docstring for tsr"""
     
+    samples_data, channels_data, trials_data = data.shape
+    samples_ref,  channels_ref,  trials_ref  = ref.shape
+    
     #adjust to make shifts non-negative
-    [samples_data, channels_data, trials_data] = data.shape
-    [samples_ref,  channels_ref,  trials_ref] = ref.shape
     
     offset1 = max(0, -min(shifts))
     idx = r_[ offset1:samples_data ]
@@ -20,7 +21,7 @@ def tsr(data, ref, shifts = 0, weights_data = [], wref = [], keep = [], thresh =
         weights_ref = weights_ref[0:-offset1, :, :]
     shifts += offset1
     
-    # adjust size of x
+    # adjust size of data
     offset2 = max(0, (max(shifts)))
     idx = r_[0:samples_data-offset2]
     data = data[idx,:,:]
@@ -117,10 +118,10 @@ def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
     for trial in arange(trials):
         z[:, :, trial] = multishift(data[:, :, trial], shifts) * topcs
         
-    return [z, idx]
+    return z, idx
         
 
-def multishift(data, shifts, amplitudes=[]):
+def multishift(data, shifts, amplitudes = array([])):
     """apply multiple shifts to an array"""
     if min(shifts) > 0: raise Exception('shifts should be non-negative')
         
@@ -129,17 +130,28 @@ def multishift(data, shifts, amplitudes=[]):
     
     # array of shift indices
     
-    [time, channels, trials] = data.shape # m, n, o
+    if data.ndim == 3:
+        time, channels, trials = data.shape # m, n, o
+    else:
+        time, channels = data.shape
+        trials = 1
     
     N = time - max(shifts)
-    shiftarray = (ones((N, shifts_length)) * shifts) + r_[ 1:N+1 ].T
+    shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[ 0:N ]).T
     
-    z = zeros((N, channels * nshifts, trials))
+    z = empty((N, channels * shifts_length, trials))
     
-    for trial in arange(trials):
-        for channel in arange(channels):
-            y = data[:, channel]
-            z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = y[shiftarray] * amplitudes
+    if amplitudes:
+        for trial in arange(trials):
+            for channel in arange(channels):
+                y = data[:, channel]
+                z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = (y[shiftarray].T * amplitudes).T
+    else:
+        for trial in arange(trials):
+            for channel in arange(channels):
+                y = data[:, channel]
+                z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = y[shiftarray]
+        
                 
     return z
                     
@@ -169,7 +181,7 @@ def pcarot(cov, keep=[]):
     return topcs, eigenvalues
     
 
-def tscov(data, shifts = 0, weights = []):
+def tscov(data, shifts = array([0]), weights = []):
     """docstring for tscov"""
     if min(shifts) < 0:
         raise Exception('shifts should be non-negative')
@@ -177,7 +189,8 @@ def tscov(data, shifts = 0, weights = []):
     nshifts = shifts.size
     
     samples, channels, trials = data.shape
-    covariance_matrix = zeros(channels * shifts)
+    covariance_matrix = zeros((channels * nshifts, channels * nshifts))
+    print covariance_matrix.shape
     
     if weights:
         if weights.shape[1] > 1: raise Exception('w should have a single column')
@@ -186,13 +199,13 @@ def tscov(data, shifts = 0, weights = []):
             shifted_trial = multishift(data[:, :, trial], shifts)
             trial_weight = weights[arange(xx.shape[0]), :, trial]
             shifted_trial *= trial_weight
-            covariance_matrix += shifted_trial.T * shifted_trial
+            covariance_matrix += shifted_trial * shifted_trial.T
         
         total_weight = sum(w[:])
     else:
         for trial in arange(trials):
-            shifted_trial = multishift(data[:, :, trial], shifts)
-            covariance_matrix += shifted_trial.T * shifted_trial
+            shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
+            covariance_matrix += dot(shifted_trial.T, shifted_trial)
             
         total_weight = shifted_trial.shape[0] * trials
 
@@ -219,26 +232,24 @@ def demean(data, weights = []):
     data = unfold(data)
     
     if not weights:
-        mean = mean(data, 0)
-        demeaned_data = data - mean
+        the_mean = mean(data, 0)
+        demeaned_data = data - the_mean
     else:
         weights = unfold(weights)
         
         if weights.shape[0] != samples:
             raise Exception('data and weights should have same nrows & npages')
         
-        if weights.shape[1] == 1:
-            mean = sum(data * weights) / sum(weights, 0)
-        elif weights.shape[1] == channels:
-            mean = sum(data * weights) / sum(weights, 0)
+        if weights.shape[1] == 1 or weights.shape[1] == channels:
+            the_mean = average(data, weights)
         else:
             raise Exception('weights should have same number of cols as data, or else 1')
         
-        demeaned_data = data - mean
+        demeaned_data = data - the_mean
     
     demeaned_data = fold(demeaned_data, samples)
     
-    return demeaned_data, mean
+    return demeaned_data, the_mean
 
 
 def normcol(data, weights = []):
@@ -259,7 +270,7 @@ def normcol(data, weights = []):
             normalized_data = fold(normcol(data, weights), samples)
     else:
         samples, channels = data.shape
-        if not w:
+        if not weights:
             normalized_data = data * ((sum(data ** 2) / samples) ** -0.5)
         else:
             if weights.shape[0] != data.shape[0]:
@@ -381,7 +392,7 @@ def tsregress(x, y, shifts = [0], keep = [], threshold = [], toobig1 = [], toobi
 def sns1(x, nneighbors, skip):
     """docstring for sns1"""
     if x.ndim > 2:
-        raise Exception('SNS1 works only with 2D matrices')
+        raise Exception("SNS1 works only with 2D matrices")
     
     [m,n] = x.shape
     
@@ -533,11 +544,11 @@ def wmean(x,w=[],dim=0):
         y = mean(x,dim)
     else:
         if x.shape[0] != w.shape[0]:
-            raise Exception 'data and weight must have same nrows'
+            raise Exception("data and weight must have same nrows")
         if w.shape[1] == 1:
             w = tile(w,(1,x.shape(1)))
         if w.shape[1] != x.shape[1]:
-            raise Exception 'weight must have same ncols as data, or 1'
+            raise Exception("weight must have same ncols as data, or 1")
         y = sum(x * w, dim) / sum(w,dim)
     
     return y
