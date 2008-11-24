@@ -3,7 +3,7 @@ from numpy.random import permutation
 import scipy as Sci
 import scipy.linalg
 
-def tsr(data, ref, shifts = 0, weights_data = [], wref = [], keep = [], thresh = 10**-20):
+def tsr(data, ref, shifts = array([0]), weights_data = [], weights_ref = [], keep = [], thresh = 10**-20):
     """docstring for tsr"""
     
     samples_data, channels_data, trials_data = data.shape
@@ -16,7 +16,7 @@ def tsr(data, ref, shifts = 0, weights_data = [], wref = [], keep = [], thresh =
     data = data[idx, :, :]
     if weights_data:
         weights_data = weights_data[idx, :, :]
-    ref = ref[0:-offset1, :, :]
+    ref = ref[:samples_ref-offset1, :, :]
     if weights_ref:
         weights_ref = weights_ref[0:-offset1, :, :]
     shifts += offset1
@@ -47,8 +47,10 @@ def tsr(data, ref, shifts = 0, weights_data = [], wref = [], keep = [], thresh =
     weights_data = weights
     weights_ref = zeros((samples_ref, 1, trials_ref))
     weights_ref[idx, :, :] = weights
+    weights_ref = squeeze(weights_ref)
     
     # remove weighted means
+    #print data.shape, ref.shape
     data, mean1 = demean(data, weights_data)
     ref = demean(ref, weights_ref)[0]
     
@@ -95,8 +97,7 @@ def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
     if weights:
         c = tscov(data, shifts)
     else:
-        if sum(weights) == 0:
-            raise Exception('weights are all zero')
+        if sum(weights) == 0: raise Exception('weights are all zero')
         c = tscov(data, shifts, weights);
         
     # PCA matrix
@@ -190,7 +191,7 @@ def tscov(data, shifts = array([0]), weights = []):
     
     samples, channels, trials = data.shape
     covariance_matrix = zeros((channels * nshifts, channels * nshifts))
-    print covariance_matrix.shape
+    #print covariance_matrix.shape
     
     if weights:
         if weights.shape[1] > 1: raise Exception('w should have a single column')
@@ -199,7 +200,7 @@ def tscov(data, shifts = array([0]), weights = []):
             shifted_trial = multishift(data[:, :, trial], shifts)
             trial_weight = weights[arange(xx.shape[0]), :, trial]
             shifted_trial *= trial_weight
-            covariance_matrix += shifted_trial * shifted_trial.T
+            covariance_matrix += dot(shifted_trial.T, shifted_trial)
         
         total_weight = sum(w[:])
     else:
@@ -226,22 +227,28 @@ def unfold(data):
     else:
         return data
 
-def demean(data, weights = []):
+def demean(data, weights = array([])):
     """docstring for demean"""
     [samples, channels, trials] = data.shape
+    
+    #print data.shape
+    
     data = unfold(data)
     
-    if not weights:
+    
+    if not weights.any():
         the_mean = mean(data, 0)
         demeaned_data = data - the_mean
     else:
-        weights = unfold(weights)
+        weights = unfold(weights)        
         
-        if weights.shape[0] != samples:
+        if weights.shape[0] != data.shape[0]:
             raise Exception('data and weights should have same nrows & npages')
         
-        if weights.shape[1] == 1 or weights.shape[1] == channels:
-            the_mean = average(data, weights)
+        if weights.shape[1] == 1:
+            the_mean = sum(data * weights) / sum(weights)
+        elif weights.shape[1] == channels:
+            the_mean = sum(data * weights) / sum(weights)
         else:
             raise Exception('weights should have same number of cols as data, or else 1')
         
@@ -254,10 +261,11 @@ def demean(data, weights = []):
 
 def normcol(data, weights = []):
     """docstring for normcol"""
+    #print "normcol", data.shape, weights.shape
     if data.ndim == 3:
         samples, channels, trials = data.shape
         data = unfold(data)
-        if not weights:
+        if not any(weights):
             normalized_data = fold(normcol(data), samples)
         else:
             if weights.shape[0] != samples:
