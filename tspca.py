@@ -6,7 +6,7 @@ import scipy.linalg
 data = array(random.random((200,50,100))[0])
 ref  = array(random.random((200,3,100))[0])
 
-def tsr(data, ref, shifts = array([0]), weights_data = [], weights_ref = [], keep = [], thresh = 10**-20):
+def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = array([]), keep = array([]), thresh = 10**-20):
     """docstring for tsr"""
     
     data = array(data[0])
@@ -63,7 +63,8 @@ def tsr(data, ref, shifts = array([0]), weights_data = [], weights_ref = [], kee
     print "tsr: data ", data.shape, "weights_ref", weights_ref.shape
     
     ref = normcol(ref, weights_ref)
-    ref = tspca(ref, 0, [], 10 ** -6)
+    print "X01", ref.__class__
+    ref = tspca(ref, array([0]), [], 10 ** -6)
     ref = normcol(ref, weights_ref)
     
     #covariances and cros covariance with time-shifted refs
@@ -87,7 +88,7 @@ def tsr(data, ref, shifts = array([0]), weights_data = [], weights_ref = [], kee
     
     return denoised_data, idx, mean, weights
 
-def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
+def tspca(data, shifts = array([0]), keep=array([]), threshold=array([]), weights=array([])):
     """TSPCA"""
     
     samples, channels, trials = data.shape
@@ -98,14 +99,16 @@ def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
     idx = offset + (arange(samples) - max([shifts]))
     
     # remove mean
-    data = fold(demean(unfold(data), weights), samples)
-    
+    data = unfold(data)
+    data = demean(data, weights)[0]
+    data = fold(data, samples)
+        
     # covariance
-    if weights:
-        c = tscov(data, shifts)
+    if not any(weights):
+        c = tscov(data, shifts)[0]
     else:
         if sum(weights) == 0: raise Exception('weights are all zero')
-        c = tscov(data, shifts, weights);
+        c = tscov(data, shifts, weights)[0]
         
     # PCA matrix
     topcs, eigenvalues = pcarot(c)
@@ -121,9 +124,10 @@ def tspca(data, shifts=[0], keep=[], threshold=[], weights=[]):
         eigenvalues = eigenvalues[ii]
     
     # apply PCA matrix to time-shifted data    
-    z = zeros(idx.size, topcs.shape[1], trials)
+    z = zeros((idx.size, topcs.shape[1], trials))
     
     for trial in arange(trials):
+        print "forloop", multishift(data[:, :, trial], shifts).shape, topcs.shape
         z[:, :, trial] = multishift(data[:, :, trial], shifts) * topcs
         
     return z, idx
@@ -164,7 +168,7 @@ def multishift(data, shifts, amplitudes = array([])):
     return z
                     
 
-def pcarot(cov, keep=[]):
+def pcarot(cov, keep=array([])):
     """PCA rotation from covariance
     
     topcs: PCA rotation matrix
@@ -222,28 +226,31 @@ def tscov(data, shifts = array([0]), weights = []):
 
 def fold(data, epochsize):
     """docstring for fold"""
+    print "fold", data.__class__
+    
     return transpose(reshape(data, (epochsize, data.shape[0]/epochsize, data.shape[1])), (0, 2, 1))
 
 
 def unfold(data):
-    """docstring for unfold"""
-    print "unfold", data.shape
-    samples, channels, trials = data.shape
+    """docstring for unfold"""    
     
-    if trials > 1:
+    if data.ndim == 3:
+        samples, channels, trials = data.shape
         return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels))
     else:
         return data
 
 def demean(data, weights = array([])):
     """docstring for demean"""
-    samples, channels, trials = data.shape
-    
-    print "demean", data.shape, "weights", weights.shape
-    
+    if data.ndim == 3:
+        samples, channels, trials = data.shape
+    else:
+        samples, channels = data.shape
+        
     data = unfold(data)
     
-    if not weights.any():
+    print weights.__class__
+    if not any(weights):
         the_mean = mean(data, 0)
         demeaned_data = data - the_mean
     else:
@@ -267,7 +274,7 @@ def demean(data, weights = array([])):
     return demeaned_data, the_mean
 
 
-def normcol(data, weights = []):
+def normcol(data, weights = array([])):
     """docstring for normcol"""
     #print "normcol", data.shape, weights.shape
     
@@ -282,18 +289,19 @@ def normcol(data, weights = []):
                 raise Exception('weight matrix should have same ncols as data')
             if weights.ndim == 2 and weights.shape[1] == 1:
                 weights = tile(weights, (1, samples, trials))
-            if weights.shape != data.shape:
+            if weights.shape != weights.shape:
                 raise Exception('weight should have same size as data')
-            w = unfold(weights)
+            weights = unfold(weights)
             normalized_data = fold(normcol(data, weights), samples)
     else:
         samples, channels = data.shape
-        if not weights:
+        if not weights.any():
             normalized_data = data * ((sum(data ** 2) / samples) ** -0.5)
         else:
+            print "normcol", weights.shape[0], data.shape[0]
             if weights.shape[0] != data.shape[0]:
                 raise Exception('weight matrix should have same ncols as data')
-            if weights.ndim == 2 and w.shape[1] == 1:
+            if weights.ndim == 2 and weights.shape[1] == 1:
                 weights = tile(weights, (1, channels))
             if weights.shape != data.shape:
                 raise Exception('weight should have same size as data')
@@ -303,7 +311,7 @@ def normcol(data, weights = []):
         
     return normalized_data
 
-def regcov(cxy,cyy,keep=[],threshold=[]):
+def regcov(cxy,cyy,keep=array([]),threshold=array([])):
     """regression matrix from cross covariance"""
     
     # PCA of regressor
@@ -332,7 +340,7 @@ def regcov(cxy,cyy,keep=[],threshold=[]):
     
     return r
 
-def tsregress(x, y, shifts = [0], keep = [], threshold = [], toobig1 = [], toobig2 = []):
+def tsregress(x, y, shifts = array([0]), keep = array([]), threshold = array([]), toobig1 = array([]), toobig2 = array([])):
     """docstring for tsregress"""
     
     # shifts must be non-negative
@@ -459,19 +467,19 @@ def find_outliers(x, toobig1, toobig2 = []):
     x = unfold(x)
     
     # remove mean
-    x = demean(x)
+    x = demean(x)[0]
     
     # apply absolute threshold
     w = ones(x.shape)
     if toobig1:
         w[where(abs(x) > toobig1)] = 0
-        x = demean(x,w)
+        x = demean(x,w)[0]
         
         w[where(abs(x) > toobig1)] = 0
-        x = demean(x,w)
+        x = demean(x,w)[0]
         
         w[where(abs(x) > toobig1)] = 0
-        x = demean(x,w)
+        x = demean(x,w)[0]
     else:
         w = ones(x.shape)
         
