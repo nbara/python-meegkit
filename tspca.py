@@ -3,12 +3,18 @@ from numpy.random import permutation
 import scipy as Sci
 import scipy.linalg
 
+data = array(random.random((200,50,100))[0])
+ref  = array(random.random((200,3,100))[0])
+
 def tsr(data, ref, shifts = array([0]), weights_data = [], weights_ref = [], keep = [], thresh = 10**-20):
     """docstring for tsr"""
     
+    data = array(data[0])
+    ref = array(ref[0])
+    
     samples_data, channels_data, trials_data = data.shape
     samples_ref,  channels_ref,  trials_ref  = ref.shape
-    
+        
     #adjust to make shifts non-negative
     
     offset1 = max(0, -min(shifts))
@@ -47,14 +53,15 @@ def tsr(data, ref, shifts = array([0]), weights_data = [], weights_ref = [], kee
     weights_data = weights
     weights_ref = zeros((samples_ref, 1, trials_ref))
     weights_ref[idx, :, :] = weights
-    weights_ref = squeeze(weights_ref)
+    weights_ref = weights_ref
     
     # remove weighted means
-    #print data.shape, ref.shape
     data, mean1 = demean(data, weights_data)
     ref = demean(ref, weights_ref)[0]
     
     # equalize power of ref channels, the equalize power of the ref PCs
+    print "tsr: data ", data.shape, "weights_ref", weights_ref.shape
+    
     ref = normcol(ref, weights_ref)
     ref = tspca(ref, 0, [], 10 ** -6)
     ref = normcol(ref, weights_ref)
@@ -220,7 +227,8 @@ def fold(data, epochsize):
 
 def unfold(data):
     """docstring for unfold"""
-    [samples, channels, trials] = data.shape
+    print "unfold", data.shape
+    samples, channels, trials = data.shape
     
     if trials > 1:
         return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels))
@@ -229,17 +237,17 @@ def unfold(data):
 
 def demean(data, weights = array([])):
     """docstring for demean"""
-    [samples, channels, trials] = data.shape
+    samples, channels, trials = data.shape
     
-    #print data.shape
+    print "demean", data.shape, "weights", weights.shape
     
     data = unfold(data)
-    
     
     if not weights.any():
         the_mean = mean(data, 0)
         demeaned_data = data - the_mean
     else:
+        print "demean weights", weights.shape
         weights = unfold(weights)        
         
         if weights.shape[0] != data.shape[0]:
@@ -262,10 +270,12 @@ def demean(data, weights = array([])):
 def normcol(data, weights = []):
     """docstring for normcol"""
     #print "normcol", data.shape, weights.shape
+    
     if data.ndim == 3:
         samples, channels, trials = data.shape
         data = unfold(data)
         if not any(weights):
+            # no weights
             normalized_data = fold(normcol(data), samples)
         else:
             if weights.shape[0] != samples:
