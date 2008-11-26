@@ -75,7 +75,8 @@ def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = 
     # TSPCA: clean x by removing regression on time-shifted refs
     denoised_data = zeros((samples_data, channels_data, trials_data))
     for trial in arange(trials_data):
-        z = multishift(ref[:, :, trial], shifts) * r
+        print "tsr78", dot(squeeze(multishift(ref[:, :, trial], shifts)), r).shape
+        z = dot(squeeze(multishift(ref[:, :, trial], shifts)), r)
         denoised_data[:, :, trial] = data[0:z.shape[0], :, trial] - z
     
     denoised_data, mean2 = demean(denoised_data, weights_data)
@@ -215,7 +216,7 @@ def tscov(data, shifts = array([0]), weights = []):
             shifted_trial = (squeeze(shifted_trial).T * squeeze(trial_weight)).T
             covariance_matrix += dot(shifted_trial.T, shifted_trial)
         
-        total_weight = sum(w[:])
+        total_weight = sum(weights[:])
     else:
         # no weights
         for trial in arange(trials):
@@ -333,13 +334,14 @@ def regcov(cxy,cyy,keep=array([]),threshold=array([])):
     
     # cross-covariance between data and regressor PCs
     cxy = cxy.T
-    r = topcs.T * cxy
+    r = dot(topcs.T, cxy)
     
     # projection matrix from regressor PCs
-    r = (r * 1/eigenvalues.T)
+    r = (r.T * 1/eigenvalues).T
     
     #projection matrix from regressors
-    r = topcs * r
+    print "regcov", squeeze(topcs).shape, squeeze(r).shape
+    r = dot(squeeze(topcs), squeeze(r))
     
     return r
 
@@ -539,29 +541,31 @@ def sns0(c, nneighbors, skip=0, wc=[]):
         
     return c4
 
-def tsxcov(x,y,shifts=0,w=[]):
+def tsxcov(x, y, shifts = 0, w = array([])):
     """docstring for tsxcov"""
     
     shifts = shifts[:]
     nshifts = shifts.size
     
-    [mx,nx,ox] = x.size
-    [my,ny,oy] = y.size
+    mx, nx, ox = x.shape
+    my, ny, oy = y.shape
     c = zeros((nx, ny*nshifts))
+    print "c", c.shape
     
-    if w:
+    if any(w):
         x = fold(unfold(x) * unfold(w), mx)
         
     # cross covariance
     for k in arange(ox):
-        yy = multishift(y[:,:,k], shifts)
-        xx = x[1:yy.shape[0],:,k]
-        c = c + xx.T * yy
+        yy = squeeze(multishift(y[:,:,k], shifts))
+        xx = squeeze(x[0:yy.shape[0],:,k])
+        
+        c = c + dot(xx.T, yy)
     
-    if not w:
+    if not any(w):
         tw = ox * ny * yy.shape[0]
     else:
-        w = w[1:yy.shape[0],:,:]
+        w = w[0:yy.shape[0],:,:]
         tw = sum(w[:])
         
     return [c, tw]
@@ -582,25 +586,3 @@ def wmean(x,w=[],dim=0):
     
     return y
 
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
