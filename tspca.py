@@ -3,15 +3,13 @@ from numpy.random import permutation
 import scipy as Sci
 import scipy.linalg
 
-data = array(random.random((200,50,100))[0])
-ref  = array(random.random((200,3,100))[0])
+data = random.random((200,50,100))
+ref  = random.random((200,3,100))
 
 def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = array([]), keep = array([]), thresh = 10**-20):
     """docstring for tsr"""
     
-    data = array(data[0])
-    ref = array(ref[0])
-    
+    print "tsr", data.shape
     samples_data, channels_data, trials_data = data.shape
     samples_ref,  channels_ref,  trials_ref  = ref.shape
         
@@ -64,7 +62,7 @@ def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = 
     
     ref = normcol(ref, weights_ref)
     print "X01", ref.__class__
-    ref = tspca(ref, array([0]), [], 10 ** -6)
+    ref = tspca(ref, array([0]), [], 10 ** -6)[0]
     ref = normcol(ref, weights_ref)
     
     #covariances and cros covariance with time-shifted refs
@@ -117,18 +115,21 @@ def tspca(data, shifts = array([0]), keep=array([]), threshold=array([]), weight
     if keep:
         topcs = topcs[:, arange(keep)]
         eigenvalues = eigenvalues[arange(keep)]
+    
         
     if threshold:
-        ii = where(eigenvalues/eigenvalues[0] > threshold)
+        ii = squeeze(where(eigenvalues/eigenvalues[0] > threshold))
+        print "eigenvalues", eigenvalues/eigenvalues[0]
+        print "ii", ii
         topcs = topcs[:, ii]
         eigenvalues = eigenvalues[ii]
     
-    # apply PCA matrix to time-shifted data    
+    # apply PCA matrix to time-shifted data 
+    print "topcs.shape[1]", topcs.shape[1], topcs.shape
     z = zeros((idx.size, topcs.shape[1], trials))
     
     for trial in arange(trials):
-        print "forloop", multishift(data[:, :, trial], shifts).shape, topcs.shape
-        z[:, :, trial] = multishift(data[:, :, trial], shifts) * topcs
+        z[:, :, trial] = dot(squeeze(multishift(data[:, :, trial], shifts)), squeeze(topcs))
         
     return z, idx
         
@@ -151,7 +152,7 @@ def multishift(data, shifts, amplitudes = array([])):
     N = time - max(shifts)
     shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[ 0:N ]).T
     
-    z = empty((N, channels * shifts_length, trials))
+    z = zeros((N, channels * shifts_length, trials))
     
     if amplitudes:
         for trial in arange(trials):
@@ -187,11 +188,11 @@ def pcarot(cov, keep=array([])):
     
     topcs = eigenvector.real[:, idx]
     
-    eigenvalues = eigenvalues[r_[0:keep]]
-    topcs = topcs[:, r_[0:keep]]
+    eigenvalues = eigenvalues[arange(keep)]
+    topcs = topcs[:, arange(keep)]    
     
     return topcs, eigenvalues
-    
+
 
 def tscov(data, shifts = array([0]), weights = []):
     """docstring for tscov"""
@@ -204,25 +205,27 @@ def tscov(data, shifts = array([0]), weights = []):
     covariance_matrix = zeros((channels * nshifts, channels * nshifts))
     #print covariance_matrix.shape
     
-    if weights:
+    if any(weights):
+        # weights
         if weights.shape[1] > 1: raise Exception('w should have a single column')
             
         for trial in arange(trials):
             shifted_trial = multishift(data[:, :, trial], shifts)
-            trial_weight = weights[arange(xx.shape[0]), :, trial]
-            shifted_trial *= trial_weight
+            trial_weight = weights[arange(shifted_trial.shape[0]), :, trial]
+            shifted_trial = (squeeze(shifted_trial).T * squeeze(trial_weight)).T
             covariance_matrix += dot(shifted_trial.T, shifted_trial)
         
         total_weight = sum(w[:])
     else:
+        # no weights
         for trial in arange(trials):
             shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
             covariance_matrix += dot(shifted_trial.T, shifted_trial)
             
         total_weight = shifted_trial.shape[0] * trials
-
+        
     return covariance_matrix, total_weight
-    
+
 
 def fold(data, epochsize):
     """docstring for fold"""
