@@ -1,6 +1,4 @@
 from numpy import *
-from numpy.random import permutation
-from numpy.matlib import rand,zeros,ones,empty,eye
 import scipy as Sci
 import scipy.linalg
 
@@ -142,8 +140,12 @@ def multishift(data, shifts, amplitudes = array([])):
     
     if data.ndim == 3:
         time, channels, trials = data.shape # m, n, o
-    else:
+    elif data.ndim == 2:
         time, channels = data.shape
+        trials = 1
+    else:
+        time = data.shape
+        channels = 1
         trials = 1
     
     N = time - max(shifts)
@@ -194,14 +196,19 @@ def pcarot(cov, keep=array([])):
 
 def tscov(data, shifts = array([0]), weights = []):
     """docstring for tscov"""
-    #print "tscov"
+    print "tscov", data.shape
     
     if min(shifts) < 0:
         raise Exception('shifts should be non-negative')
         
     nshifts = shifts.size
     
-    samples, channels, trials = data.shape
+    if data.ndim == 3:
+        samples, channels, trials = data.shape
+    else:
+        samples, channels = data.shape
+        trials = 1
+        
     covariance_matrix = zeros((channels * nshifts, channels * nshifts))
     
     if any(weights):
@@ -209,7 +216,10 @@ def tscov(data, shifts = array([0]), weights = []):
         if weights.shape[1] > 1: raise Exception('w should have a single column')
             
         for trial in arange(trials):
-            shifted_trial = multishift(data[:, :, trial], shifts)
+            if data.ndim == 3:
+                shifted_trial = multishift(data[:, :, trial], shifts)
+            else:
+                shifted_trial = multishift(data[:, trial], shifts)
             trial_weight = weights[arange(shifted_trial.shape[0]), :, trial]
             shifted_trial = (squeeze(shifted_trial).T * squeeze(trial_weight)).T
             covariance_matrix += dot(shifted_trial.T, shifted_trial)
@@ -218,7 +228,11 @@ def tscov(data, shifts = array([0]), weights = []):
     else:
         # no weights
         for trial in arange(trials):
-            shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
+            if data.ndim == 3:
+                shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
+            else:
+                shifted_trial = squeeze(multishift(data[:, trial], shifts))
+                
             covariance_matrix += dot(shifted_trial.T, shifted_trial)
             
         total_weight = shifted_trial.shape[0] * trials
@@ -585,3 +599,45 @@ def wmean(x,w=[],dim=0):
     
     return y
 
+def sns(x, nneighbors = 0, skip = 0, w = array([])):
+    """docstring for sns"""
+    if not nneighbors:
+        nneighbors = x.shape[1]-1
+    
+    m, n, o = x.shape
+    
+    x = unfold(x)
+    m, mn0 = demean(x)
+    c, nc = tscov(x)
+    
+    
+    if w:
+        w = unfold(w)
+        x, mn1 = demean(x,w)
+        wc, nwc = tscov(x,[],w)
+        r = sns0(c, nneighbors, skip, wc)
+    else:
+        mn1 = 0
+        w = ones((n, o))
+        r = sns0(c, nneighbors, skip, c)
+    
+    y = dot(x, r)
+    y = fold(y, m)
+    
+    mn = mn0 + mn1
+    
+    return y
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
