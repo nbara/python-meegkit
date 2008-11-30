@@ -1,6 +1,8 @@
 from numpy import *
 import scipy as Sci
 import scipy.linalg
+from scipy import weave
+
 
 data = random.random((800,157,241))
 ref  = random.random((800,3,241))
@@ -38,11 +40,11 @@ def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = 
     elif not weights_ref:
         weights[:, :, :] = weights_data[:, :, :]
     elif not weights_data:
-        for trial in arange(trials_data):
+        for trial in xrange(trials_data):
             wr = multishift(weights_ref[:, :, trial], shifts).min(1)
             weights[:, :, trial] = wr
     else:
-        for trial in arange(trials_data):
+        for trial in xrange(trials_data):
             wr = multishift(wref[:, :, trial], shifts).min(1)
             wr = min(wr, wx[0:wr.shape[0], :, trial])
             weights[:, :, trial] = wr
@@ -70,7 +72,7 @@ def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = 
     
     # TSPCA: clean x by removing regression on time-shifted refs
     denoised_data = zeros((samples_data, channels_data, trials_data))
-    for trial in arange(trials_data):
+    for trial in xrange(trials_data):
         z = dot(squeeze(multishift(ref[:, :, trial], shifts)), r)
         denoised_data[:, :, trial] = data[0:z.shape[0], :, trial] - z
     
@@ -127,7 +129,7 @@ def tspca(data, shifts = None, keep = None, threshold = None, weights = None):
     # apply PCA matrix to time-shifted data 
     z = zeros((idx.size, topcs.shape[1], trials))
     
-    for trial in arange(trials):
+    for trial in xrange(trials):
         z[:, :, trial] = dot(squeeze(multishift(data[:, :, trial], shifts)), squeeze(topcs))
         
     return z, idx
@@ -148,10 +150,6 @@ def multishift(data, shifts, amplitudes = array([])):
     elif data.ndim == 2:
         time, channels = data.shape
         trials = 1
-    else:
-        time = data.shape
-        channels = 1
-        trials = 1
     
     N = time - max(shifts)
     shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[ 0:N ]).T
@@ -159,13 +157,13 @@ def multishift(data, shifts, amplitudes = array([])):
     z = zeros((N, channels * shifts_length, trials))
     
     if amplitudes:
-        for trial in arange(trials):
-            for channel in arange(channels):
+        for trial in xrange(trials):
+            for channel in xrange(channels):
                 y = data[:, channel]
                 z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = (y[shiftarray].T * amplitudes).T
     else:
-        for trial in arange(trials):
-            for channel in arange(channels):
+        for trial in xrange(trials):
+            for channel in xrange(channels):
                 y = data[:, channel]
                 z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = y[shiftarray]
         
@@ -220,7 +218,7 @@ def tscov(data, shifts = array([0]), weights = []):
         # weights
         if weights.shape[1] > 1: raise Exception('w should have a single column')
             
-        for trial in arange(trials):
+        for trial in xrange(trials):
             if data.ndim == 3:
                 shifted_trial = multishift(data[:, :, trial], shifts)
             else:
@@ -232,7 +230,7 @@ def tscov(data, shifts = array([0]), weights = []):
         total_weight = sum(weights[:])
     else:
         # no weights
-        for trial in arange(trials):
+        for trial in xrange(trials):
             if data.ndim == 3:
                 shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
             else:
@@ -416,7 +414,7 @@ def tsregress(x, y, shifts = array([0]), keep = array([]), threshold = array([])
         mm = m - max(shifts)
         z = zeros(x.shape)
         
-        for k in arange(nshifts):
+        for k in xrange(nshifts):
             kk = shifts(k)
             idx1 = r_[kk+1:kk+mm]
             idx2 = k + r_[0:y.shape[1]] * nshifts
@@ -427,7 +425,7 @@ def tsregress(x, y, shifts = array([0]), keep = array([]), threshold = array([])
     else:
         [m,n] = x.shape
         z = zeros((m-max(shifts), n))
-        for k in arange(nshifts):
+        for k in xrange(nshifts):
             kk = shifts(k)
             idx1 = r_[kk+1:kk+z.shape[0]]
             idx2 = k + r_[0:y.shape[1]] * nshifts
@@ -460,7 +458,7 @@ def sns1(x, nneighbors, skip):
     
     y = zeros(x.shape)
     
-    for k in arange(n):
+    for k in xrange(n):
         
         c1 = x.T * x[:, k]                  #correlation with neighbors
         c1 = c1 / c1[k]                     
@@ -534,7 +532,7 @@ def sns0(c, nneighbors, skip=0, wc=[]):
     d = sqrt(1 / diag(c))
     c = c * d * d.T
     
-    for k in arange(n):
+    for k in xrange(n):
         
         c1 = c[:,k] # correlation of channel
         [c1, idx] = sort(c1 ** 2, 0)[::-1] # sort by correlation
@@ -574,7 +572,7 @@ def tsxcov(x, y, shifts = 0, w = array([])):
         x = fold(unfold(x) * unfold(w), mx)
         
     # cross covariance
-    for k in arange(ox):
+    for k in xrange(ox):
         yy = squeeze(multishift(y[:,:,k], shifts))
         xx = squeeze(x[0:yy.shape[0],:,k])
         
