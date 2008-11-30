@@ -82,9 +82,14 @@ def tsr(data, ref, shifts = array([0]), weights_data = array([]), weights_ref = 
     
     return denoised_data, idx, mean, weights
 
-def tspca(data, shifts = array([0]), keep=array([]), threshold=array([]), weights=array([])):
+def tspca(data, shifts = None, keep = None, threshold = None, weights = None):
     """TSPCA"""
     #print "tspca"
+    
+    if not shifts:    shifts    = array([0])
+    if not keep:      keep      = array([])
+    if not threshold: threshold = array([])
+    if not weights:   weights   = array([])
     
     samples, channels, trials = data.shape
     
