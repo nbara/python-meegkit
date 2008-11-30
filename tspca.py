@@ -251,10 +251,10 @@ def unfold(data):
     """docstring for unfold"""    
     #print "unfold"
     
-    if data.ndim == 3:
+    try:
         samples, channels, trials = data.shape
         return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels))
-    else:
+    except ValueError:
         return data
 
 def demean(data, weights = array([])):
