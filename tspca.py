@@ -663,12 +663,11 @@ def sns0(c, nneighbors, skip=0, wc=[]):
         # first row defines projection to clean component k
         print 'c4 construction', c3[0,1:].shape, topcs[1:,1:].T.shape
         c4 = dot(c3[0,1:], topcs[1:,1:].T)
+        c4.shape = (c4.shape[0], 1)
         
-        # insert new column into denoising matric
-        print "r, c4", r.shape, c4.shape
+        # insert new column into denoising matrix
         r[idx, k] = c4
     
-
     return r
 
 def tsxcov(x, y, shifts = None, w = array([])):
@@ -757,7 +756,8 @@ def sns(data, nneighbors = 0, skip = 0, w = array([])):
         w = ones((n, o))
         r = sns0(c, nneighbors, skip, c)
     
-    y = dot(data, r)
+    print "y = dot(data, r)", data.shape, r.shape
+    y = dot(squeeze(data), r)
     y = fold(y, m)
     
     mn = mn0 + mn1
