@@ -1,15 +1,22 @@
 from numpy import *
 import scipy as Sci
 import scipy.linalg
-from scipy import weave
+#from scipy import weave
 
 
-data = random.random((800,157,241))
-ref  = random.random((800,3,241))
+#data = random.random((800,157,241))
+#ref  = random.random((800,3,241))
 
 def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep = None, thresh = None):
     """
     Time-shift regression.
+    
+    The basic idea is to project the signal DATA on a basis formed by the
+    orthogonalized time-shifted REF, and remove the projection. Supposing REF
+    gives a good observation of the noise that contaminates DATA, the noise is
+    removed. By allowing time shifts, the algorithm finds the optimal FIR filter 
+    to apply to REF so as to compensate for any convolutional mismatch
+    between DATA and REF.
     
     INPUT
     data:         data to denoise (time * channels * trials)
@@ -25,51 +32,46 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     idx:           data[idx] is aligned with denoised_data
     mean:          channel means (removed by tsr)
     weights:       weights applied by tsr
-    
-    The basic idea is to project the signal DATA on a basis formed by the
-    orthogonalized time-shifted REF, and remove the projection. Supposing REF
-    gives a good observation of the noise that contaminates DATA, the noise is
-    removed. By allowing time shifts, the algorithm finds the optimal FIR filter 
-    to apply to REF so as to compensate for any convolutional mismatch
-    between DATA and REF.    
     """
     
-    if not shifts:       shifts       = array([0])
+    initial_samples = data.shape[0]
+    
+    if shifts == None:   shifts       = array([0])
     if not weights_data: weights_data = array([])
     if not weights_ref:  weights_ref  = array([])
     if not keep:         keep         = array([])
     if not thresh:       thresh       = 10**-12
-    
-    samples_data, channels_data, trials_data = data.shape
-    samples_ref,  channels_ref,  trials_ref  = ref.shape
-    
+        
     #adjust to make shifts non-negative
     
-    offset1 = max(0, -shifts.min())
-    idx = slice(offset1, samples_data)
+    offset1 = max(0, -min(shifts))
+    idx = r_[offset1:data.shape[0]]
     data = data[idx, :, :]
-    
+    print data.shape, idx.shape, offset1
     if weights_data: weights_data = weights_data[idx, :, :]
     
-    ref = ref[:samples_ref-offset1, :, :]
+    ref = ref[:ref.shape[0]-offset1, :, :]
     
     if weights_ref: weights_ref = weights_ref[0:-offset1, :, :]
     
     shifts += offset1
     
-    # adjust size of data
+    # adjust size of data array
     offset2 = max(0, max(shifts))
     
-    idx = slice(0, samples_data - offset2)
+    idx = r_[0:data.shape[0]-offset2]
     data = data[idx,:,:]
     
     if weights_data: weights_data = weights_data[idx,:,:]
+    
+    samples_data, channels_data, trials_data = data.shape
+    samples_ref,  channels_ref,  trials_ref  = ref.shape
     
     # consolidate weights into single weight matrix
     weights = zeros((samples_data, 1, trials_ref))
     
     if not weights_data and not weights_ref:
-        weights[0:samples_data, :, :] = 1
+        weights[arange(samples_data), :, :] = 1
     elif not weights_ref:
         weights[:, :, :] = weights_data[:, :, :]
     elif not weights_data:
@@ -84,9 +86,11 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     
     weights_data = weights
     weights_ref = zeros((samples_ref, 1, trials_ref))
-    weights_ref[idx, :, :] = weights
+    print weights_ref.shape, weights.shape
+    weights_ref[idx, :, :] = weights[idx, :, :]
     
     # remove weighted means
+    print "L91", data.shape, weights_data.shape
     data, mean1 = demean(data, weights_data)
     ref         = demean(ref, weights_ref)[0]
     
@@ -110,7 +114,7 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     
     denoised_data, mean2 = demean(denoised_data, weights_data)
     
-    idx = r_[offset1:samples_data-offset2]
+    idx = r_[offset1:initial_samples-offset2]
     mean = mean1 + mean2
     weights = weights_ref
     
@@ -129,9 +133,8 @@ def tspca(data, shifts = None, keep = None, threshold = None, weights = None):
     
     OUTPUT
     principal_components: PCs
-    idx:                  data[idx] maps to principal_components
+    idx: data[idx] maps to principal_components
     """
-    #print "tspca"
     
     if not shifts:    shifts    = array([0])
     if not keep:      keep      = array([])
@@ -154,7 +157,7 @@ def tspca(data, shifts = None, keep = None, threshold = None, weights = None):
     if not any(weights):
         c = tscov(data, shifts)[0]
     else:
-        if sum(weights) == 0: raise Exception('weights are all zero')
+        if sum(weights) == 0: raise ValueError, "Weights are all zero."
         c = tscov(data, shifts, weights)[0]
     
     # PCA matrix
@@ -180,12 +183,22 @@ def tspca(data, shifts = None, keep = None, threshold = None, weights = None):
 
 
 def multishift(data, shifts, amplitudes = None):
-    """apply multiple shifts to an array"""
-    #print "multishift"
+    """
+    Apply multiple shifts to an array.
+    
+    INPUT
+    data:       array to shift
+    shifts:     array of shifts (must be nonnegative)
+    amplitudes: array of amplitudes
+    
+    OUTPUT
+    z: result
+    """
+    print "multishift", data.shape
     
     if not amplitudes: amplitudes = array([])
     
-    if shifts.min() > 0: raise Exception('shifts should be non-negative')
+    if shifts.min() > 0: raise ValueError, "Shifts should be non-negative."
     
     shifts = shifts.T
     shifts_length = shifts.size
@@ -197,6 +210,9 @@ def multishift(data, shifts, amplitudes = None):
     elif data.ndim == 2:
         time, channels = data.shape
         trials = 1
+    elif data.ndim == 1:
+        time = data.shape
+        channels, trials = 1, 1
     
     N = time - max(shifts)
     shiftarray = ((ones((N, shifts_length), int) * shifts).T + arange(N)).T
@@ -219,18 +235,20 @@ def multishift(data, shifts, amplitudes = None):
 
 
 def pcarot(cov, keep = None):
-    """PCA rotation from covariance
-    
-    topcs: PCA rotation matrix
-    eigenvalues: PCA eigenvalues
-    
-    cov: covariance matrix
-    keep: number of components to keep [default: all]
     """
-    #print "pcarot", cov.shape, keep.shape
+    PCA rotation from covariance.
     
-    if not keep: keep = cov.shape[0]
+    INPUT
+    cov:  covariance matrix
+    keep: number of components to keep [default: all]
     
+    OUTPUT
+    topcs:       PCA rotation matrix
+    eigenvalues: PCA eigenvalues
+    """
+    
+    if not keep: keep = cov.shape[0] # keep all components
+    print "eig", cov.shape
     eigenvalues, eigenvector = linalg.eig(cov)
     
     idx = argsort(eigenvalues.real)[::-1] # reverse sort ev order
@@ -238,21 +256,45 @@ def pcarot(cov, keep = None):
     
     topcs = eigenvector.real[:, idx]
     
-    eigenvalues = eigenvalues[arange(keep)]
     topcs = topcs[:, arange(keep)]
+    eigenvalues = eigenvalues[arange(keep)]
     
     return topcs, eigenvalues
 
 
 def tscov(data, shifts = None, weights = None):
-    """docstring for tscov"""
+    """
+    Time shift covariance.
+    
+    This function calculates, for each pair [DATA[i], DATA[j]] of columns of DATA, the
+    cross-covariance matrix between the time-shifted versions of DATA[i]. 
+    Shifts are taken from array SHIFTS. Weights are taken from WEIGHTS.
+    
+    DATA can be 1D, 2D or 3D.  WEIGHTS is 1D (if DATA is 1D or 2D) or 2D (if DATA is 3D).
+    
+    Output is a 2D matrix with dimensions (ncols(X)*nshifts)^2.
+    This matrix is made up of a DATA.shape[1]^2 matrix of submatrices
+    of dimensions nshifts^2.
+    
+    The weights are not shifted.
+    
+    INPUT
+    data: data
+    shifts: array of time shifts (must be non-negative)
+    weights: weights
+    
+    OUTPUT
+    covariance_matrix: covariance matrix
+    total_weight: total weight (covariance_matrix/total_weight is normalized covariance)
+    """
     print "tscov", data.shape
     
-    if not shifts:  shifts  = array([0])
+    if shifts == None:  shifts  = array([0])
     if not any(weights): weights = array([])
     
-    if shifts.min() < 0: raise Exception('shifts should be non-negative')
+    if shifts.min() < 0: raise ValueError, "Shifts should be non-negative."
     
+    shifts = shifts.T
     nshifts = shifts.size
     
     if data.ndim == 3:
@@ -265,7 +307,7 @@ def tscov(data, shifts = None, weights = None):
     
     if any(weights):
         # weights
-        if weights.shape[1] > 1: raise Exception('w should have a single column')
+        if weights.shape[1] > 1: raise ValueError, "Weights array should have a single column"
         
         for trial in xrange(trials):
             if data.ndim == 3:
@@ -284,7 +326,7 @@ def tscov(data, shifts = None, weights = None):
             if data.ndim == 3:
                 shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
             else:
-                shifted_trial = squeeze(multishift(data[:, trial], shifts))
+                shifted_trial = multishift(data[:, trial], shifts)
             
             covariance_matrix += dot(shifted_trial.T, shifted_trial)
         
@@ -294,24 +336,23 @@ def tscov(data, shifts = None, weights = None):
 
 
 def fold(data, epochsize):
-    """docstring for fold"""
-    #print "fold"
-    
     return transpose(reshape(data, (epochsize, data.shape[0]/epochsize, data.shape[1])), (0, 2, 1))
 
 
 def unfold(data):
-    """docstring for unfold"""
-    #print "unfold"
-    
     try:
         samples, channels, trials = data.shape
+    except:
+        samples, channels = data.shape
+        trials = 1
+    
+    if trials > 1:
         return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels))
-    except ValueError:
+    else:
         return data
 
 def demean(data, weights = None):
-    """docstring for demean"""
+    """Remove weighted mean over columns."""
     #print "demean"
     
     if data.ndim == 3:
@@ -321,22 +362,20 @@ def demean(data, weights = None):
     
     data = unfold(data)
     
-    if not weights.any():
-        the_mean = mean(data, 0)
-        demeaned_data = data - the_mean
-    else:
+    if any(weights):
         weights = unfold(weights)
         
         if weights.shape[0] != data.shape[0]:
-            raise Exception('data and weights should have same nrows & npages')
+            raise ValueError, "Data and weights arrays should have same number of rows and pages."
         
-        if weights.shape[1] == 1:
-            the_mean = sum(data * weights) / sum(weights)
-        elif weights.shape[1] == channels:
+        if weights.shape[1] == 1 or weights.shape[1] == channels:
             the_mean = sum(data * weights) / sum(weights)
         else:
-            raise Exception('weights should have same number of cols as data, or else 1')
+            raise ValueError, "Weight array should have either the same number of columns as data array, or 1 column."
         
+        demeaned_data = data - the_mean
+    else:
+        the_mean = mean(data, 0)
         demeaned_data = data - the_mean
     
     demeaned_data = fold(demeaned_data, samples)
@@ -345,9 +384,22 @@ def demean(data, weights = None):
 
 
 def normcol(data, weights = None):
-    """docstring for normcol"""
-    #print "normcol"
+    """
+    Normalize each column so its weighted msq is 1.
     
+    If DATA is 3D, pages are concatenated vertically before calculating the norm.
+    
+    Weight should be either a column vector, or a matrix (2D or 3D) of same size as data.
+    
+    INPUT
+    data: data to normalize
+    weights: weight
+    
+    OUTPUT
+    normalized_data: normalized data
+    
+    """
+        
     if data.ndim == 3:
         samples, channels, trials = data.shape
         data = unfold(data)
@@ -355,11 +407,11 @@ def normcol(data, weights = None):
             # no weights
             normalized_data = fold(normcol(data), samples)
         else:
-            if weights.shape[0] != samples: raise Exception('weight matrix should have same ncols as data')
+            if weights.shape[0] != samples: raise ValueError, "Weight array should have same number of columns as data array."
             
             if weights.ndim == 2 and weights.shape[1] == 1: weights = tile(weights, (1, samples, trials))
             
-            if weights.shape != weights.shape: raise Exception('weight should have same size as data')
+            if weights.shape != weights.shape: raise ValueError, "Weight array should have be same shape as data array"
             
             weights = unfold(weights)
             
@@ -369,11 +421,11 @@ def normcol(data, weights = None):
         if not weights.any():
             normalized_data = data * ((sum(data ** 2) / samples) ** -0.5)
         else:
-            if weights.shape[0] != data.shape[0]: raise Exception('weight matrix should have same ncols as data')
+            if weights.shape[0] != data.shape[0]: raise ValueError, "Weight array should have same number of columns as data array."
             
             if weights.ndim == 2 and weights.shape[1] == 1: weights = tile(weights, (1, channels))
             
-            if weights.shape != data.shape: raise Exception('weight should have same size as data')
+            if weights.shape != data.shape: raise ValueError, "Weight array should have be same shape as data array"
             
             if weights.shape[1] == 1: weights = tile(weights, (1, channels))
             
@@ -569,7 +621,7 @@ def find_outliers(x, toobig1, toobig2 = []):
 def sns0(c, nneighbors, skip=0, wc=[]):
     """docstring for sns0"""
     
-    if not wc:
+    if not any(wc):
         wc = c
     
     n = c.shape[0]
@@ -577,7 +629,7 @@ def sns0(c, nneighbors, skip=0, wc=[]):
     if not nneighbors:
         nneighbors = n - 1
     
-    r = zeros(c.size)
+    r = zeros(c.shape)
     
     # normalize
     d = sqrt(1 / diag(c))
@@ -585,47 +637,78 @@ def sns0(c, nneighbors, skip=0, wc=[]):
     
     for k in xrange(n):
         
-        c1 = c[:,k] # correlation of channel
-        [c1, idx] = sort(c1 ** 2, 0)[::-1] # sort by correlation
-        idx = idx[skip+2:skip+1+nneighbors] # keep best
+        c1 = c[:,k] # correlation of channel k with all other channels
+        corr_sq = c1 ** 2
+        idx = argsort(corr_sq, 0)[::-1] # sort by correlation, descending order
+        c1 = c1[idx]
+        print "wc", wc.shape
+        print "idx pre", idx.shape
+        idx = idx[skip+2:skip+1+nneighbors+1] # keep best
+        print "idx post", idx
         
         # pca neighbors to orthogonalize them
-        c2 = wc[idx,idx]
+        c2 = wc[idx,:][:,idx]
+        print "L648", c2.shape
         [topcs, eigenvalues] = pcarot(c2)
         topcs = topcs * diag(1/sqrt(eigenvalues))
         
         # augment rotation matric to include this channel
-        topcs = array([[1, zeros(nneighbors)], [zeros((nneighbors, 1)), topcs]])
+        topcs = vstack((hstack((1, zeros(topcs.shape[0]))), hstack((zeros((topcs.shape[0],1)), topcs))))
         
         # correlation matrix for rotated data
-        c3 = topcs.T * wc[c_[k,idx],c_[k,idx]] * topcs
+        #c3 = topcs.T * wc[c_[k,idx],c_[k,idx]] * topcs
+        idx.shape = (idx.shape[0], 1)
+        c3 = topcs.T * wc[vstack((k, idx)), vstack((k, idx))] * topcs
         
         # first row defines projection to clean component k
-        c4 = c3[0,1:] * topcs[1:,1:].T
+        print 'c4 construction', c3[0,1:].shape, topcs[1:,1:].T.shape
+        c4 = dot(c3[0,1:], topcs[1:,1:].T)
         
         # insert new column into denoising matric
-        r[idx,k] = c4
+        print "r, c4", r.shape, c4.shape
+        r[idx, k] = c4
     
-    return c4
 
-def tsxcov(x, y, shifts = 0, w = array([])):
-    """docstring for tsxcov"""
-    #print "tsxcov"
+    return r
+
+def tsxcov(x, y, shifts = None, w = array([])):
+    """
+    Calculate cross-covariance of X and time-shifted Y.
     
-    shifts = shifts[:]
+    This function calculates, for each pair of columns (Xi,Yj) of X and Y, the
+    scalar products between Xi and time-shifted versions of Yj. 
+    Shifts are taken from array SHIFTS. 
+    
+    The weights are applied to X.
+    
+    X can be 1D, 2D or 3D.  W is 1D (if X is 1D or 2D) or 2D (if X is 3D).
+    
+    Output is a 2D matrix with dimensions ncols(X)*(ncols(Y)*nshifts).
+    
+    INPUT
+    x, y: data to cross correlate
+    shifts: array of time shifts (must be non-negative)
+    w: weights
+    
+    OUTPUT
+    c: cross-covariance matrix
+    tw: total weight
+    """
+    
+    if shifts == None: shifts = array([0])
+    
     nshifts = shifts.size
     
     mx, nx, ox = x.shape
     my, ny, oy = y.shape
     c = zeros((nx, ny*nshifts))
     
-    if any(w):
-        x = fold(unfold(x) * unfold(w), mx)
+    if any(w): x = fold(unfold(x) * unfold(w), mx)
     
     # cross covariance
-    for k in xrange(ox):
-        yy = squeeze(multishift(y[:,:,k], shifts))
-        xx = squeeze(x[0:yy.shape[0],:,k])
+    for trial in xrange(ox):
+        yy = squeeze(multishift(y[:, :, trial], shifts))
+        xx = squeeze(x[0:yy.shape[0], :, trial])
         
         c += dot(xx.T, yy)
     
@@ -635,7 +718,7 @@ def tsxcov(x, y, shifts = 0, w = array([])):
         w = w[0:yy.shape[0],:,:]
         tw = sum(w[:])
     
-    return [c, tw]
+    return c, tw
 
 def wmean(x,w=[],dim=0):
     """docstring for wmean"""
@@ -653,45 +736,43 @@ def wmean(x,w=[],dim=0):
     
     return y
 
-def sns(x, nneighbors = 0, skip = 0, w = array([])):
+def sns(data, nneighbors = 0, skip = 0, w = array([])):
     """docstring for sns"""
     if not nneighbors:
         nneighbors = x.shape[1]-1
     
-    m, n, o = x.shape
+    m, n, o = data.shape
+    data = unfold(data)
     
-    x = unfold(x)
-    m, mn0 = demean(x)
-    c, nc = tscov(x)
-    
+    data, mn0 = demean(data)
+    c, nc = tscov(data)
     
     if w:
         w = unfold(w)
-        x, mn1 = demean(x,w)
-        wc, nwc = tscov(x,[],w)
+        data, mn1 = demean(data, w)
+        wc, nwc = tscov(data, [], w)
         r = sns0(c, nneighbors, skip, wc)
     else:
         mn1 = 0
         w = ones((n, o))
         r = sns0(c, nneighbors, skip, c)
     
-    y = dot(x, r)
+    y = dot(data, r)
     y = fold(y, m)
     
     mn = mn0 + mn1
     
     return y
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+
+
+
+
+
+
