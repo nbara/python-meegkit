@@ -47,7 +47,7 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     offset1 = max(0, -min(shifts))
     idx = r_[offset1:data.shape[0]]
     data = data[idx, :, :]
-    print data.shape, idx.shape, offset1
+
     if weights_data: weights_data = weights_data[idx, :, :]
     
     ref = ref[:ref.shape[0]-offset1, :, :]
@@ -86,11 +86,9 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     
     weights_data = weights
     weights_ref = zeros((samples_ref, 1, trials_ref))
-    print weights_ref.shape, weights.shape
     weights_ref[idx, :, :] = weights[idx, :, :]
     
     # remove weighted means
-    print "L91", data.shape, weights_data.shape
     data, mean1 = demean(data, weights_data)
     ref         = demean(ref, weights_ref)[0]
     
@@ -193,9 +191,7 @@ def multishift(data, shifts, amplitudes = None):
     
     OUTPUT
     z: result
-    """
-    print "multishift", data.shape
-    
+    """    
     if not amplitudes: amplitudes = array([])
     
     if shifts.min() > 0: raise ValueError, "Shifts should be non-negative."
@@ -248,7 +244,6 @@ def pcarot(cov, keep = None):
     """
     
     if not keep: keep = cov.shape[0] # keep all components
-    print "eig", cov.shape
     eigenvalues, eigenvector = linalg.eig(cov)
     
     idx = argsort(eigenvalues.real)[::-1] # reverse sort ev order
@@ -287,7 +282,6 @@ def tscov(data, shifts = None, weights = None):
     covariance_matrix: covariance matrix
     total_weight: total weight (covariance_matrix/total_weight is normalized covariance)
     """
-    print "tscov", data.shape
     
     if shifts == None:  shifts  = array([0])
     if not any(weights): weights = array([])
@@ -353,7 +347,6 @@ def unfold(data):
 
 def demean(data, weights = None):
     """Remove weighted mean over columns."""
-    #print "demean"
     
     if data.ndim == 3:
         samples, channels, trials = data.shape
@@ -435,7 +428,6 @@ def normcol(data, weights = None):
 
 def regcov(cxy,cyy,keep=array([]),threshold=array([])):
     """regression matrix from cross covariance"""
-    #print "regcov"
     
     # PCA of regressor
     [topcs, eigenvalues] = pcarot(cyy)
@@ -465,7 +457,6 @@ def regcov(cxy,cyy,keep=array([]),threshold=array([])):
 
 def tsregress(x, y, shifts = array([0]), keep = array([]), threshold = array([]), toobig1 = array([]), toobig2 = array([])):
     """docstring for tsregress"""
-    #print "tsregress"
     
     # shifts must be non-negative
     mn = shifts.min()
@@ -641,14 +632,10 @@ def sns0(c, nneighbors, skip=0, wc=[]):
         corr_sq = c1 ** 2
         idx = argsort(corr_sq, 0)[::-1] # sort by correlation, descending order
         c1 = c1[idx]
-        print "wc", wc.shape
-        print "idx pre", idx.shape
         idx = idx[skip+2:skip+1+nneighbors+1] # keep best
-        print "idx post", idx
         
         # pca neighbors to orthogonalize them
         c2 = wc[idx,:][:,idx]
-        print "L648", c2.shape
         [topcs, eigenvalues] = pcarot(c2)
         topcs = topcs * diag(1/sqrt(eigenvalues))
         
@@ -661,7 +648,6 @@ def sns0(c, nneighbors, skip=0, wc=[]):
         c3 = topcs.T * wc[vstack((k, idx)), vstack((k, idx))] * topcs
         
         # first row defines projection to clean component k
-        print 'c4 construction', c3[0,1:].shape, topcs[1:,1:].T.shape
         c4 = dot(c3[0,1:], topcs[1:,1:].T)
         c4.shape = (c4.shape[0], 1)
         
@@ -756,7 +742,6 @@ def sns(data, nneighbors = 0, skip = 0, w = array([])):
         w = ones((n, o))
         r = sns0(c, nneighbors, skip, c)
     
-    print "y = dot(data, r)", data.shape, r.shape
     y = dot(squeeze(data), r)
     y = fold(y, m)
     
@@ -764,14 +749,106 @@ def sns(data, nneighbors = 0, skip = 0, w = array([])):
     
     return y
 
+def dss1(x, w = None, keep1 = None, keep2 = None):
+    """docstring for dss1"""
+    
+    if not any(w): w = array([])
+    if not keep1: keep1 = array([])
+    if not keep2: keep2 = 10.0 ** -12
+    
+    
+    m, n, o = x.shape
+    x, mn = demean(x, w) # remove weighted mean
+    
+    # weighted mean over trials (--> bias function for DSS)
+    xx, ww = mean_over_trials(x, w)
+    ww = ww.min(1)
+    
+    # covariance of raw and biased data
+    c0, nc0 = tscov(x, array([]), w)
+    c1, nc1 = tscov(xx, [], ww)
+    c1 = linalg.lstsq(c1, o)[0]
+    
+    todss, fromdss, ratio, pwr = dss0(c0, c1, keep1, keep2)
+    
+    return todss, fromdss, ratio, pwr
 
+def dss0(c1, c2, keep1, keep2):
+    """docstring for dss0"""
+    
+    # SANITY CHECKS GO HERE
+    
+    # derive PCA and whitening matrix from unbiased covariance
+    topcs1, evs1 = pcarot(c1)
+    if keep1:
+        topcs1 = topcs1[:,arange(keep1)]
+        evs1 = evs1[arange(keep1)]
+    
+    if keep2:
+        idx = where(evs1/max(evs1) > keep2)
+        topcs1 = topcs[:, idx]
+        evs1 = evs1[idx]
+        
+    # apply whitening and PCA matrices to the biased covariance
+    # (== covariance of bias whitened data)
+    N = diag(sqrt(1/evs1))
+    c3 = N.T * topcs1.T * c2 * topcs1 * N
+    
+    # derive the dss matrix
+    topcs2, evs2 = pcarot(c3)
+    todss = topcs1 * N * topcs2
+    fromdss = linalg.pinv(todss)
+    
+    # dss to data projection matrix
+    cxy = c1 * todss # covariance between unbiased data and selected DSS component
+    
+    # estimate power per DSS component
+    pwr = zeros((todss.shape[1], 1))
+    
+    for k in xrange(todss.shape[1]):
+        to_component = todss[:, k] * fromdss[k, :]
+        cc = to_component.T * c1 * to_component
+        cc = diag(cc)
+        pwr[k] = sum(cc**2)
+    
+    ratio = diag(todss.T * c2 * todss) / diag(todss.T * c1 * todss)
+    
+    return todss, fromdss, ratio, pwr
 
-
-
-
-
-
-
+def mean_over_trials(x, w):
+    """docstring for mean_over_trials"""
+    
+    m, n, o = x.shape
+    
+    if not any(w):
+        y = mean(x,2)
+        tw = ones((m,n,1)) * o
+    else:
+        mw, nw, ow = w.shape
+        if mw != m: raise "!"
+        if ow != o: raise "!"
+        
+        x = unfold(x)
+        w = unfold(w)
+        
+        if nw == n:
+            x = x * w
+            x = fold(x, m)
+            w = fold(w, m)
+            y = sum(x,3) / sum(w, 3)
+        elif nw == 1:
+            x = x * w
+            x = fold(x, m)
+            w = fold(w, m)
+            y = sum(x, 3) * 1/sum(w, 3)
+        
+        tw = sum(w, 3)
+    
+    return y, tw
+    
+            
+            
+            
 
 
 
