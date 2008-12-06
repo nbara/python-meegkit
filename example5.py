@@ -1,12 +1,12 @@
 def tspca_sns_dss(data, ref, sr):
     """
     Requires data stored in a time X channels X trials matrix.
-
+    
     Remove environmental noise with TSPCA (shifts=-50:50).
     Remove sensor noise with SNS.
     Remove non-repeatable components with DSS.
     """
-
+    
     # remove means
     noisy_data = demean(data)[0]
     noisy_ref  = demean(ref)[0]

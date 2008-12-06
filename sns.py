@@ -1,3 +1,7 @@
+from numpy import *
+import scipy.linalg
+from denoise import *
+
 def sns(data, nneighbors = 0, skip = 0, w = array([])):
     """docstring for sns"""
     if not nneighbors:

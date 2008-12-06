@@ -1,3 +1,7 @@
+from numpy import *
+import scipy.linalg
+from denoise import *
+
 def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep = None, thresh = None):
     """
     Time-shift regression.
