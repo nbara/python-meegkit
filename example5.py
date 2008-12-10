@@ -1,4 +1,9 @@
-def tspca_sns_dss(data, ref, sr):
+from denoise import *
+from tspca import *
+from sns import *
+from dss import *
+
+def tspca_sns_dss():
     """
     Requires data stored in a time X channels X trials matrix.
     
@@ -7,14 +12,17 @@ def tspca_sns_dss(data, ref, sr):
     Remove non-repeatable components with DSS.
     """
     
+    data = random.random((800,157,200))
+    ref = random.random((800,3,200))
+    
     # remove means
     noisy_data = demean(data)[0]
     noisy_ref  = demean(ref)[0]
     
     # apply TSPCA
-    shifts = r_[-50:50]
+    shifts = r_[-50:51]
     print 'TSPCA ...'
-    data_tspca, idx = tsr(noisy_data, noisy_ref, shifts)
+    data_tspca, idx = tsr(noisy_data, noisy_ref, shifts)[0:2]
     
     # apply SNS
     nneighbors = 10
@@ -25,7 +33,9 @@ def tspca_sns_dss(data, ref, sr):
     
     disp('DSS ...');
     # Keep all PC components
-    todss, fromdss, ratio, pwr = dss1(demean(data_tspca_sns[:,:,:]))
+    data_tspca_sns = demean(data_tspca_sns)[0]
+    todss, fromdss, ratio, pwr = dss1(data_tspca_sns)
     # c3 = DSS components
-    data_tspca_sns_dss = fold(unfold(demean(data_tspca_sns)) * todss, data_tspca_sns.shape[0]); 
-    
+    data_tspca_sns_dss = fold(unfold(data_tspca_sns) * todss, data_tspca_sns.shape[0]); 
+
+tspca_sns_dss()

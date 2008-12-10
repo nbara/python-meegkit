@@ -4,24 +4,11 @@ import scipy.linalg
 #data = random.random((800,157,241))
 #ref  = random.random((800,3,241))
 
-def multishift(data, shifts, amplitudes = None):
-    """
-    Apply multiple shifts to an array.
-    
-    INPUT
-    data:       array to shift
-    shifts:     array of shifts (must be nonnegative)
-    amplitudes: array of amplitudes
-    
-    OUTPUT
-    z: result
-    """    
-    if not amplitudes: 
-        amplitudes = array([])
-    
-    if shifts.min() > 0: 
-        raise ValueError, "Shifts should be non-negative."
-    
+def multishift(data, shifts, amplitudes = array([])):
+    """apply multiple shifts to an array"""
+    #print "multishift"
+    if min(shifts) > 0: raise Exception('shifts should be non-negative')
+        
     shifts = shifts.T
     shifts_length = shifts.size
     
@@ -32,25 +19,26 @@ def multishift(data, shifts, amplitudes = None):
     elif data.ndim == 2:
         time, channels = data.shape
         trials = 1
-    elif data.ndim == 1:
+    else:
         time = data.shape
         channels, trials = 1, 1
     
     N = time - max(shifts)
-    shiftarray = ((ones((N, shifts_length), int) * shifts).T + arange(N)).T
+    shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[ 0:N ]).T
     
     z = zeros((N, channels * shifts_length, trials))
     
     if amplitudes:
-        for trial in xrange(trials):
-            for channel in xrange(channels):
+        for trial in arange(trials):
+            for channel in arange(channels):
                 y = data[:, channel]
                 z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = (y[shiftarray].T * amplitudes).T
     else:
-        for trial in xrange(trials):
-            for channel in xrange(channels):
+        for trial in arange(trials):
+            for channel in arange(channels):
                 y = data[:, channel]
                 z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = y[shiftarray]
+        
                 
     return z
 
