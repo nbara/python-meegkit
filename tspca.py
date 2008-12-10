@@ -42,7 +42,8 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     if not thresh:
         thresh       = 10**-12
         
-    #adjust to make shifts non-negative
+    # adjust to make shifts non-negative
+    initial_channels = data.shape[0]
     
     offset1 = max(0, -min(shifts))
     idx = r_[offset1:data.shape[0]]
@@ -62,6 +63,7 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     offset2 = max(0, max(shifts))
     
     idx = r_[0:data.shape[0]-offset2]
+    idx = arange(x.shape[0]) - offset2
     data = data[idx, :, :]
     
     if weights_data:
