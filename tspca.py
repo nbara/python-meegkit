@@ -29,8 +29,6 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     weights:       weights applied by tsr
     """
     
-    initial_samples = data.shape[0]
-    
     if shifts == None:
         shifts       = array([0])
     if not weights_data:
@@ -43,12 +41,12 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
         thresh       = 10**-12
         
     # adjust to make shifts non-negative
-    initial_channels = data.shape[0]
+    initial_samples = data.shape[0]
     
     offset1 = max(0, -min(shifts))
-    idx = r_[offset1:data.shape[0]]
+    idx = arange(offset1, data.shape[0])
     data = data[idx, :, :]
-    
+        
     if weights_data: 
         weights_data = weights_data[idx, :, :]
     
@@ -57,20 +55,23 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     if weights_ref:
         weights_ref = weights_ref[0:-offset1, :, :]
     
-    shifts += offset1
+    shifts += offset1 # shifts are now positive
     
     # adjust size of data array
     offset2 = max(0, max(shifts))
     
-    idx = r_[0:data.shape[0]-offset2]
-    idx = arange(x.shape[0]) - offset2
+    idx = arange(data.shape[0]) - offset2
+    idx = idx[idx >= 0]
     data = data[idx, :, :]
     
     if weights_data:
         weights_data = weights_data[idx, :, :]
     
     samples_data, channels_data, trials_data = data.shape
+    print "data.shape", data.shape
     samples_ref,  channels_ref,  trials_ref  = ref.shape
+    
+#    1/0
     
     # consolidate weights into single weight matrix
     weights = zeros((samples_data, 1, trials_ref))
@@ -91,33 +92,39 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     
     weights_data = weights
     weights_ref = zeros((samples_ref, 1, trials_ref))
-    weights_ref[idx, :, :] = weights[idx, :, :]
+    weights_ref[idx, :, :] = weights
     
     # remove weighted means
     data, mean1 = demean(data, weights_data)
+    print "pre demean", ref[0:10,0,0]
     ref         = demean(ref, weights_ref)[0]
     
     # equalize power of ref channels, the equalize power of the ref PCs
+    print "pre", ref[0:10,0,0]
     ref = normcol(ref, weights_ref)
+    print "normcol", ref[0:10,0,0]
     ref = tspca(ref)[0]
+    print "tspca", ref[0:10,0,0]
     ref = normcol(ref, weights_ref)
+    print "normcol", ref[0:10,0,0]
     
     #covariances and cross-covariance with time-shifted refs
     cref, twcref = tscov(ref, shifts, weights_ref)
     cxref, twcxref = tsxcov(data, ref, shifts, weights_data)
     
     # regression matrix of x on time-shifted refs
-    r = regcov(cxref/twcxref, cref/twcref, keep, thresh)
+    regression = regcov(cxref/twcxref, cref/twcref, keep, thresh)
     
     # TSPCA: clean x by removing regression on time-shifted refs
     denoised_data = zeros((samples_data, channels_data, trials_data))
     for trial in xrange(trials_data):
-        z = dot(squeeze(multishift(ref[:, :, trial], shifts)), r)
-        denoised_data[:, :, trial] = data[0:z.shape[0], :, trial] - z
+        z = dot(squeeze(multishift(ref[:, :, trial], shifts)), regression)
+        denoised_data[:, :, trial] = data[arange(z.shape[0]), :, trial] - z
     
     denoised_data, mean2 = demean(denoised_data, weights_data)
     
-    idx = r_[offset1:initial_samples-offset2]
+    #idx = r_[offset1:initial_samples-offset2]
+    idx = arange(offset1, initial_samples - offset2)
     mean_total = mean1 + mean2
     weights = weights_ref
     

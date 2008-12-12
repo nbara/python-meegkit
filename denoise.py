@@ -13,32 +13,25 @@ def multishift(data, shifts, amplitudes = array([])):
     shifts_length = shifts.size
     
     # array of shift indices
-    
-    if data.ndim == 3:
-        time, channels, trials = data.shape # m, n, o
-    elif data.ndim == 2:
-        time, channels = data.shape
-        trials = 1
-    else:
-        time = data.shape
-        channels, trials = 1, 1
-    
-    N = time - max(shifts)
+    N = data.shape[0] - max(shifts)
     shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[ 0:N ]).T
-    
+    time, channels, trials = theshapeof(data)
     z = zeros((N, channels * shifts_length, trials))
     
     if amplitudes:
         for trial in arange(trials):
             for channel in arange(channels):
                 y = data[:, channel]
-                z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = (y[shiftarray].T * amplitudes).T
+                a = channel * shifts_length
+                b = channel * shifts_length + shifts_length
+                z[:, arange(a, b), trial] = (y[shiftarray].T * amplitudes).T
     else:
-        for trial in arange(trials):
-            for channel in arange(channels):
+        for trial in xrange(trials):
+            for channel in xrange(channels):
                 y = data[:, channel]
-                z[:, (channel * shifts_length):(channel * shifts_length + shifts_length), trial] = y[shiftarray]
-        
+                a = channel * shifts_length
+                b = channel * shifts_length + shifts_length
+                z[:, arange(a, b), trial] = y[shiftarray]
                 
     return z
 
@@ -151,7 +144,7 @@ def tscov(data, shifts = None, weights = None):
 
 def fold(data, epochsize):
     '''fold'''
-    return transpose(reshape(data, (epochsize, data.shape[0]/epochsize, data.shape[1])), (0, 2, 1))
+    return transpose(reshape(data, (epochsize, data.shape[0]/epochsize, data.shape[1]), order="F").copy(), (0, 2, 1))
 
 
 def unfold(data):
@@ -163,18 +156,27 @@ def unfold(data):
         trials = 1
     
     if trials > 1:
-        return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels))
+        return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels), order = "F").copy()
     else:
         return data
+
+
+def theshapeof(data):
+    """docstring for theshape"""
+    if data.ndim == 3:
+        return data.shape[0], data.shape[1], data.shape[2]
+    elif data.ndim == 2:
+        return data.shape[0], data.shape[1], 1
+    elif data.ndim == 1:
+        return data.shape[0], 1, 1
+    else:
+        raise ValueError, "Array contains more than 3 dimensions"
 
 
 def demean(data, weights = None):
     """Remove weighted mean over columns."""
     
-    if data.ndim == 3:
-        samples, channels, trials = data.shape
-    else:
-        samples, channels = data.shape
+    samples, channels, trials = theshapeof(data)
     
     data = unfold(data)
     
@@ -195,6 +197,8 @@ def demean(data, weights = None):
         demeaned_data = data - the_mean
     
     demeaned_data = fold(demeaned_data, samples)
+    
+    #the_mean.shape = (1, the_mean.shape[0])
     
     return demeaned_data, the_mean
 
@@ -464,6 +468,7 @@ def wmean(x, w=[], dim=0):
             w = tile(w, (1, x.shape(1)))
         if w.shape[1] != x.shape[1]:
             raise Exception("weight must have same ncols as data, or 1")
+            
         y = sum(x * w, dim) / sum(w, dim)
     
     return y
@@ -500,11 +505,3 @@ def mean_over_trials(x, w):
         tw = sum(w, 3)
     
     return y, tw
-    
-            
-            
-            
-
-
-
-
