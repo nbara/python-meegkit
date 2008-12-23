@@ -18,9 +18,22 @@ def clean(data, ref):
     noisy_ref  = demean(ref)[0]
     
     # apply TSPCA
-    shifts = r_[-50:51]
+    shifts = arange(-50, 51)
     print 'TSPCA ...'
     data_tspca, idx = tsr(noisy_data, noisy_ref, shifts)[0:2]
+    
+    data = data[idx, :, :]
+    data_mean = mean(data, 2)
+    data_tspca_mean = mean(data_tspca, 2)
+    
+    # stats
+    #p1 = wpwr(data)[0]
+    #pp1 = wpwr(data_mean)[0]
+    #p2 = wpwr(data_tspca)[0]
+    #pp2 = wpwr(data_tspca_mean)[0]
+    
+    #print "TSPCA done. ", 100*p2/p1, " of raw power remains"
+    #print "trial-averaged: ", 100*pp2/pp1, " of raw power remains"
     
     # apply SNS
     nneighbors = 10
@@ -29,12 +42,12 @@ def clean(data, ref):
     
     # apply DSS
     
-    #disp('DSS ...');
+    print "DSS ..."
     ## Keep all PC components
-    #data_tspca_sns = demean(data_tspca_sns)[0]
-    #todss, fromdss, ratio, pwr = dss1(data_tspca_sns)
+    data_tspca_sns = demean(data_tspca_sns)[0]
+    todss, fromdss, ratio, pwr = dss1(data_tspca_sns)
     ## c3 = DSS components
-    #data_tspca_sns_dss = fold(unfold(data_tspca_sns) * todss, data_tspca_sns.shape[0]); 
+    data_tspca_sns_dss = fold(dot(unfold(data_tspca_sns), todss), data_tspca_sns.shape[0]); 
     
     return data_tspca_sns
 

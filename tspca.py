@@ -68,7 +68,7 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
         weights_data = weights_data[idx, :, :]
     
     samples_data, channels_data, trials_data = data.shape
-    print "data.shape", data.shape
+    #print "data.shape", data.shape
     samples_ref,  channels_ref,  trials_ref  = ref.shape
     
 #    1/0
@@ -96,17 +96,17 @@ def tsr(data, ref, shifts = None, weights_data = None, weights_ref = None, keep 
     
     # remove weighted means
     data, mean1 = demean(data, weights_data)
-    print "pre demean", ref[0:10,0,0]
+    #print "pre demean", ref[0:10,0,0]
     ref         = demean(ref, weights_ref)[0]
     
     # equalize power of ref channels, the equalize power of the ref PCs
-    print "pre", ref[0:10,0,0]
+    #print "pre", ref[0:10,0,0]
     ref = normcol(ref, weights_ref)
-    print "normcol", ref[0:10,0,0]
+    #print "normcol", ref[0:10,0,0]
     ref = tspca(ref)[0]
-    print "tspca", ref[0:10,0,0]
+    #print "tspca", ref[0:10,0,0]
     ref = normcol(ref, weights_ref)
-    print "normcol", ref[0:10,0,0]
+    #print "normcol", ref[0:10,0,0]
     
     #covariances and cross-covariance with time-shifted refs
     cref, twcref = tscov(ref, shifts, weights_ref)

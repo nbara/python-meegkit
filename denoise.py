@@ -11,7 +11,7 @@ def multishift(data, shifts, amplitudes = array([])):
         
     shifts = shifts.T
     shifts_length = shifts.size
-    
+        
     # array of shift indices
     N = data.shape[0] - max(shifts)
     shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[ 0:N ]).T
@@ -51,13 +51,21 @@ def pcarot(cov, keep = None):
     
     if not keep: 
         keep = cov.shape[0] # keep all components
-        
+    
+    print "cov shape", cov.shape    
     eigenvalues, eigenvector = linalg.eig(cov)
     
-    idx = argsort(eigenvalues.real)[::-1] # reverse sort ev order
-    eigenvalues = sort(eigenvalues.real)[::-1]
+    eigenvalues = eigenvalues.real
+    eigenvector = eigenvector.real
     
-    topcs = eigenvector.real[:, idx]
+    idx = argsort(eigenvalues)[::-1] # reverse sort ev order
+    #eigenvalues = sort(eigenvalues.real)[::-1]
+    eigenvalues = eigenvalues[idx]
+    
+    eigenvalues = eigenvalues[::-1]
+    idx = idx[::-1]
+    
+    topcs = eigenvector[:, idx]
     
     topcs = topcs[:, arange(keep)]
     eigenvalues = eigenvalues[arange(keep)]
@@ -78,7 +86,7 @@ def tscov(data, shifts = None, weights = None):
     
     Output is a 2D matrix with dimensions (ncols(X)*nshifts)^2.
     This matrix is made up of a DATA.shape[1]^2 matrix of submatrices
-    of dimensions nshifts^2.
+    of dimensions nshifts**2.
     
     The weights are not shifted.
     
@@ -100,27 +108,25 @@ def tscov(data, shifts = None, weights = None):
     
     if shifts.min() < 0: raise ValueError, "Shifts should be non-negative."
     
-    shifts = shifts.T
     nshifts = shifts.size
     
-    if data.ndim == 3:
-        samples, channels, trials = data.shape
-    else:
-        samples, channels = data.shape
-        trials = 1
-    
+    samples, channels, trials = theshapeof(data)
     covariance_matrix = zeros((channels * nshifts, channels * nshifts))
     
     if any(weights):
         # weights
         if weights.shape[1] > 1: 
-            raise ValueError, "Weights array should have a single column"
+            raise ValueError, "Weights array should have a single column."
         
         for trial in xrange(trials):
             if data.ndim == 3:
                 shifted_trial = multishift(data[:, :, trial], shifts)
-            else:
+            elif data.ndim == 2:
+                data = unsqueeze(data)
                 shifted_trial = multishift(data[:, trial], shifts)
+            else:
+                data = unsqueeze(data)
+                shifted_trial = multishift(data[trial], shifts)
             
             trial_weight = weights[arange(shifted_trial.shape[0]), :, trial]
             shifted_trial = (squeeze(shifted_trial).T * squeeze(trial_weight)).T
@@ -149,11 +155,8 @@ def fold(data, epochsize):
 
 def unfold(data):
     '''unfold'''
-    try:
-        samples, channels, trials = data.shape
-    except:
-        samples, channels = data.shape
-        trials = 1
+    
+    samples, channels, trials = theshapeof(data)
     
     if trials > 1:
         return reshape(transpose(data, (0, 2, 1)), (samples * trials, channels), order = "F").copy()
@@ -505,3 +508,36 @@ def mean_over_trials(x, w):
         tw = sum(w, 3)
     
     return y, tw
+
+
+def wpwr(x, w=None):
+    """Weighted power."""
+    
+    if w == None: w = array([])
+    
+    x = unfold(x)
+    w = unfold(w)
+    
+    if w:
+        x = x * w
+        y = sum(x ** 2)
+        tweight = sum(w)
+    else:
+        y = sum(x ** 2)
+        tweight = x.size
+    
+    return y, tweight
+    
+def unsqueeze(data):
+    """Adds singleton dimensions to an array."""
+    
+    return data.reshape(theshapeof(data))
+    
+    
+    
+    
+    
+    
+    
+    
+    

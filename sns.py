@@ -53,14 +53,14 @@ def sns0(c, nneighbors, skip=0, wc=[]):
         idx = argsort(c1**2, 0)[::-1] # sort by correlation, descending order
         c1 = c1[idx]
         idx = idx[skip:skip+nneighbors] # keep best
-        print "c1", c1.shape
-        print "idx", idx
+        #print "c1", c1.shape
+        #print "idx", idx
         
         # pca neighbors to orthogonalize them
         c2 = wc[idx, :][:, idx]
         [topcs, eigenvalues] = pcarot(c2)
         topcs = dot(topcs, diag(1/sqrt(eigenvalues)))
-        print "c2", c2.shape
+        #print "c2", c2.shape
         
         # augment rotation matrix to include this channel
         stack1 = hstack((1, zeros(topcs.shape[0])))
@@ -70,12 +70,12 @@ def sns0(c, nneighbors, skip=0, wc=[]):
         # correlation matrix for rotated data
         #c3 = topcs.T * wc[hstack((k,idx)), hstack((k,idx))] * topcs
         c3 = dot(dot(topcs.T, wc[hstack((k, idx)), :][:, hstack((k, idx))]), topcs)
-        print "c3", c3.shape
+        #print "c3", c3.shape
         
         # first row defines projection to clean component k
         c4 = dot(c3[0, 1:], topcs[1:, 1:].T)
         c4.shape = (c4.shape[0], 1)
-        print "c4", c4
+        #print "c4", c4
         
         # insert new column into denoising matrix
         r[idx, k] = squeeze(c4)
