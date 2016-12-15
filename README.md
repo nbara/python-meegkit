@@ -1,6 +1,6 @@
 ## Python implementation of TSPCA, SNS, and DSS denoising in scipy  
   
-Original code by Alain de Cheveigné:  
+Code adapted from the NoiseTools toolbox for Matlab by Alain de Cheveigné:  
 http://audition.ens.fr/adc/NoiseTools/
 
 Python implementation by Pedro Alcocer:   
