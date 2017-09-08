@@ -1,9 +1,10 @@
-from numpy import *
-import scipy.linalg
+import numpy as np
+from scipy import linalg
+from matplotlib import gridspec
 import matplotlib.pyplot as plt
 
 
-def multishift(data, shifts, amplitudes=array([])):
+def multishift(data, shifts, amplitudes=np.array([])):
     """Apply multiple shifts to an array."""
     # print "multishift"
     if min(shifts) > 0:
@@ -14,24 +15,24 @@ def multishift(data, shifts, amplitudes=array([])):
 
     # array of shift indices
     N = data.shape[0] - max(shifts)
-    shiftarray = ((ones((N, shifts_length), int) * shifts).T + r_[0:N]).T
+    shiftarray = ((np.ones((N, shifts_length), int) * shifts).T + np.r_[0:N]).T
     time, channels, trials = theshapeof(data)
-    z = zeros((N, channels * shifts_length, trials))
+    z = np.zeros((N, channels * shifts_length, trials))
 
     if amplitudes:
-        for trial in arange(trials):
-            for channel in arange(channels):
+        for trial in np.arange(trials):
+            for channel in np.arange(channels):
                 y = data[:, channel]
                 a = channel * shifts_length
                 b = channel * shifts_length + shifts_length
-                z[:, arange(a, b), trial] = (y[shiftarray].T * amplitudes).T
+                z[:, np.arange(a, b), trial] = (y[shiftarray].T * amplitudes).T
     else:
-        for trial in xrange(trials):
-            for channel in xrange(channels):
+        for trial in range(trials):
+            for channel in range(channels):
                 y = data[:, channel]
                 a = channel * shifts_length
                 b = channel * shifts_length + shifts_length
-                z[:, arange(a, b), trial] = y[shiftarray]
+                z[:, np.arange(a, b), trial] = y[shiftarray]
 
     return z
 
@@ -45,21 +46,21 @@ def pcarot(cov, keep=None):
     keep: number of components to keep [default: all]
 
     Returns
-    --------
+    -------
     topcs:       PCA rotation matrix
     eigenvalues: PCA eigenvalues
-    """
 
+    """
     if not keep:
         keep = cov.shape[0]  # keep all components
 
-    print("cov shape", cov.shape)
+    print(("cov shape", cov.shape))
     eigenvalues, eigenvector = linalg.eig(cov)
 
     eigenvalues = eigenvalues.real
     eigenvector = eigenvector.real
 
-    idx = argsort(eigenvalues)[::-1]  # reverse sort ev order
+    idx = np.argsort(eigenvalues)[::-1]  # reverse sort ev order
     # eigenvalues = sort(eigenvalues.real)[::-1]
     eigenvalues = eigenvalues[idx]
 
@@ -68,8 +69,8 @@ def pcarot(cov, keep=None):
 
     topcs = eigenvector[:, idx]
 
-    topcs = topcs[:, arange(keep)]
-    eigenvalues = eigenvalues[arange(keep)]
+    topcs = topcs[:, np.arange(keep)]
+    eigenvalues = eigenvalues[np.arange(keep)]
 
     return topcs, eigenvalues
 
@@ -104,14 +105,13 @@ def tscov(data, shifts=None, w=None):
     covariance_matrix: array
         Covariance matrix.
     total_weight: array
-        Total weight (covariance_matrix/total_weight is normalized
-        covariance).
-    """
+        Total weight (covariance_matrix/total_weight is normalized covariance).
 
+    """
     if shifts is None:
-        shifts = array([0])
+        shifts = np.array([0])
     if not any(w):
-        w = array([])
+        w = np.array([])
 
     if shifts.min() < 0:
         raise ValueError("Shifts should be non-negative.")
@@ -119,14 +119,14 @@ def tscov(data, shifts=None, w=None):
     nshifts = shifts.size
 
     samples, channels, trials = theshapeof(data)
-    covariance_matrix = zeros((channels * nshifts, channels * nshifts))
+    covariance_matrix = np.zeros((channels * nshifts, channels * nshifts))
 
     if any(w):
         # weights
         if w.shape[1] > 1:
             raise ValueError("Weights array should have a single column.")
 
-        for trial in xrange(trials):
+        for trial in range(trials):
             if data.ndim == 3:
                 shifted_trial = multishift(data[:, :, trial], shifts)
             elif data.ndim == 2:
@@ -136,21 +136,22 @@ def tscov(data, shifts=None, w=None):
                 data = unsqueeze(data)
                 shifted_trial = multishift(data[trial], shifts)
 
-            trial_weight = w[arange(shifted_trial.shape[0]), :, trial]
-            shifted_trial = (squeeze(shifted_trial).T *
-                             squeeze(trial_weight)).T
-            covariance_matrix += dot(shifted_trial.T, shifted_trial)
+            trial_weight = w[np.arange(shifted_trial.shape[0]), :, trial]
+            shifted_trial = (np.squeeze(shifted_trial).T *
+                             np.squeeze(trial_weight)).T
+            covariance_matrix += np.dot(shifted_trial.T, shifted_trial)
 
         total_weight = sum(w[:])
     else:
         # no weights
-        for trial in xrange(trials):
+        for trial in range(trials):
             if data.ndim == 3:
-                shifted_trial = squeeze(multishift(data[:, :, trial], shifts))
+                shifted_trial = np.squeeze(multishift(data[:, :, trial],
+                                                      shifts))
             else:
                 shifted_trial = multishift(data[:, trial], shifts)
 
-            covariance_matrix += dot(shifted_trial.T, shifted_trial)
+            covariance_matrix += np.dot(shifted_trial.T, shifted_trial)
 
         total_weight = shifted_trial.shape[0] * trials
 
@@ -159,25 +160,26 @@ def tscov(data, shifts=None, w=None):
 
 def fold(data, epochsize):
     """Fold 2D data into 3D."""
-    return transpose(reshape(data, (epochsize, data.shape[0] /
-                                    epochsize, data.shape[1]),
-                             order="F").copy(), (0, 2, 1))
+    return np.transpose(
+        np.reshape(data, (epochsize, data.shape[0] / epochsize, data.shape[1]),
+                   order="F").copy(),
+        (0, 2, 1))
 
 
 def unfold(data):
     """Unfold 3D data."""
-
     samples, channels, trials = theshapeof(data)
 
     if trials > 1:
-        return reshape(transpose(data, (0, 2, 1)),
-                       (samples * trials, channels), order="F").copy()
+        return np.reshape(
+            np.transpose(data, (0, 2, 1)),
+            (samples * trials, channels), order="F").copy()
     else:
         return data
 
 
 def theshapeof(data):
-    """docstring for theshape"""
+    """Return the shape of data."""
     if data.ndim == 3:
         return data.shape[0], data.shape[1], data.shape[2]
     elif data.ndim == 2:
@@ -190,7 +192,6 @@ def theshapeof(data):
 
 def demean(data, w=None):
     """Remove weighted mean over columns."""
-
     samples, channels, trials = theshapeof(data)
 
     data = unfold(data)
@@ -199,28 +200,28 @@ def demean(data, w=None):
         w = unfold(w)
 
         if w.shape[0] != data.shape[0]:
-            raise ValueError, "Data and weights arrays should have same number of rows and pages."
+            raise ValueError('Data and weights arrays should have same ' +
+                             'number of rows and pages.')
 
         if w.shape[1] == 1 or w.shape[1] == channels:
             the_mean = sum(data * w) / sum(w)
         else:
-            raise ValueError, "Weight array should have either the same number of columns as data array, or 1 column."
+            raise ValueError('Weight array should have either the same ' +
+                             'number of columns as data array, or 1 column.')
 
         demeaned_data = data - the_mean
     else:
-        the_mean = mean(data, 0)
+        the_mean = np.mean(data, 0)
         demeaned_data = data - the_mean
 
     demeaned_data = fold(demeaned_data, samples)
 
-    #the_mean.shape = (1, the_mean.shape[0])
-
+    # the_mean.shape = (1, the_mean.shape[0])
     return demeaned_data, the_mean
 
 
 def normcol(data, w=None):
-    """
-    Normalize each column so its weighted msq is 1.
+    """Normalize each column so its weighted msq is 1.
 
     If DATA is 3D, pages are concatenated vertically before calculating the
     norm.
@@ -234,11 +235,10 @@ def normcol(data, w=None):
     w: weight
 
     Returns
-    --------
+    -------
     normalized_data: normalized data
 
     """
-
     if data.ndim == 3:
         samples, channels, trials = data.shape
         data = unfold(data)
@@ -251,7 +251,7 @@ def normcol(data, w=None):
                                  'columns as data array.")
 
             if w.ndim == 2 and w.shape[1] == 1:
-                w = tile(w, (1, samples, trials))
+                w = np.tile(w, (1, samples, trials))
 
             if w.shape != w.shape:
                 raise ValueError("Weight array should have be same shape ' \
@@ -266,18 +266,18 @@ def normcol(data, w=None):
             normalized_data = data * ((sum(data ** 2) / samples) ** -0.5)
         else:
             if w.shape[0] != data.shape[0]:
-                raise ValueError(
-                    "Weight array should have same number of columns as data array.")
+                raise ValueError('Weight array should have same number of ' +
+                                 'columns as data array.')
 
             if w.ndim == 2 and w.shape[1] == 1:
-                w = tile(w, (1, channels))
+                w = np.tile(w, (1, channels))
 
             if w.shape != data.shape:
-                raise ValueError(
-                    "Weight array should have be same shape as data array")
+                raise ValueError('Weight array should have be same shape as ' +
+                                 'data array')
 
             if w.shape[1] == 1:
-                w = tile(w, (1, channels))
+                w = np.tile(w, (1, channels))
 
             normalized_data = data * \
                 (sum((data ** 2) * w) / sum(w)) ** -0.5
@@ -285,9 +285,8 @@ def normcol(data, w=None):
     return normalized_data
 
 
-def regcov(cxy, cyy, keep=array([]), threshold=array([])):
-    """regression matrix from cross covariance"""
-
+def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
+    """Compute regression matrix from cross covariance."""
     # PCA of regressor
     [topcs, eigenvalues] = pcarot(cyy)
 
@@ -298,24 +297,24 @@ def regcov(cxy, cyy, keep=array([]), threshold=array([])):
         eigenvalues = eigenvalues[0:keep]
 
     if threshold:
-        idx = where(eigenvalues / max(eigenvalues) > threshold)
+        idx = np.where(eigenvalues / max(eigenvalues) > threshold)
         topcs = topcs[:, idx]
         eigenvalues = eigenvalues[idx]
 
     # cross-covariance between data and regressor PCs
     cxy = cxy.T
-    r = dot(topcs.T, cxy)
+    r = np.dot(topcs.T, cxy)
 
     # projection matrix from regressor PCs
     r = (r.T * 1 / eigenvalues).T
 
     # projection matrix from regressors
-    r = dot(squeeze(topcs), squeeze(r))
+    r = np.dot(np.squeeze(topcs), np.squeeze(r))
 
     return r
 
 
-def tsxcov(x, y, shifts=None, w=array([])):
+def tsxcov(x, y, shifts=None, w=np.array([])):
     """Calculate cross-covariance of X and time-shifted Y.
 
     This function calculates, for each pair of columns (Xi,Yj) of X and Y, the
@@ -341,26 +340,26 @@ def tsxcov(x, y, shifts=None, w=array([])):
     -------
     c: cross-covariance matrix
     tw: total weight
-    """
 
-    if shifts == None:
-        shifts = array([0])
+    """
+    if shifts is None:
+        shifts = np.array([0])
 
     nshifts = shifts.size
 
     mx, nx, ox = x.shape
     my, ny, oy = y.shape
-    c = zeros((nx, ny * nshifts))
+    c = np.zeros((nx, ny * nshifts))
 
     if any(w):
         x = fold(unfold(x) * unfold(w), mx)
 
     # cross covariance
-    for trial in xrange(ox):
-        yy = squeeze(multishift(y[:, :, trial], shifts))
-        xx = squeeze(x[0:yy.shape[0], :, trial])
+    for trial in range(ox):
+        yy = np.squeeze(multishift(y[:, :, trial], shifts))
+        xx = np.squeeze(x[0:yy.shape[0], :, trial])
 
-        c += dot(xx.T, yy)
+        c += np.dot(xx.T, yy)
 
     if not any(w):
         tw = ox * ny * yy.shape[0]
@@ -371,10 +370,10 @@ def tsxcov(x, y, shifts=None, w=array([])):
     return c, tw
 
 
-def tsregress(x, y, shifts=array([0]), keep=array([]), threshold=array([]),
-              toobig1=array([]), toobig2=array([])):
-    """docstring for tsregress"""
-
+def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
+              threshold=np.array([]), toobig1=np.array([]),
+              toobig2=np.array([])):
+    """Time-shift regression."""
     # shifts must be non-negative
     mn = shifts.min()
     if mn < 0:
@@ -423,34 +422,33 @@ def tsregress(x, y, shifts=array([0]), keep=array([]), threshold=array([]),
 
         [m, n, o] = x.shape
         mm = m - max(shifts)
-        z = zeros(x.shape)
+        z = np.zeros(x.shape)
 
-        for k in xrange(nshifts):
+        for k in range(nshifts):
             kk = shifts(k)
-            idx1 = r_[kk + 1:kk + mm]
-            idx2 = k + r_[0:y.shape[1]] * nshifts
+            idx1 = np.r_[kk + 1:kk + mm]
+            idx2 = k + np.r_[0:y.shape[1]] * nshifts
             z[0:mm, :] = z[0:mm, :] + y[idx1, :] * r[idx2, :]
 
         z = fold(z, Mx)
         z = z[0:-max(shifts), :, :]
     else:
         m, n = x.shape
-        z = zeros((m - max(shifts), n))
-        for k in xrange(nshifts):
+        z = np.zeros((m - max(shifts), n))
+        for k in range(nshifts):
             kk = shifts(k)
-            idx1 = r_[kk + 1:kk + z.shape[0]]
-            idx2 = k + r_[0:y.shape[1]] * nshifts
+            idx1 = np.r_[kk + 1:kk + z.shape[0]]
+            idx2 = k + np.r_[0:y.shape[1]] * nshifts
             z = z + y[idx1, :] * r[idx2, :]
 
     offset = max(0, -mn)
-    idx = r_[offset + 1:offset + z.shape[0]]
+    idx = np.r_[offset + 1:offset + z.shape[0]]
 
-    return [z, idx]
+    return z, idx
 
 
 def find_outliers(x, toobig1, toobig2=[]):
     """docstring for find_outliers"""
-
     [m, n, o] = x.shape
     x = unfold(x)
 
@@ -458,24 +456,24 @@ def find_outliers(x, toobig1, toobig2=[]):
     x = demean(x)[0]
 
     # apply absolute threshold
-    w = ones(x.shape)
+    w = np.ones(x.shape)
     if toobig1:
-        w[where(abs(x) > toobig1)] = 0
+        w[np.where(abs(x) > toobig1)] = 0
         x = demean(x, w)[0]
 
-        w[where(abs(x) > toobig1)] = 0
+        w[np.where(abs(x) > toobig1)] = 0
         x = demean(x, w)[0]
 
-        w[where(abs(x) > toobig1)] = 0
+        w[np.where(abs(x) > toobig1)] = 0
         x = demean(x, w)[0]
     else:
-        w = ones(x.shape)
+        w = np.ones(x.shape)
 
     # apply relative threshold
     if toobig2:
         X = wmean(x ** 2, w)
-        X = tile(X, (x.shape[0], 1))
-        idx = where(x**2 > (X * toobig2))
+        X = np.tile(X, (x.shape[0], 1))
+        idx = np.where(x**2 > (X * toobig2))
         w[idx] = 0
 
     w = fold(w, m)
@@ -504,6 +502,7 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
         Indices of trials to reject.
     d : array
         Relative deviations from mean.
+
     """
     if thresh is None:
         thresh = [np.inf]
@@ -570,15 +569,14 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
 
 
 def wmean(x, w=[], dim=0):
-    """docstring for wmean"""
-
+    """Weighted mean."""
     if not w:
-        y = mean(x, dim)
+        y = np.mean(x, dim)
     else:
         if x.shape[0] != w.shape[0]:
             raise Exception("data and weight must have same nrows")
         if w.shape[1] == 1:
-            w = tile(w, (1, x.shape(1)))
+            w = np.tile(w, (1, x.shape(1)))
         if w.shape[1] != x.shape[1]:
             raise Exception("weight must have same ncols as data, or 1")
 
@@ -588,13 +586,12 @@ def wmean(x, w=[], dim=0):
 
 
 def mean_over_trials(x, w):
-    """docstring for mean_over_trials"""
-
-    m, n, o = x.shape
+    """Compute mean over trials."""
+    m, n, o = theshapeof(x)
 
     if not any(w):
-        y = mean(x, 2)
-        tw = ones((m, n, 1)) * o
+        y = np.mean(x, 2)
+        tw = np.ones((m, n, 1)) * o
     else:
         mw, nw, ow = w.shape
         if mw != m:
@@ -623,9 +620,8 @@ def mean_over_trials(x, w):
 
 def wpwr(x, w=None):
     """Weighted power."""
-
     if w is None:
-        w = array([])
+        w = np.array([])
 
     x = unfold(x)
     w = unfold(w)
@@ -643,5 +639,4 @@ def wpwr(x, w=None):
 
 def unsqueeze(data):
     """Add singleton dimensions to an array."""
-
     return data.reshape(theshapeof(data))

@@ -1,0 +1,18 @@
+# run: conda env create --file environment.yml
+name: meegkit
+dependencies:
+- python>=3.5
+- pip
+- numpy
+- scipy
+- matplotlib
+- scikit-learn
+- sphinx
+- joblib
+- numpydoc
+- flake8
+- pip:
+  - mne
+  - codespell
+  - pydocstyle
+  - sphinx_bootstrap_theme

@@ -1,16 +1,20 @@
+[![Build Status](https://travis-ci.org/nbara/python-meeg-denoise.svg?branch=master)](https://travis-ci.org/nbara/python-meeg-denoise)
+
 ## Python implementation of TSPCA, SNS, and DSS denoising in scipy  
   
 Code adapted from the NoiseTools toolbox for Matlab by Alain de Cheveigné:  
 http://audition.ens.fr/adc/NoiseTools/
 
-Python implementation by Pedro Alcocer:   
+Original python implementation by Pedro Alcocer:   
 https://github.com/pealco
 
-Cite: 
+## References 
 
+If you use this code, you should cite the relevant methods from the original
+articles : 
 - de Cheveigné A (2016) Sparse Time Artifact Removal, Journal of Neuroscience Methods, 262, 14-20, doi:10.1016/j.jneumeth.2016.01.005
 - de Cheveigné A, Arzounian D (2015) Scanning for oscillations, Journal of Neural Engineering, 12, 066020, DOI: 10.1088/1741-2560/12/6/066020.
-- de Cheveigné, A., Parra, L. (2014), Joint decorrelation: a flexible tool for multichannel data analysis, Neuroimage, DOI: 10.1016/j.neuroimage.2014.05.068.
+- de Cheveigné, A., Parra, L. (2014), Joint decorrelation: a flexible tool for multichannel data analysis, Neuroimage, DOI: 10.1016/j.neuroimage.2014.05.068 
 - de Cheveigné, A., Edeline, J.M., Gaucher, Q. Gourévitch, B. (2013). "Component analysis reveals sharp tuning of the local field potential in the guinea pig auditory cortex." J. Neurophysiol. 109, 261-272.
 - de Cheveigné, A. (2012). "Quadratic component analysis." Neuroimage 59: 3838-3844.
 - de Cheveigné, A. (2010). "Time-shift denoising source separation." Journal of Neuroscience Methods 189: 113-120.

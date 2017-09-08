@@ -1,11 +1,10 @@
 import numpy as np
-import scipy.linalg
-from denoise import *
+# import scipy.linalg
+from .utils import demean, tscov, mean_over_trials, pcarot
 
 
 def dss1(data, weights=None, keep1=None, keep2=None):
     """DSS to maximise repeatability across trials."""
-
     if not any(weights):
         weights = np.array([])
     if not keep1:
@@ -13,12 +12,12 @@ def dss1(data, weights=None, keep1=None, keep2=None):
     if not keep2:
         keep2 = 10.0 ** -12
 
-    m, n, o = theshapeof(data)
+    m, n, o = data.shape()
     data, data_mean = demean(data, weights)  # remove weighted mean
 
     # weighted mean over trials (--> bias function for DSS)
     xx, ww = mean_over_trials(data, weights)
-    print "xx.shape", xx.shape
+    print("xx.shape", xx.shape)
     ww = ww.min(1)
 
     # covariance of raw and biased data
@@ -32,8 +31,7 @@ def dss1(data, weights=None, keep1=None, keep2=None):
 
 
 def dss0(c1, c2, keep1, keep2):
-    """docstring for dss0"""
-
+    """DSS base function."""
     # SANITY CHECKS GO HERE
 
     # derive PCA and whitening matrix from unbiased covariance
@@ -61,7 +59,7 @@ def dss0(c1, c2, keep1, keep2):
     # estimate power per DSS component
     pwr = np.zeros((todss.shape[1], 1))
 
-    for k in xrange(todss.shape[1]):
+    for k in range(todss.shape[1]):
         to_component = todss[:, k] * fromdss[k, :]
         cc = to_component.T * c1 * to_component
         cc = np.diag(cc)
