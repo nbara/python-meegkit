@@ -1,18 +1,16 @@
 import numpy as np
 # import scipy.linalg
-from .utils import demean, tscov, mean_over_trials, pcarot
+from .utils import demean, tscov, mean_over_trials, pcarot, theshapeof
 
 
 def dss1(data, weights=None, keep1=None, keep2=None):
     """DSS to maximise repeatability across trials."""
-    if not any(weights):
-        weights = np.array([])
     if not keep1:
         keep1 = np.array([])
     if not keep2:
         keep2 = 10.0 ** -12
 
-    m, n, o = data.shape()
+    n_samples, n_chans, n_trials = theshapeof(data)
     data, data_mean = demean(data, weights)  # remove weighted mean
 
     # weighted mean over trials (--> bias function for DSS)
@@ -23,7 +21,7 @@ def dss1(data, weights=None, keep1=None, keep2=None):
     # covariance of raw and biased data
     c0, nc0 = tscov(data, None, weights)
     c1, nc1 = tscov(xx, None, ww)
-    c1 = c1 / o
+    c1 = c1 / n_trials
 
     todss, fromdss, ratio, pwr = dss0(c0, c1, keep1, keep2)
 

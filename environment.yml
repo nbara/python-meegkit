@@ -12,7 +12,7 @@ dependencies:
 - numpydoc
 - flake8
 - pip:
-  - mne
+  - nose
   - codespell
   - pydocstyle
   - sphinx_bootstrap_theme

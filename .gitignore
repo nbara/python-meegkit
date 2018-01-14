@@ -68,4 +68,7 @@ target/
 .idea/codeStyleSettings.xml
 .idea/vcs.xml
 
+# VSCode
+.vscode/*
+
 .DS_Store

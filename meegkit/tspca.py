@@ -1,5 +1,4 @@
 import numpy as np
-from scipy import linalg
 
 from .utils import (demean, fold, multishift, normcol, pcarot, regcov, tscov,
                     tsxcov, unfold)
@@ -16,20 +15,23 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     filter to apply to REF so as to compensate for any convolutional mismatch
     between DATA and REF.
 
-    INPUT
-    data:         data to denoise (time * channels * trials)
-    ref:          reference (time * channels * trials)
-    shifts:       np.array of shifts to apply to ref (default: [0])
-    weights_data: weights to apply to data (time * 1 * trials);
-    weights_ref:  weights to apply to ref (time * 1 * trials);
+    Parameters
+    ----------
+    data:         data to denoise (n_samples * n_chans * n_trials)
+    ref:          reference (n_samples * n_chans * n_trials)
+    shifts:       array of shifts to apply to ref (default: [0])
+    weights_data: weights to apply to data (n_samples * 1 * n_trials);
+    weights_ref:  weights to apply to ref (n_samples * 1 * n_trials);
     keep:         number of shifted-ref PCs to retain (default: all)
     thresh:       ignore shifted-ref PCs smaller than thresh (default: 10.^-12)
 
-    OUTPUT
+    Returns
+    -------
     denoised_data: denoised data
     idx:           data[idx] is aligned with denoised_data
     mean:          channel means (removed by tsr)
     weights:       weights applied by tsr
+
     """
     if shifts is None:
         shifts = np.array([0])
@@ -45,7 +47,7 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     # adjust to make shifts non-negative
     initial_samples = data.shape[0]
 
-    offset1 = max(0, -min(shifts))
+    offset1 = np.max((0, -np.min(shifts)))
     idx = np.arange(offset1, data.shape[0])
     data = data[idx, :, :]
 
@@ -59,8 +61,8 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
 
     shifts += offset1  # shifts are now positive
 
-    # adjust size of data np.array
-    offset2 = max(0, max(shifts))
+    # adjust size of data array
+    offset2 = np.max((0, np.max(shifts)))
 
     idx = np.arange(data.shape[0]) - offset2
     idx = idx[idx >= 0]
@@ -73,7 +75,7 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     # print "data.shape", data.shape
     samples_ref,  channels_ref,  trials_ref = ref.shape
 
-    #    1/0
+#    1/0
 
     # consolidate weights into single weight matrix
     weights = np.zeros((samples_data, 1, trials_ref))
@@ -83,11 +85,11 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     elif not weights_ref:
         weights[:, :, :] = weights_data[:, :, :]
     elif not weights_data:
-        for trial in np.xrange(trials_data):
+        for trial in xrange(trials_data):
             wr = multishift(weights_ref[:, :, trial], shifts).min(1)
             weights[:, :, trial] = wr
     else:
-        for trial in np.xrange(trials_data):
+        for trial in xrange(trials_data):
             wr = multishift(weights_ref[:, :, trial], shifts).min(1)
             wr = (wr, wx[0:wr.shape[0], :, trial]).min()
             weights[:, :, trial] = wr
@@ -119,9 +121,9 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
 
     # TSPCA: clean x by removing regression on time-shifted refs
     denoised_data = np.zeros((samples_data, channels_data, trials_data))
-    for trial in np.xrange(trials_data):
-        z = np.dot(np.squeeze(multishift(ref[:, :, trial], shifts)),
-                   regression)
+    for trial in xrange(trials_data):
+        z = np.dot(np.squeeze(multishift(
+            ref[:, :, trial], shifts)), regression)
         denoised_data[:, :, trial] = data[np.arange(z.shape[0]), :, trial] - z
 
     denoised_data, mean2 = demean(denoised_data, weights_data)
@@ -137,16 +139,19 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
 def tspca(data, shifts=None, keep=None, threshold=None, weights=None):
     """Time-shift PCA.
 
-    INPUT
+    Parameters
+    ----------
     data:      data matrix
-    shifts:    np.array of shifts to apply
+    shifts:    array of shifts to apply
     keep:      number of components shifted regressor PCs to keep (default: all)
     threshold: discard PCs with eigenvalues below this (default: 10 ** -6)
     weights:   ignore samples with absolute value above this
 
-    OUTPUT
+    Returns
+    -------
     principal_components: PCs
     idx: data[idx] maps to principal_components
+
     """
     if not shifts:
         shifts = np.array([0])
@@ -157,24 +162,24 @@ def tspca(data, shifts=None, keep=None, threshold=None, weights=None):
     if not weights:
         weights = np.array([])
 
-    samples, channels, trials = data.shape
+    n_samples, n_chans, n_trials = data.shape
 
     # offset of z relative to data
-    offset = np.max(0, -np.min(shifts, 0))
+    offset = max(0, -min(shifts, 0))
     shifts += offset
-    idx = offset + (np.arange(samples) - np.max([shifts]))
+    idx = offset + (np.arange(n_samples) - max([shifts]))
 
     # remove mean
     data = unfold(data)
     data = demean(data, weights)[0]
-    data = fold(data, samples)
+    data = fold(data, n_samples)
 
     # covariance
     if not any(weights):
         c = tscov(data, shifts)[0]
     else:
-        if np.sum(weights) == 0:
-            raise ValueError('Weights are all zero.')
+        if sum(weights) == 0:
+            raise ValueError("Weights are all zero.")
         c = tscov(data, shifts, weights)[0]
 
     # PCA matrix
@@ -191,9 +196,9 @@ def tspca(data, shifts=None, keep=None, threshold=None, weights=None):
         eigenvalues = eigenvalues[ii]
 
     # apply PCA matrix to time-shifted data
-    principal_components = np.zeros((idx.size, topcs.shape[1], trials))
+    principal_components = np.zeros((idx.size, topcs.shape[1], n_trials))
 
-    for trial in np.xrange(trials):
+    for trial in xrange(n_trials):
         principal_components[:, :, trial] = np.dot(
             np.squeeze(multishift(data[:, :, trial], shifts)),
             np.squeeze(topcs))

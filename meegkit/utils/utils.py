@@ -1,38 +1,35 @@
-import numpy as np
-from scipy import linalg
-from matplotlib import gridspec
+from __future__ import division
+
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import gridspec
+from scipy import linalg
+
+from .matrix import fold, theshapeof, unfold, unsqueeze
 
 
-def multishift(data, shifts, amplitudes=np.array([])):
+def multishift(data, shifts):
     """Apply multiple shifts to an array."""
-    # print "multishift"
     if min(shifts) > 0:
         raise Exception('shifts should be non-negative')
 
-    shifts = shifts.T
+    data = unsqueeze(data)
+    _, n_chans, n_trials = theshapeof(data)
+
+    # shifts = shifts.T
     shifts_length = shifts.size
 
     # array of shift indices
     N = data.shape[0] - max(shifts)
     shiftarray = ((np.ones((N, shifts_length), int) * shifts).T + np.r_[0:N]).T
-    time, channels, trials = theshapeof(data)
-    z = np.zeros((N, channels * shifts_length, trials))
+    z = np.zeros((N, n_chans * shifts_length, n_trials))
 
-    if amplitudes:
-        for trial in np.arange(trials):
-            for channel in np.arange(channels):
-                y = data[:, channel]
-                a = channel * shifts_length
-                b = channel * shifts_length + shifts_length
-                z[:, np.arange(a, b), trial] = (y[shiftarray].T * amplitudes).T
-    else:
-        for trial in range(trials):
-            for channel in range(channels):
-                y = data[:, channel]
-                a = channel * shifts_length
-                b = channel * shifts_length + shifts_length
-                z[:, np.arange(a, b), trial] = y[shiftarray]
+    for trial in range(n_trials):
+        for channel in range(n_chans):
+            y = data[:, channel, trial]
+            a = channel * shifts_length
+            b = channel * shifts_length + shifts_length
+            z[:, np.arange(a, b), trial] = y[shiftarray]
 
     return z
 
@@ -54,7 +51,7 @@ def pcarot(cov, keep=None):
     if not keep:
         keep = cov.shape[0]  # keep all components
 
-    print(("cov shape", cov.shape))
+    # print(("cov shape", cov.shape))
     eigenvalues, eigenvector = linalg.eig(cov)
 
     eigenvalues = eigenvalues.real
@@ -75,19 +72,20 @@ def pcarot(cov, keep=None):
     return topcs, eigenvalues
 
 
-def tscov(data, shifts=None, w=None):
+def tscov(data, shifts=None, weights=None):
     """Time shift covariance.
 
     This function calculates, for each pair [DATA[i], DATA[j]] of columns of
     DATA, the cross-covariance matrix between the time-shifted versions of
-    DATA[i]. Shifts are taken from array SHIFTS. Weights are taken from `w`.
+    DATA[i]. Shifts are taken from array SHIFTS. Weights are taken from
+    `weights`.
 
     DATA can be 1D, 2D or 3D.  WEIGHTS is 1D (if DATA is 1D or 2D) or
     2D (if DATA is 3D).
 
-    Output is a 2D matrix with dimensions (ncols(X)*nshifts)^2.
+    Output is a 2D matrix with dimensions (ncols(X)*n_shifts)^2.
     This matrix is made up of a DATA.shape[1]^2 matrix of submatrices
-    of dimensions nshifts**2.
+    of dimensions n_shifts**2.
 
     The weights are not shifted.
 
@@ -97,114 +95,76 @@ def tscov(data, shifts=None, w=None):
         Data.
     shifts: array
         Array of time shifts (must be non-negative).
-    w: array
+    weights: array
         Weights.
 
     Returns
     -------
-    covariance_matrix: array
+    covariance: array
         Covariance matrix.
     total_weight: array
-        Total weight (covariance_matrix/total_weight is normalized covariance).
+        Total weight (covariance/total_weight is normalized covariance).
 
     """
     if shifts is None:
         shifts = np.array([0])
-    if not any(w):
-        w = np.array([])
-
+    if weights is None:
+        weights = np.array([])
     if shifts.min() < 0:
         raise ValueError("Shifts should be non-negative.")
 
-    nshifts = shifts.size
+    n_shifts = np.size(shifts)
 
-    samples, channels, trials = theshapeof(data)
-    covariance_matrix = np.zeros((channels * nshifts, channels * nshifts))
+    n_samples, n_chans, n_trials = theshapeof(data)
+    data = unsqueeze(data)
+    covariance = np.zeros((n_chans * n_shifts, n_chans * n_shifts))
 
-    if any(w):
-        # weights
-        if w.shape[1] > 1:
+    if weights.any():  # weights
+        if weights.shape[1] > 1:
             raise ValueError("Weights array should have a single column.")
 
-        for trial in range(trials):
-            if data.ndim == 3:
-                shifted_trial = multishift(data[:, :, trial], shifts)
-            elif data.ndim == 2:
-                data = unsqueeze(data)
-                shifted_trial = multishift(data[:, trial], shifts)
-            else:
-                data = unsqueeze(data)
-                shifted_trial = multishift(data[trial], shifts)
-
-            trial_weight = w[np.arange(shifted_trial.shape[0]), :, trial]
+        weights = unsqueeze(weights)
+        print(data.shape)
+        for trial in range(n_trials):
+            shifted_trial = multishift(data[..., trial], shifts)
+            shifted_weight = multishift(weights[..., trial], shifts)
             shifted_trial = (np.squeeze(shifted_trial).T *
-                             np.squeeze(trial_weight)).T
-            covariance_matrix += np.dot(shifted_trial.T, shifted_trial)
+                             np.squeeze(shifted_weight)).T
+            covariance += np.dot(shifted_trial.T, shifted_trial)
 
-        total_weight = sum(w[:])
-    else:
-        # no weights
-        for trial in range(trials):
+        total_weight = np.sum(weights[:])
+    else:  # no weights
+        for trial in range(n_trials):
             if data.ndim == 3:
-                shifted_trial = np.squeeze(multishift(data[:, :, trial],
-                                                      shifts))
+                shifted_trial = np.squeeze(
+                    multishift(data[:, :, trial], shifts))
             else:
                 shifted_trial = multishift(data[:, trial], shifts)
 
-            covariance_matrix += np.dot(shifted_trial.T, shifted_trial)
+            covariance += np.dot(shifted_trial.T, shifted_trial)
 
-        total_weight = shifted_trial.shape[0] * trials
+        total_weight = shifted_trial.shape[0] * n_trials
 
-    return covariance_matrix, total_weight
-
-
-def fold(data, epochsize):
-    """Fold 2D data into 3D."""
-    return np.transpose(
-        np.reshape(data, (epochsize, data.shape[0] / epochsize, data.shape[1]),
-                   order="F").copy(),
-        (0, 2, 1))
+    return covariance, total_weight
 
 
-def unfold(data):
-    """Unfold 3D data."""
-    samples, channels, trials = theshapeof(data)
-
-    if trials > 1:
-        return np.reshape(
-            np.transpose(data, (0, 2, 1)),
-            (samples * trials, channels), order="F").copy()
-    else:
-        return data
-
-
-def theshapeof(data):
-    """Return the shape of data."""
-    if data.ndim == 3:
-        return data.shape[0], data.shape[1], data.shape[2]
-    elif data.ndim == 2:
-        return data.shape[0], data.shape[1], 1
-    elif data.ndim == 1:
-        return data.shape[0], 1, 1
-    else:
-        raise ValueError("Array contains more than 3 dimensions")
-
-
-def demean(data, w=None):
+def demean(data, weights=None):
     """Remove weighted mean over columns."""
-    samples, channels, trials = theshapeof(data)
+    if weights is None:
+        weights = np.array([])
 
+    n_samples, n_chans, n_trials = theshapeof(data)
     data = unfold(data)
 
-    if any(w):
-        w = unfold(w)
+    if weights.any():
+        weights = unfold(weights)
 
-        if w.shape[0] != data.shape[0]:
+        if weights.shape[0] != data.shape[0]:
             raise ValueError('Data and weights arrays should have same ' +
                              'number of rows and pages.')
 
-        if w.shape[1] == 1 or w.shape[1] == channels:
-            the_mean = sum(data * w) / sum(w)
+        if weights.shape[1] == 1 or weights.shape[1] == n_chans:
+            the_mean = np.sum(data * weights) // np.sum(weights)
         else:
             raise ValueError('Weight array should have either the same ' +
                              'number of columns as data array, or 1 column.')
@@ -214,13 +174,13 @@ def demean(data, w=None):
         the_mean = np.mean(data, 0)
         demeaned_data = data - the_mean
 
-    demeaned_data = fold(demeaned_data, samples)
+    demeaned_data = fold(demeaned_data, n_samples)
 
     # the_mean.shape = (1, the_mean.shape[0])
     return demeaned_data, the_mean
 
 
-def normcol(data, w=None):
+def normcol(data, weights=None):
     """Normalize each column so its weighted msq is 1.
 
     If DATA is 3D, pages are concatenated vertically before calculating the
@@ -232,7 +192,7 @@ def normcol(data, w=None):
     Parameters
     ----------
     data: data to normalize
-    w: weight
+    weights: weight
 
     Returns
     -------
@@ -240,47 +200,47 @@ def normcol(data, w=None):
 
     """
     if data.ndim == 3:
-        samples, channels, trials = data.shape
+        n_samples, n_chans, n_trials = data.shape
         data = unfold(data)
-        if not w.any():
+        if not weights.any():
             # no weights
-            normalized_data = fold(normcol(data), samples)
+            normalized_data = fold(normcol(data), n_samples)
         else:
-            if w.shape[0] != samples:
+            if weights.shape[0] != n_samples:
                 raise ValueError("Weight array should have same number of' \
                                  'columns as data array.")
 
-            if w.ndim == 2 and w.shape[1] == 1:
-                w = np.tile(w, (1, samples, trials))
+            if weights.ndim == 2 and weights.shape[1] == 1:
+                weights = np.tile(weights, (1, n_samples, n_trials))
 
-            if w.shape != w.shape:
+            if weights.shape != weights.shape:
                 raise ValueError("Weight array should have be same shape ' \
                                  'as data array")
 
-            w = unfold(w)
+            weights = unfold(weights)
 
-            normalized_data = fold(normcol(data, w), samples)
+            normalized_data = fold(normcol(data, weights), n_samples)
     else:
-        samples, channels = data.shape
-        if not w.any():
-            normalized_data = data * ((sum(data ** 2) / samples) ** -0.5)
+        n_samples, n_chans, n_trials = theshapeof(data)
+        if not weights.any():
+            normalized_data = data * ((np.sum(data ** 2) / n_samples) ** -0.5)
         else:
-            if w.shape[0] != data.shape[0]:
+            if weights.shape[0] != data.shape[0]:
                 raise ValueError('Weight array should have same number of ' +
                                  'columns as data array.')
 
-            if w.ndim == 2 and w.shape[1] == 1:
-                w = np.tile(w, (1, channels))
+            if weights.ndim == 2 and weights.shape[1] == 1:
+                weights = np.tile(weights, (1, n_chans))
 
-            if w.shape != data.shape:
+            if weights.shape != data.shape:
                 raise ValueError('Weight array should have be same shape as ' +
                                  'data array')
 
-            if w.shape[1] == 1:
-                w = np.tile(w, (1, channels))
+            if weights.shape[1] == 1:
+                weights = np.tile(weights, (1, n_chans))
 
             normalized_data = data * \
-                (sum((data ** 2) * w) / sum(w)) ** -0.5
+                (np.sum((data ** 2) * weights) / np.sum(weights)) ** -0.5
 
     return normalized_data
 
@@ -314,7 +274,7 @@ def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
     return r
 
 
-def tsxcov(x, y, shifts=None, w=np.array([])):
+def tsxcov(x, y, shifts=None, weights=np.array([])):
     """Calculate cross-covariance of X and time-shifted Y.
 
     This function calculates, for each pair of columns (Xi,Yj) of X and Y, the
@@ -325,7 +285,7 @@ def tsxcov(x, y, shifts=None, w=np.array([])):
 
     X can be 1D, 2D or 3D.  W is 1D (if X is 1D or 2D) or 2D (if X is 3D).
 
-    Output is a 2D matrix with dimensions ncols(X)*(ncols(Y)*nshifts).
+    Output is a 2D matrix with dimensions ncols(X)*(ncols(Y)*n_shifts).
 
     Parameters
     ----------
@@ -333,7 +293,7 @@ def tsxcov(x, y, shifts=None, w=np.array([])):
         data to cross correlate
     shifts: array
         time shifts (must be non-negative)
-    w: array
+    weights: array
         weights
 
     Returns
@@ -345,14 +305,14 @@ def tsxcov(x, y, shifts=None, w=np.array([])):
     if shifts is None:
         shifts = np.array([0])
 
-    nshifts = shifts.size
+    n_shifts = shifts.size
 
-    mx, nx, ox = x.shape
-    my, ny, oy = y.shape
-    c = np.zeros((nx, ny * nshifts))
+    mx, nx, ox = theshapeof(x)
+    my, ny, oy = theshapeof(y)
+    c = np.zeros((nx, ny * n_shifts))
 
-    if any(w):
-        x = fold(unfold(x) * unfold(w), mx)
+    if weights.any():
+        x = fold(unfold(x) * unfold(weights), mx)
 
     # cross covariance
     for trial in range(ox):
@@ -361,11 +321,11 @@ def tsxcov(x, y, shifts=None, w=np.array([])):
 
         c += np.dot(xx.T, yy)
 
-    if not any(w):
+    if not weights.any():
         tw = ox * ny * yy.shape[0]
     else:
-        w = w[0:yy.shape[0], :, :]
-        tw = sum(w[:])
+        weights = weights[0:yy.shape[0], :, :]
+        tw = np.sum(weights[:])
 
     return c, tw
 
@@ -381,7 +341,7 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
         x = x[-mn + 1:, :, :]
         y = y[-mn + 1:, :, :]
 
-    nshifts = shifts.size
+    n_shifts = shifts.size
 
     # flag outliers in x and y
     if toobig1 or toobig2:
@@ -409,7 +369,7 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
     cyy = cyy / totalweight
 
     # cross-covariance of x and y
-    [cxy, totalweight] = tscov2(x, y, shifts.T, xw, yw)
+    [cxy, totalweight] = tsxcov(x, y, shifts.T, xw, yw)
     cxy = cxy / totalweight
 
     # regression matrix
@@ -420,25 +380,25 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
         x = unfold(x)
         y = unfold(y)
 
-        [m, n, o] = x.shape
-        mm = m - max(shifts)
+        [n_samples, n_chans, n_trials] = x.shape
+        mm = n_samples - max(shifts)
         z = np.zeros(x.shape)
 
-        for k in range(nshifts):
+        for k in range(n_shifts):
             kk = shifts(k)
             idx1 = np.r_[kk + 1:kk + mm]
-            idx2 = k + np.r_[0:y.shape[1]] * nshifts
+            idx2 = k + np.r_[0:y.shape[1]] * n_shifts
             z[0:mm, :] = z[0:mm, :] + y[idx1, :] * r[idx2, :]
 
         z = fold(z, Mx)
         z = z[0:-max(shifts), :, :]
     else:
-        m, n = x.shape
-        z = np.zeros((m - max(shifts), n))
-        for k in range(nshifts):
+        n_samples, n_chans = x.shape
+        z = np.zeros((n_samples - max(shifts), n_chans))
+        for k in range(n_shifts):
             kk = shifts(k)
             idx1 = np.r_[kk + 1:kk + z.shape[0]]
-            idx2 = k + np.r_[0:y.shape[1]] * nshifts
+            idx2 = k + np.r_[0:y.shape[1]] * n_shifts
             z = z + y[idx1, :] * r[idx2, :]
 
     offset = max(0, -mn)
@@ -448,37 +408,37 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
 
 
 def find_outliers(x, toobig1, toobig2=[]):
-    """docstring for find_outliers"""
-    [m, n, o] = x.shape
-    x = unfold(x)
+    """Find outlier trials using an absolute threshold."""
+    n_samples, n_chans, n_trials = theshapeof(x)
 
     # remove mean
+    x = unfold(x)
     x = demean(x)[0]
 
     # apply absolute threshold
-    w = np.ones(x.shape)
+    weights = np.ones(x.shape)
     if toobig1:
-        w[np.where(abs(x) > toobig1)] = 0
-        x = demean(x, w)[0]
+        weights[np.where(abs(x) > toobig1)] = 0
+        x = demean(x, weights)[0]
 
-        w[np.where(abs(x) > toobig1)] = 0
-        x = demean(x, w)[0]
+        weights[np.where(abs(x) > toobig1)] = 0
+        x = demean(x, weights)[0]
 
-        w[np.where(abs(x) > toobig1)] = 0
-        x = demean(x, w)[0]
+        weights[np.where(abs(x) > toobig1)] = 0
+        x = demean(x, weights)[0]
     else:
-        w = np.ones(x.shape)
+        weights = np.ones(x.shape)
 
     # apply relative threshold
     if toobig2:
-        X = wmean(x ** 2, w)
+        X = wmean(x ** 2, weights)
         X = np.tile(X, (x.shape[0], 1))
         idx = np.where(x**2 > (X * toobig2))
-        w[idx] = 0
+        weights[idx] = 0
 
-    w = fold(w, m)
+    weights = fold(weights, n_samples)
 
-    return w
+    return weights
 
 
 def find_outlier_trials(x, thresh=None, disp_flag=True):
@@ -490,7 +450,7 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
     Parameters
     ----------
     x : ndarray
-        Data array (trials * channels * time).
+        Data array (n_trials * n_chans * time).
     thresh : float or array of floats
         Keep trials less than thresh from mean.
     disp_flag : bool
@@ -509,21 +469,21 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
     elif isinstance(thresh, float) or isinstance(thresh, int):
         thresh = [thresh]
 
-    if len(x.shape) > 3:
+    if x.ndim > 3:
         raise ValueError('x should be 2D or 3D')
-    elif len(x.shape) == 3:
-        n, c, t = x.shape  # trials * channels * time
-        x = np.reshape(x, (n, c * t))
+    elif x.ndim == 3:
+        n_chans, n_chans, n_trials = x.shape  # n_trials * n_chans * time
+        x = np.reshape(x, (n_chans, n_chans * n_trials))
     else:
-        n, _ = x.shape
+        n_chans, _ = x.shape
 
-    m = np.mean(x, axis=0)  # mean over trials
-    m = np.tile(m, (n, 1))  # repeat mean
-    d = x - m  # difference from mean
-    dd = np.zeros(n)
-    for i_trial in range(n):
+    n_samples = np.mean(x, axis=0)  # mean over trials
+    n_samples = np.tile(n_samples, (n_chans, 1))  # repeat mean
+    d = x - n_samples  # difference from mean
+    dd = np.zeros(n_chans)
+    for i_trial in range(n_chans):
         dd[i_trial] = np.sum(d[i_trial, :] ** 2)
-    d = dd / (np.sum(x.flatten() ** 2) / n)
+    d = dd / (np.sum(x.flatten() ** 2) / n_chans)
     idx = np.where(d < thresh[0])[0]
     del dd
 
@@ -536,8 +496,9 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
         # Before
         ax1 = plt.subplot(gs[0, 0])
         ax1.plot(d, ls='-')
-        ax1.plot(np.setdiff1d(range(n), idx),
-                 d[np.setdiff1d(range(n), idx)], color='r', ls=' ', marker='.')
+        ax1.plot(np.setdiff1d(np.arange(n_chans), idx),
+                 d[np.setdiff1d(np.arange(n_chans), idx)], color='r', ls=' ',
+                 marker='.')
         ax1.axhline(y=thresh[0], color='grey', linestyle=':')
         ax1.set_xlabel('Trial #')
         ax1.set_ylabel('Normalized deviation from mean')
@@ -562,81 +523,79 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
         idx = np.setdiff1d(idx, idx2)
 
     bads = []
-    if len(idx) < n:
-        bads = np.setdiff1d(range(n), idx)
+    if len(idx) < n_chans:
+        bads = np.setdiff1d(range(n_chans), idx)
 
     return bads, d
 
 
-def wmean(x, w=[], dim=0):
+def wmean(x, weights=[], axis=0):
     """Weighted mean."""
-    if not w:
-        y = np.mean(x, dim)
+    if not weights:
+        y = np.mean(x, axis)
     else:
-        if x.shape[0] != w.shape[0]:
+        if x.shape[0] != weights.shape[0]:
             raise Exception("data and weight must have same nrows")
-        if w.shape[1] == 1:
-            w = np.tile(w, (1, x.shape(1)))
-        if w.shape[1] != x.shape[1]:
+        if weights.shape[1] == 1:
+            weights = np.tile(weights, (1, x.shape(1)))
+        if weights.shape[1] != x.shape[1]:
             raise Exception("weight must have same ncols as data, or 1")
 
-        y = sum(x * w, dim) / sum(w, dim)
+        y = np.sum(x * weights, axis) / np.sum(weights, axis)
 
     return y
 
 
-def mean_over_trials(x, w):
+def mean_over_trials(x, weights=None):
     """Compute mean over trials."""
-    m, n, o = theshapeof(x)
+    if weights is None:
+        weights = np.array([])
 
-    if not any(w):
+    n_samples, n_chans, n_trials = theshapeof(x)
+
+    if not weights.any():
         y = np.mean(x, 2)
-        tw = np.ones((m, n, 1)) * o
+        tw = np.ones((n_samples, n_chans, 1)) * n_trials
     else:
-        mw, nw, ow = w.shape
-        if mw != m:
+        m, n, o = theshapeof(weights)
+        if m != n_samples:
             raise "!"
-        if ow != o:
+        if o != n_trials:
             raise "!"
 
         x = unfold(x)
-        w = unfold(w)
+        weights = unfold(weights)
 
-        if nw == n:
-            x = x * w
-            x = fold(x, m)
-            w = fold(w, m)
-            y = sum(x, 3) / sum(w, 3)
-        elif nw == 1:
-            x = x * w
-            x = fold(x, m)
-            w = fold(w, m)
-            y = sum(x, 3) * 1 / sum(w, 3)
+        if n == n_chans:
+            x = x * weights
+            x = fold(x, n_samples)
+            weights = fold(weights, n_samples)
+            y = np.sum(x, 3) / np.sum(weights, 3)
+        elif n == 1:
+            x = x * weights
+            x = fold(x, n_samples)
+            weights = fold(weights, n_samples)
+            y = np.sum(x, 3) * 1 / np.sum(weights, 3)
 
-        tw = sum(w, 3)
+        tw = np.sum(weights, 3)
 
     return y, tw
 
 
-def wpwr(x, w=None):
+def wpwr(x, weights=None):
     """Weighted power."""
-    if w is None:
-        w = np.array([])
+    if weights is None:
+        weights = np.array([])
 
     x = unfold(x)
-    w = unfold(w)
+    weights = unfold(weights)
 
-    if w:
-        x = x * w
-        y = sum(x ** 2)
-        tweight = sum(w)
+    if weights:
+        x = x * weights
+        y = np.sum(x ** 2)
+        tweight = np.sum(weights)
     else:
-        y = sum(x ** 2)
+        y = np.sum(x ** 2)
         tweight = x.size
 
     return y, tweight
-
-
-def unsqueeze(data):
-    """Add singleton dimensions to an array."""
-    return data.reshape(theshapeof(data))

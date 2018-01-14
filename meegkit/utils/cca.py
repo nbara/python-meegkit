@@ -1,5 +1,5 @@
 import numpy as np
-import scipy
+from scipy import linalg
 
 
 def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
@@ -101,7 +101,7 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
 
     # sphere x
     Cx = C[:m, :m]
-    V, S = scipy.linalg.eig(Cx)
+    V, S = linalg.eig(Cx)
     V = np.real(V)
     S = np.real(S)
     E, idx = np.sort(np.diag(S).T, 'descend', nargout=2)
@@ -114,7 +114,7 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
 
     # sphere y
     Cy = C[m + 1:, m + 1:]
-    V, S = scipy.linalg.eig(Cy)
+    V, S = linalg.eig(Cy)
     V = np.real(V)
     S = np.real(S)
     E, idx = np.sort(np.diag(S).T, 'descend', nargout=2)
@@ -132,7 +132,7 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
     N = min(A1.shape(1), A2.shape(1))
 
     # PCA
-    V, S = scipy.linalg.eig(C)
+    V, S = linalg.eig(C)
 
     # [V, S] = eigs(C,N) ; # not faster
     V = np.real(V)
@@ -160,7 +160,7 @@ def whiten(X, fudge=1E-18):
     Xcov = np.dot(X.T, X)
 
     # eigenvalue decomposition of the covariance matrix
-    d, V = np.linalg.eigh(Xcov)
+    d, V = linalg.eigh(Xcov)
 
     # a fudge factor can be used so that eigenvectors associated with
     # small eigenvalues do not get overamplified.
@@ -177,7 +177,7 @@ def whiten(X, fudge=1E-18):
 
 def svd_whiten(X):
     """SVD whitening."""
-    U, s, Vt = np.linalg.svd(X, full_matrices=False)
+    U, s, Vt = linalg.svd(X, full_matrices=False)
 
     # U and Vt are the singular matrices, and s contains the singular values.
     # Since the rows of both U and Vt are orthonormal vectors, then U * Vt
