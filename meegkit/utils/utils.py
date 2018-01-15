@@ -8,6 +8,11 @@ from scipy import linalg
 from .matrix import fold, theshapeof, unfold, unsqueeze
 
 
+def rms(x, axis=0):
+    """Root-mean-square along given axis."""
+    return np.sqrt(np.mean(np.abs(x) ** 2, axis=axis))
+
+
 def multishift(data, shifts):
     """Apply multiple shifts to an array."""
     if min(shifts) > 0:
@@ -39,33 +44,31 @@ def pcarot(cov, keep=None):
 
     Parameters
     ----------
-    cov:  covariance matrix
-    keep: number of components to keep [default: all]
+    cov:  array, shape = (n_chans, n_chans)
+        Covariance matrix.
+    keep: int | None
+        Number of components to keep [default: all].
 
     Returns
     -------
-    topcs:       PCA rotation matrix
+    topcs: array, shape = (keep, keep)
+        PCA rotation matrix.
     eigenvalues: PCA eigenvalues
 
     """
     if not keep:
         keep = cov.shape[0]  # keep all components
 
-    # print(("cov shape", cov.shape))
     eigenvalues, eigenvector = linalg.eig(cov)
 
     eigenvalues = eigenvalues.real
     eigenvector = eigenvector.real
 
     idx = np.argsort(eigenvalues)[::-1]  # reverse sort ev order
-    # eigenvalues = sort(eigenvalues.real)[::-1]
     eigenvalues = eigenvalues[idx]
 
-    eigenvalues = eigenvalues[::-1]
-    idx = idx[::-1]
-
+    # Truncate
     topcs = eigenvector[:, idx]
-
     topcs = topcs[:, np.arange(keep)]
     eigenvalues = eigenvalues[np.arange(keep)]
 
