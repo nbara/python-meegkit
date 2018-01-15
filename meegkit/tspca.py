@@ -1,6 +1,6 @@
 import numpy as np
 
-from .utils import (demean, fold, multishift, normcol, pcarot, regcov, tscov,
+from .utils import (demean, fold, multishift, normcol, pca, regcov, tscov,
                     tsxcov, unfold)
 
 
@@ -75,8 +75,6 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     # print "data.shape", data.shape
     samples_ref,  channels_ref,  trials_ref = ref.shape
 
-#    1/0
-
     # consolidate weights into single weight matrix
     weights = np.zeros((samples_data, 1, trials_ref))
 
@@ -85,11 +83,11 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     elif not weights_ref:
         weights[:, :, :] = weights_data[:, :, :]
     elif not weights_data:
-        for trial in xrange(trials_data):
+        for trial in np.arange(trials_data):
             wr = multishift(weights_ref[:, :, trial], shifts).min(1)
             weights[:, :, trial] = wr
     else:
-        for trial in xrange(trials_data):
+        for trial in np.arange(trials_data):
             wr = multishift(weights_ref[:, :, trial], shifts).min(1)
             wr = (wr, wx[0:wr.shape[0], :, trial]).min()
             weights[:, :, trial] = wr
@@ -121,7 +119,7 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
 
     # TSPCA: clean x by removing regression on time-shifted refs
     denoised_data = np.zeros((samples_data, channels_data, trials_data))
-    for trial in xrange(trials_data):
+    for trial in np.arange(trials_data):
         z = np.dot(np.squeeze(multishift(
             ref[:, :, trial], shifts)), regression)
         denoised_data[:, :, trial] = data[np.arange(z.shape[0]), :, trial] - z
@@ -183,7 +181,7 @@ def tspca(data, shifts=None, keep=None, threshold=None, weights=None):
         c = tscov(data, shifts, weights)[0]
 
     # PCA matrix
-    topcs, eigenvalues = pcarot(c)
+    topcs, eigenvalues = pca(c)
 
     # truncate
     if keep:
@@ -198,7 +196,7 @@ def tspca(data, shifts=None, keep=None, threshold=None, weights=None):
     # apply PCA matrix to time-shifted data
     principal_components = np.zeros((idx.size, topcs.shape[1], n_trials))
 
-    for trial in xrange(n_trials):
+    for trial in np.arange(n_trials):
         principal_components[:, :, trial] = np.dot(
             np.squeeze(multishift(data[:, :, trial], shifts)),
             np.squeeze(topcs))

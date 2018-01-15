@@ -10,7 +10,7 @@ from .matrix import fold, theshapeof, unfold, unsqueeze
 
 def rms(x, axis=0):
     """Root-mean-square along given axis."""
-    return np.sqrt(np.mean(np.abs(x) ** 2, axis=axis))
+    return np.sqrt(np.mean(x ** 2, axis=axis, keepdims=True))
 
 
 def multishift(data, shifts):
@@ -39,25 +39,28 @@ def multishift(data, shifts):
     return z
 
 
-def pcarot(cov, keep=None):
+def pca(cov, max_components=None, thresh=0):
     """PCA rotation from covariance.
 
     Parameters
     ----------
     cov:  array, shape = (n_chans, n_chans)
         Covariance matrix.
-    keep: int | None
-        Number of components to keep [default: all].
+    max_components : int | None
+        Maximum number of components to retain after decomposition. ``None``
+        (the default) keeps all suprathreshold components (see ``thresh``).
 
     Returns
     -------
-    topcs: array, shape = (keep, keep)
-        PCA rotation matrix.
+    eigenvectors: array, shape = (max_components, max_components)
+        Eigenvectors (matrix of PCA components).
     eigenvalues: PCA eigenvalues
 
     """
-    if not keep:
-        keep = cov.shape[0]  # keep all components
+    if not max_components:
+        max_components = cov.shape[0]  # keep all components
+    if thresh is not None and (thresh > 1 or thresh < 0):
+        raise ValueError('Threshold must be between 0 and 1 (or None).')
 
     eigenvalues, eigenvector = linalg.eig(cov)
 
@@ -68,11 +71,16 @@ def pcarot(cov, keep=None):
     eigenvalues = eigenvalues[idx]
 
     # Truncate
-    topcs = eigenvector[:, idx]
-    topcs = topcs[:, np.arange(keep)]
-    eigenvalues = eigenvalues[np.arange(keep)]
+    eigenvectors = eigenvector[:, idx]
+    eigenvectors = eigenvectors[:, np.arange(max_components)]
+    eigenvalues = eigenvalues[np.arange(max_components)]
 
-    return topcs, eigenvalues
+    if thresh is not None:
+        suprathresh = np.where(eigenvalues / eigenvalues.max() > thresh)[0]
+        eigenvalues = eigenvalues[suprathresh]
+        eigenvectors = eigenvectors[:, suprathresh]
+
+    return eigenvectors, eigenvalues
 
 
 def tscov(data, shifts=None, weights=None):
@@ -251,7 +259,7 @@ def normcol(data, weights=None):
 def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
     """Compute regression matrix from cross covariance."""
     # PCA of regressor
-    [topcs, eigenvalues] = pcarot(cyy)
+    [topcs, eigenvalues] = pca(cyy)
 
     # discard negligible regressor PCs
     if keep:

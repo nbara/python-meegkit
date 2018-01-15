@@ -1,6 +1,6 @@
 import numpy as np
 
-from .utils import demean, fold, pcarot, theshapeof, tscov, tsregress, unfold
+from .utils import demean, fold, pca, theshapeof, tscov, tsregress, unfold
 
 
 def sns(data, nneighbors=0, skip=0, w=np.array([])):
@@ -60,7 +60,7 @@ def sns0(c, nneighbors, skip=0, wc=[]):
 
         # pca neighbors to orthogonalize them
         c2 = wc[idx, :][:, idx]
-        [topcs, eigenvalues] = pcarot(c2)
+        [topcs, eigenvalues] = pca(c2)
         topcs = np.dot(topcs, np.diag(1 / np.sqrt(eigenvalues)))
         # print "c2", c2.shape
 
@@ -120,7 +120,7 @@ def sns1(x, nneighbors, skip):
         # pca neighbors to orthogonalize them
         xx = x[:, idx]
         c2 = xx.T * xx
-        [topcs, eigenvalues] = pcarot(c2)
+        [topcs, eigenvalues] = pca(c2)
         topcs = topcs * np.diag(1 / np.sqrt(eigenvalues))
 
         y[:, k] = tsregress(x[:, k], xx * topcs)

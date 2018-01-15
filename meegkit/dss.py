@@ -1,6 +1,6 @@
 import numpy as np
 from scipy import linalg
-from .utils import demean, tscov, mean_over_trials, pcarot, theshapeof
+from .utils import demean, tscov, mean_over_trials, pca, theshapeof
 
 
 def dss1(data, weights=None, keep1=None, keep2=1e-12):
@@ -21,7 +21,7 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
 
     Returns
     -------
-    todss: array
+    todss: array, shape = (n_dss_components, n_chans)
         Ddenoising matrix to convert data to normalized DSS components.
     pwr0: array
         Power per component (raw).
@@ -54,6 +54,9 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
 def dss0(c0, c1, keep1=None, keep2=1e-9):
     """DSS base function.
 
+    This function allows specifying arbitrary bias functions (as compared to
+    the function:`dss1`, which forces the bias to be the mean over trials).
+
     Parameters
     ----------
     c0: array, shape = (n_chans, n_chans)
@@ -67,7 +70,7 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
 
     Returns
     -------
-    todss: array
+    todss: array, shape = (n_dss_components, n_chans)
         Matrix to convert data to normalized DSS components.
     pwr0: array
         Power per component (baseline).
@@ -77,57 +80,41 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     """
     if c0 is None or c1 is None:
         raise AttributeError('dss0 needs at least two arguments')
-
     if c0.shape != c1.shape:
         raise AttributeError('c0 and c1 should have same size')
-
     if c0.shape[0] != c0.shape[1]:
         raise AttributeError('c0 should be square')
-
     if np.any(np.isnan(c0)) or np.any(np.isinf(c0)):
         raise ValueError('NaN or INF in c0')
-
     if np.any(np.isnan(c1)) or np.any(np.isinf(c1)):
         raise ValueError('NaN or INF in c1')
 
     # derive PCA and whitening matrix from unbiased covariance
-    topcs1, evs1 = pcarot(c0, keep=keep1)
-    if keep1:
-        topcs1 = topcs1[:, np.arange(keep1)]
-        evs1 = evs1[np.arange(keep1)]
-
-    if keep2:
-        idx = np.where(evs1 / np.max(evs1) > keep2)
-        topcs1 = topcs1[:, idx]
-        evs1 = evs1[idx]
+    eigvec0, eigval0 = pca(c0, max_components=keep1, thresh=keep2)
 
     # apply whitening and PCA matrices to the biased covariance
     # (== covariance of bias whitened data)
-    N = np.diag(np.sqrt(1. / evs1))
-    c2 = np.dot(np.dot(np.dot(np.dot(N.T, topcs1.squeeze().T), c1),
-                topcs1.squeeze()), N)
+    W = np.sqrt(1. / eigval0)  # diagonal of whitening matrix
 
-    # derive the DSS matrix
-    topcs2, evs2 = pcarot(c2, keep=keep1)
+    # c1 is projected into whitened PCA space of data channels
+    c2 = (W * eigvec0.squeeze()).T.dot(c1).dot(eigvec0.squeeze()) * W
+
+    # proj. matrix from whitened data space to a space maximizing bias
+    eigvec2, eigval2 = pca(c2, max_components=keep1, thresh=keep2)
 
     # DSS matrix (raw data to normalized DSS)
-    todss = np.dot(np.dot(topcs1.squeeze(), N), topcs2)
+    todss = (W[np.newaxis, :] * eigvec0).dot(eigvec2)
     fromdss = linalg.pinv(todss)
 
-    # estimate power per DSS component
-    # pwr = np.zeros((todss.shape[1], 1))
-    # for k in range(todss.shape[1]):
-    #     to_component = todss[:, k] * fromdss[k, :]
-    #     cc = to_component.T * c0 * to_component
-    #     cc = np.diag(cc)
-    #     pwr[k] = np.sum(cc ** 2)
-    # ratio = (np.diag(np.dot(np.dot(todss.T, c1), todss)) /
-    #          np.diag(np.dot(np.dot(todss.T, c0), todss)))
+    # Normalise DSS matrix
+    N = np.sqrt(1. / np.diag(np.dot(np.dot(todss.T, c0), todss)))
+    todss = todss * N
 
-    N2 = np.diag(np.dot(np.dot(todss.T, c0), todss))
-    todss = np.dot(todss, np.diag(1. / np.sqrt(N2)))
+    pwr0 = np.sqrt(np.sum(np.dot(c0, todss) ** 2, axis=0))
+    pwr1 = np.sqrt(np.sum(np.dot(c1, todss) ** 2, axis=0))
 
-    pwr0 = np.sqrt(np.sum(np.dot(c0, todss) ** 2))
-    pwr1 = np.sqrt(np.sum(np.dot(c1, todss) ** 2))
+    # Return data
+    # next line equiv. to: np.array([np.dot(todss, ep) for ep in data])
+    # dss_data = np.einsum('ij,hjk->hik', todss, data)
 
     return todss, fromdss, pwr0, pwr1

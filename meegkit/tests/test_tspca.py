@@ -47,7 +47,7 @@ def test_tspca_sns_dss():
     # Keep all PC components
     y_tspca_sns, _ = demean(y_tspca_sns)
     print(y_tspca_sns.shape)
-    todss, fromdss, ratio, pwr = dss.dss1(y_tspca_sns)
+    todss, fromdss, _, _ = dss.dss1(y_tspca_sns)
     print('\b OK!')
 
     # c3 = DSS components
