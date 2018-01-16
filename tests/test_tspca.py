@@ -19,7 +19,7 @@ def test_tspca_sns_dss():
     # ref  = x['ref']
 
     # Random data (time*chans*trials)
-    data = np.random.random((800, 157, 200))
+    data = np.random.random((800, 102, 200))
     ref = np.random.random((800, 3, 200))
 
     # remove means
@@ -38,7 +38,7 @@ def test_tspca_sns_dss():
     # -------------------------------------------------------------------------
     nneighbors = 10
     print('SNS...')
-    y_tspca_sns = sns.sns(y_tspca, nneighbors)
+    y_tspca_sns, r = sns.sns(y_tspca, nneighbors)
     print('\b OK!')
 
     # apply DSS

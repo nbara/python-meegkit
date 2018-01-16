@@ -58,9 +58,9 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
             C = np.dot(np.cat(x, y).T, np.cat(x, y))
             m = x.shape[1]
         else:
-            C, __, m = nt_cov_lags(x, y, lags, nargout=3)
+            C, _, m = nt_cov_lags(x, y, lags)
 
-        A, B, R = nt_cca([], [], [], C, m, thresh, nargout=3)
+        A, B, R = nt_cca([], [], [], C, m, thresh)
         return A, B, R
 
     # if logical_not(exist('C', 'var')) or isempty(C):
@@ -87,7 +87,7 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
         R = np.zeros(N, C.shape(2))
 
         for k in np.arange(1, C.shape(2)).reshape(-1):
-            AA, BB, RR = nt_cca(None, None, None, C[:, :, k], m, nargout=3)
+            AA, BB, RR = nt_cca(None, None, None, C[:, :, k], m)
             A[:AA.shape(0), :AA.shape(1), k] = AA
             B[:BB.shape(0), :BB.shape(1), k] = BB
             R[:RR.shape(1), k] = RR
