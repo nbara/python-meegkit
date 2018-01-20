@@ -1,11 +1,13 @@
 import numpy as np
 from scipy import linalg
 
+from .covariances import cov_lags
+
 
 def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
-    """CCA implementation.
+    """Compute CCA from covariance.
 
-    [A,B,R]=nt_cca(x,y,lags,C,m,thresh) - canonical correlation
+    [A, B, R] = nt_cca(x, y, lags, C, m, thresh) - canonical correlation
 
     Returns
     -------
@@ -23,21 +25,21 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
     Notes
     -----
     Usage 1:
-    [A,B,R]=nt_cca(x,y); # CCA of x, y
+    [A, B, R] = nt_cca(x, y)  # CCA of x, y
 
     Usage 2:
-    [A,B,R]=nt_cca(x,y,lags); # CCA of x, y for each value of lags.
+    [A, B, R] = nt_cca(x, y, lags)  # CCA of x, y for each value of lags.
     A positive lag indicates that y is delayed relative to x.
 
     Usage 3:
-    C=[x,y]'*[x,y]; # covariance
-    [A,B,R]=nt_cca([],[],[],C,size(x,2)); # CCA of x,y
+    C = [x, y].T * [x, y] # covariance
+    [A, B, R] = nt_cca([], [], [], C, x.shape[1])  # CCA of x,y
     Use the third form to handle multiple files or large data
     (covariance C can be calculated chunk-by-chunk).
-    C can be 3-D, which case CCA is derived independently from each page.
+    C can be 3D, which case CCA is derived independently from each page.
 
     Warning: means of x and y are NOT removed.
-    Warning: A, B scaled so that (x*A)^2 and (y*B)^2 are identity matrices
+    Warning: A, B scaled so that (x * A)^2 and (y * B)^2 are identity matrices
     (differs from canoncorr).
 
     See Also
@@ -58,26 +60,21 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
             C = np.dot(np.cat(x, y).T, np.cat(x, y))
             m = x.shape[1]
         else:
-            C, _, m = nt_cov_lags(x, y, lags)
+            C, _, m = cov_lags(x, y, lags)
 
         A, B, R = nt_cca([], [], [], C, m, thresh)
         return A, B, R
 
-    # if logical_not(exist('C', 'var')) or isempty(C):
-    #     error('!')
-
-    # if logical_not(exist('m', 'var')):
-    #     error('!')
-
-    # if C.shape(1) != C.shape(2):
-    #     error('!')
-
-    # if logical_not(isempty(x)) or logical_not(isempty(y)) or logical_not(isempty(lags)):
-    #     error('!')
-
+    if not C:
+        raise RuntimeError('covariance matrix should be defined')
+    if not m:
+        raise RuntimeError('m should be defined')
+    if C.shape[0] != C.shape[1]:
+        raise RuntimeError('covariance matrix should be square')
+    if len(x) > 0 or len(y) > 0 or len(lags) > 0:
+        raise RuntimeError('only covariance should be defined at this point')
     if C.ndim > 3:
-        pass
-        # error('!')
+        raise RuntimeError('covariance should be 3D at most')
 
     if C.ndim == 3:  # covariance is 3D: do a separate CCA for each page
 
@@ -94,7 +91,7 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
 
         return A, B, R
 
-    # Calculate CCA given C=[x,y]'*[x,y] and m=size(x,2);
+    # Calculate CCA given C = [x,y].T * [x,y] and m = size(x,2);
     # -------------------------------------------------------------------------
     # see here for better code :
     # https://xcorr.net/2011/05/27/whiten-a-matrix-matlab-code/
@@ -104,32 +101,32 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
     V, S = linalg.eig(Cx)
     V = np.real(V)
     S = np.real(S)
-    E, idx = np.sort(np.diag(S).T, 'descend', nargout=2)
+    E, idx = np.sort(np.diag(S).T, 'descend')
     keep = np.find(E / max(E) > thresh)
     topcs = V[:, idx[keep]]
     E = E[keep]
     EXP = 1 - 10 ** - 12
     E = E ** EXP
-    A1 = np.dot(topcs, np.diag(np.sqrt((1.0 / E))))
+    Cxw = np.dot(topcs, np.diag(np.sqrt((1.0 / E))))
 
     # sphere y
     Cy = C[m + 1:, m + 1:]
     V, S = linalg.eig(Cy)
     V = np.real(V)
     S = np.real(S)
-    E, idx = np.sort(np.diag(S).T, 'descend', nargout=2)
+    E, idx = np.sort(np.diag(S).T, 'descend')
     keep = np.find(E / max(E) > thresh)
     topcs = V[:, idx[keep]]
     E = E[keep]
     E = E ** EXP
-    A2 = np.dot(topcs, np.diag(np.sqrt((1. / E))))
+    Cyw = np.dot(topcs, np.diag(np.sqrt((1. / E))))
 
     # apply sphering matrices to C
-    AA = np.zeros(A1.shape(0) + A2.shape(0), A1.shape(1) + A2.shape(1))
-    AA[:A1.shape(0), :A1.shape(1)] = A1
-    AA[A1.shape(0) + 1:, A1.shape(1) + 1:] = A2
+    AA = np.zeros(Cxw.shape(0) + Cyw.shape(0), Cxw.shape(1) + Cyw.shape(1))
+    AA[:Cxw.shape(0), :Cxw.shape(1)] = Cxw
+    AA[Cxw.shape(0) + 1:, Cxw.shape(1) + 1:] = Cyw
     C = np.dot(np.dot(AA.T, C), AA)
-    N = min(A1.shape(1), A2.shape(1))
+    N = min(Cxw.shape(1), Cyw.shape(1))
 
     # PCA
     V, S = linalg.eig(C)
@@ -137,10 +134,10 @@ def nt_cca(x=None, y=None, lags=None, C=None, m=None, thresh=None):
     # [V, S] = eigs(C,N) ; # not faster
     V = np.real(V)
     S = np.real(S)
-    E, idx = np.sort(np.diag(S), 'descend', nargout=2)
+    E, idx = np.sort(np.diag(S), 'descend')
     topcs = V[:, idx]
-    A = np.dot(np.dot(A1, topcs[:A1.shape(1), :N]), np.sqrt(2))
-    B = np.dot(np.dot(A2, topcs[A1.shape(1) + 1:, :N]), np.sqrt(2))
+    A = np.dot(np.dot(Cxw, topcs[:Cxw.shape(1), :N]), np.sqrt(2))
+    B = np.dot(np.dot(Cyw, topcs[Cxw.shape(1) + 1:, :N]), np.sqrt(2))
     R = E[:N] - 1
 
     return A, B, R

@@ -1,7 +1,9 @@
 """Benchmark utility functions."""
 from __future__ import division, print_function
-import numpy as np
+
 import random
+
+import numpy as np
 
 try:
     import mne
@@ -9,17 +11,22 @@ except ImportError:
     mne = None
 
 
-def rms(epochs, window):
-    """Compute RMS in given window."""
-    idx = epochs.time_as_index(window)
+def rms(x, axis=0):
+    """Root-mean-square along given axis."""
+    return np.sqrt(np.mean(x ** 2, axis=axis, keepdims=True))
 
-    y = epochs.average().data  # average over trials
-    y = y[:, idx]  # only take time samples in window
 
-    r = np.empty(y.shape[0])
-    for ch in range(len(epochs.ch_names)):
-        r[ch] = np.sqrt(np.mean(y**2))  # rms
-    return r
+# def rms2(epochs, window):
+#     """Compute RMS in given window."""
+#     idx = epochs.time_as_index(window)
+
+#     y = epochs.average().data  # average over trials
+#     y = y[:, idx]  # only take time samples in window
+
+#     r = np.empty(y.shape[0])
+#     for ch in range(len(epochs.ch_names)):
+#         r[ch] = np.sqrt(np.mean(y**2))  # rms
+#     return r
 
 
 def robust_mean(x, axis=0, percentile=[5, 95]):
@@ -84,20 +91,19 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
         Number of bootstrap iterations (should be > 10000 for publication
         quality).
     baseline : tuple or list of length 2, or None
-        The time interval to apply rescaling / baseline correction.
-        If None do not apply it. If baseline is ``(bmin, bmax)``
-        the interval is between ``bmin`` (s) and ``bmax`` (s).
-        If ``bmin is None`` the beginning of the data is used
-        and if ``bmax is None`` then ``bmax`` is set to the end of the
-        interval. If baseline is ``(None, None)`` the entire time
-        interval is used. If baseline is None, no correction is applied.
+        The time interval to apply rescaling / baseline correction. If None do
+        not apply it. If baseline is ``(bmin, bmax)`` the interval is between
+        ``bmin`` (s) and ``bmax`` (s). If ``bmin is None`` the beginning of the
+        data is used and if ``bmax is None`` then ``bmax`` is set to the end of
+        the interval. If baseline is ``(None, None)`` the entire time interval
+        is used. If baseline is None, no correction is applied.
     window : tuple or list of length 2, or None
-        The time interval used to compute the numerator of the SNR.
-        If window is ``(bmin, bmax)`` the interval is between ``bmin`` (s)
-        and ``bmax`` (s). If ``bmin is None`` the beginning of the data is used
-        and if ``bmax is None`` then ``bmax`` is set to the end of the
-        interval. If window is ``(None, None)`` the entire time
-        interval is used. If None use all positive times.
+        The time interval used to compute the numerator of the SNR. If window
+        is ``(bmin, bmax)`` the interval is between ``bmin`` (s) and ``bmax``
+        (s). If ``bmin is None`` the beginning of the data is used and if
+        ``bmax is None`` then ``bmax`` is set to the end of the interval. If
+        window is ``(None, None)`` the entire time interval is used. If None
+        use all positive times.
 
     Returns
     -------
@@ -117,7 +123,7 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
 
     for i in range(n_bootstrap):
         if 100 * i / n_bootstrap == np.floor(100 * i / n_bootstrap):
-            print('Bootstrapping... ' + str(round(100 * i / n_bootstrap)) + '%',
+            print('Bootstrapping... {}%'.format(round(100 * i / n_bootstrap)),
                   end='\r'),
         bs_indices = np.random.choice(indices, replace=True, size=len(indices))
         erp_bs[i] = np.mean(epochs._data[bs_indices, 0, :], 0)
@@ -332,4 +338,3 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
         SNR = np.reshape(SNR, (n_trials, n_channels, n_samples))
 
     return SNR
-

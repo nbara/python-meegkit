@@ -1,2 +1,2 @@
-# -*- coding: utf-8 -*-
+"""M/EEG denoising utilities in python."""
 from . import dss, sns, tspca

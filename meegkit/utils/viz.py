@@ -56,7 +56,7 @@ def plot_montage(chan_list, ax=None, scores=None, title='', cmap=None):
     scale_factor = 20.
     try:
         ax = ax
-    except:
+    except:  # noqa
         ax = f.axes[0]
     collection = ax.collections[0]
     if check_version("matplotlib", "1.4"):

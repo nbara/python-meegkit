@@ -89,7 +89,7 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     else:
         for trial in np.arange(trials_data):
             wr = multishift(weights_ref[:, :, trial], shifts).min(1)
-            wr = (wr, wx[0:wr.shape[0], :, trial]).min()
+            # wr = (wr, wx[0:wr.shape[0], :, trial]).min() # TODO
             weights[:, :, trial] = wr
 
     weights_data = weights
@@ -139,9 +139,12 @@ def tspca(data, shifts=None, keep=None, threshold=None, weights=None):
 
     Parameters
     ----------
-    data:      data matrix
-    shifts:    array of shifts to apply
-    keep:      number of components shifted regressor PCs to keep (default: all)
+    data : array
+        Data matrix.
+    shifts: array
+        Array of shifts to apply
+    keep: int
+        Number of components shifted regressor PCs to keep (default: all).
     threshold: discard PCs with eigenvalues below this (default: 10 ** -6)
     weights:   ignore samples with absolute value above this
 
