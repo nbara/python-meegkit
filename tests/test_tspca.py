@@ -1,7 +1,7 @@
 import numpy as np
 
 from context import meegkit  # noqa
-from meegkit import dss, sns, tspca
+from meegkit import dss, sns
 from meegkit.utils import demean, fold, unfold
 
 

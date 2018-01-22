@@ -52,15 +52,6 @@ def test_dss0():
     assert_allclose(np.abs(best_comp), np.abs(np.squeeze(source)) * scale,
                     atol=1e-6)  # use abs as DSS component might be flipped
 
-    # plot results
-    # f, (ax1, ax2, ax3) = plt.subplots(3, 1)
-    # ax1.plot(source * scale)
-    # ax1.legend(['source', ])
-    # ax2.plot(np.mean(data, 2))
-    # ax2.legend(['data', ])
-    # ax3.plot(best_comp)
-    # ax3.legend(['recovered', ])
-    # plt.show()
 
 if __name__ == '__main__':
     import nose

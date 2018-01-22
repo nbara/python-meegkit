@@ -1,173 +1,194 @@
+import warnings
 import numpy as np
 
-from .matrix import multishift, theshapeof, fold, unfold, unsqueeze, shift
+from .matrix import (multishift, theshapeof, unsqueeze, relshift,
+                     _check_shifts)
 
 
-def cov_lags(x, y, lags):
-    """Empirical covariance of [x,y] with lags.
+def cov_lags(X, Y, shifts=None):
+    """Empirical covariance of [X,Y] with lags.
 
-    [C,tw,m]=nt_cov_lags(x,y,lags)
+    Parameters
+    ----------
+    X: array, shape = (n_times, n_chans_x[, n_trials])
+        Data.
+    Y: array, shape = (n_times, n_chans_y[, n_trials])
+        Time shifted data.
+    shifts: array, shape = (shifts,)
+        Positive lag means Y is delayed relative to X.
 
-    C: covariance matrix (3D if length(lags)>1)
-    tw: total weight
-    m: number of columns in x
-
-    x,y: data matrices
-    lags: positive lag means y is delayed relative to x.
-
-    x and y can be time X channels or time X channels X trials.  They can
-    also be cell arrays of time X channels matrices.
+    Returns
+    -------
+    C : array, shape = (n_chans_x + n_chans_y, n_chans_x + n_chans_y, n_shifts)
+        Covariance matrix (3D if n_shifts > 1).
+    tw : float
+        Total weight.
+    m : int
+        Number of columns in X.
 
     See Also
     --------
-    nt_relshift
+    relshift, tscov, tsxcov
 
     """
-    # if nargin<2 error('!') end
-    # if nargin<3 || isempty(lags) lags=[0] end
-    # if size(y,1)~=size(x,1) error('!') end
-    # if size(y,3)~=size(x,3) error('!') end
+    shifts, n_shifts = _check_shifts(shifts)
 
-    n = x.shape[1] + y.shape[1]  # sum of channels of x and y
-    C = np.zeros(n, n, len(lags))
-    for t in np.arange(x.shape[2]):
-        for l in np.arange(len(lags)):
-            yy = shift(y, lags(l), axis=0)
-            xy = np.vstack(x, yy)
-            C[:, :, l] += xy.T * xy
+    n_samples1, n_chans1, n_trials1 = theshapeof(X)
+    n_samples2, n_chans2, n_trials2 = theshapeof(Y)
 
-    m = x.shape[1]
-    tw = x.shape[0] * x.shape[2]
+    if n_samples1 != n_samples2:
+        raise AttributeError('X and Y must have same n_times')
+    if n_trials1 != n_trials2:
+        raise AttributeError('X and Y must have same n_trials')
+    if n_samples1 <= max(shifts):
+        raise AttributeError('shifts should be no larger than n_samples')
 
-    return C, tw, m
+    n_cov = n_chans1 + n_chans2  # sum of channels of X and Y
+    C = np.zeros(n_cov, n_cov, n_shifts)
+    for t in np.arange(n_trials1):
+        for i, s in enumerate(shifts):
+            YY, XX = relshift(Y[..., t], ref=X[..., t], shifts=s)
+            XY = np.vstack(XX, YY)
+            C[:, :, i] += XY.T * XY
+
+    tw = n_samples1 * n_trials1
+
+    return C, tw, n_chans1
 
 
-def tsxcov(x, y, shifts=None, weights=np.array([])):
+def tsxcov(X, Y, shifts=None, weights=None):
     """Calculate cross-covariance of X and time-shifted Y.
 
-    This function calculates, for each pair of columns (Xi,Yj) of X and Y, the
+    This function calculates, for each pair of columns (Xi, Yj) of X and Y, the
     scalar products between Xi and time-shifted versions of Yj.
-    Shifts are taken from array SHIFTS.
 
-    The weights are applied to X.
-
-    X can be 1D, 2D or 3D.  W is 1D (if X is 1D or 2D) or 2D (if X is 3D).
-
-    Output is a 2D matrix with dimensions ncols(X)*(ncols(Y)*n_shifts).
+    Output is a 2D matrix with dimensions .
 
     Parameters
     ----------
-    x, y: arrays
-        data to cross correlate
-    shifts: array
-        time shifts (must be non-negative)
-    weights: array
-        weights
+    X, Y : arrays, shape = (n_times, n_chans[, n_trials])
+        Data to cross correlate. X can be 1D, 2D or 3D.
+    shifts : array
+        Time shifts.
+    weights : array
+        The weights that are applied to X. 1D (if X is 1D or 2D) or 2D (if X is
+        3D).
 
     Returns
     -------
-    c: cross-covariance matrix
-    tw: total weight
+    C : array, shape = (n_chans_x, n_chans_y * n_shifts)
+        Cross-covariance matrix.
+    tw : total weight
 
     """
-    if shifts is None:
-        shifts = np.array([0])
+    weights = _check_weights(weights, X)
+    shifts, n_shifts = _check_shifts(shifts)
 
-    n_shifts = shifts.size
+    n_times1, n_chans1, n_trials1 = theshapeof(X)
+    n_times2, n_chans2, n_trials2 = theshapeof(Y)
+    X = unsqueeze(X)
+    Y = unsqueeze(Y)
 
-    mx, nx, ox = theshapeof(x)
-    my, ny, oy = theshapeof(y)
-    c = np.zeros((nx, ny * n_shifts))
-
+    # Apply weights if any
     if weights.any():
-        x = fold(unfold(x) * unfold(weights), mx)
+        X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult
+        weights = weights[:n_times2, :, :]
+        tw = np.sum(weights[:])
+    else:  # infer weights
+        N = 0
+        if len(shifts[shifts < 0]):
+            N -= np.min(shifts)
+        if len(shifts[shifts >= 0]):
+            N += np.max(shifts)
+        tw = (n_chans1 * n_shifts - N) * n_trials1
 
     # cross covariance
-    for trial in range(ox):
-        yy = np.squeeze(multishift(y[:, :, trial], shifts))
-        xx = np.squeeze(x[0:yy.shape[0], :, trial])
+    # C = np.zeros((n_chans1 * n_shifts, n_chans2 * n_shifts))
+    # for t in np.arange(n_trials1):
+    #     YY, XX = relshift(Y[..., t], ref=X[..., t], shifts=shifts)
+    #     XX = XX.reshape(n_times1, n_chans1 * n_shifts)
+    #     YY = YY.reshape(n_times2, n_chans2 * n_shifts)
+    #     C += np.dot(XX.T, YY)
+    C = np.zeros((n_chans1, n_chans2 * n_shifts))
+    for t in np.arange(n_trials1):
+        YY = multishift(Y[..., t], shifts=shifts)
+        YY = YY.reshape(n_times2, n_chans2 * n_shifts)
+        C += np.dot(X[..., t].T, YY)
 
-        c += np.dot(xx.T, yy)
-
-    if not weights.any():
-        tw = ox * ny * yy.shape[0]
-    else:
-        weights = weights[0:yy.shape[0], :, :]
-        tw = np.sum(weights[:])
-
-    return c, tw
+    return C, tw
 
 
-def tscov(data, shifts=None, weights=None):
+def tscov(X, shifts=None, weights=None, assume_centered=True):
     """Time shift covariance.
 
-    This function calculates, for each pair [DATA[i], DATA[j]] of columns of
-    DATA, the cross-covariance matrix between the time-shifted versions of
-    DATA[i]. Shifts are taken from array SHIFTS. Weights are taken from
-    `weights`.
-
-    DATA can be 1D, 2D or 3D.  WEIGHTS is 1D (if DATA is 1D or 2D) or
-    2D (if DATA is 3D).
-
-    Output is a 2D matrix with dimensions (ncols(X)*n_shifts)^2.
-    This matrix is made up of a DATA.shape[1]^2 matrix of submatrices
-    of dimensions n_shifts**2.
-
-    The weights are not shifted.
+    This function calculates, for each pair [X[i], X[j]] of columns of X, the
+    cross-covariance matrix between the time-shifted versions of X[i].
 
     Parameters
     ----------
-    data: array
-        Data.
-    shifts: array
-        Array of time shifts (must be non-negative).
-    weights: array
-        Weights.
+    X : array, shape = (n_times, n_chans[, n_trials])
+        Data, can be 1D, 2D or 3D.
+    shifts : array
+        Array of time shifts.
+    weights : array
+        Weights, 1D (if X is 1D or 2D) or 2D (if X is 3D). The weights are not
+        shifted.
 
     Returns
     -------
-    covariance: array
-        Covariance matrix.
-    total_weight: array
-        Total weight (covariance/total_weight is normalized covariance).
+    C : array, shape = (n_channels * n_shifts, n_channels * n_shifts)
+        Covariance matrix. This matrix is made up of a (n_times, n_times)
+        matrix of submatrices of dimensions (n_shifts, n_shifts).
+    tw : array
+        Total weight (C/tw is the normalized covariance).
 
     """
-    if shifts is None:
-        shifts = np.array([0])
-    if weights is None:
-        weights = np.array([])
-    if shifts.min() < 0:
-        raise ValueError("Shifts should be non-negative.")
+    weights = _check_weights(weights, X)
+    shifts, n_shifts = _check_shifts(shifts)
 
-    n_shifts = np.size(shifts)
+    n_times, n_chans, n_trials = theshapeof(X)
+    X = unsqueeze(X)
 
-    n_samples, n_chans, n_trials = theshapeof(data)
-    data = unsqueeze(data)
-    covariance = np.zeros((n_chans * n_shifts, n_chans * n_shifts))
+    if not assume_centered:
+        X = X - X.sum(0, keepdims=1) / n_chans
 
     if weights.any():  # weights
+        X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult
+        weights = weights[:n_times, :, :]
+        tw = np.sum(weights[:])
+    else:  # no weights
+        N = 0
+        if len(shifts[shifts < 0]):
+            N -= np.min(shifts)
+        if len(shifts[shifts >= 0]):
+            N += np.max(shifts)
+        tw = (n_chans * n_shifts - N) * n_trials
+
+    C = np.zeros((n_chans * n_shifts, n_chans * n_shifts))
+    for trial in range(n_trials):
+        XX = multishift(X[..., trial], shifts)
+        XX = XX.reshape(n_times, n_chans * n_shifts)
+        C += np.dot(XX.T, XX)
+
+    return C, tw
+
+
+def _check_weights(weights, X):
+    """Check weights dimensions against X."""
+    if not isinstance(weights, (np.ndarray, list)):
+        if weights is not None:
+            warnings.warn('weights should be a list or a numpy array.')
+        weights = np.array([])
+
+    if len(weights) > 0:
+        dtype = np.complex128 if np.any(np.iscomplex(weights)) else np.float64
+        weights = np.asanyarray(weights, dtype=dtype)
+        if weights.ndim > 3:
+            raise ValueError('Weights must be 3D at most')
+        if weights.ndim != X.ndim:
+            raise ValueError("Weights array should be the same ndim as X.")
         if weights.shape[1] > 1:
             raise ValueError("Weights array should have a single column.")
-
         weights = unsqueeze(weights)
-        print(data.shape)
-        for trial in range(n_trials):
-            shifted_trial = multishift(data[..., trial], shifts)
-            shifted_weight = multishift(weights[..., trial], shifts)
-            shifted_trial = (np.squeeze(shifted_trial).T *
-                             np.squeeze(shifted_weight)).T
-            covariance += np.dot(shifted_trial.T, shifted_trial)
 
-        total_weight = np.sum(weights[:])
-    else:  # no weights
-        for trial in range(n_trials):
-            if data.ndim == 3:
-                shifted_trial = np.squeeze(
-                    multishift(data[:, :, trial], shifts))
-            else:
-                shifted_trial = multishift(data[:, trial], shifts)
-            covariance += np.dot(shifted_trial.T, shifted_trial)
-
-        total_weight = shifted_trial.shape[0] * n_trials
-
-    return covariance, total_weight
+    return weights

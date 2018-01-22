@@ -11,8 +11,8 @@ def test_multishift():
     x = np.array([
         [1, 2, 3, 4],
         [5, 6, 7, 8]])
-    assert_equal(multishift(x, [1], axis=0)[..., 0], np.array([[0, 0, 0, 0],
-                                                               [1, 2, 3, 4]]))
+    assert_equal(multishift(x, [1], axis=0), np.array([[0, 0, 0, 0],
+                                                       [1, 2, 3, 4]]))
 
     # relshift() 1d
     y, y_ref = relshift([1, 2, 3, 4], [11, 12, 13, 14], [1], axis=0)

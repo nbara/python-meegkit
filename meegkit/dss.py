@@ -38,7 +38,7 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
 
     # weighted mean over trials (--> bias function for DSS)
     xx, ww = mean_over_trials(data, weights)
-    print("xx.shape", xx.shape)
+
     ww = ww.min(1)
 
     # covariance of raw and biased data

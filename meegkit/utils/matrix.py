@@ -2,16 +2,18 @@
 import numpy as np
 
 
-def relshift(X, X_ref, shifts, fill_value=0, axis=0):
-    """Create shifted versions of X relative to X_ref with padding.
+def relshift(X, ref, shifts, fill_value=0, axis=0):
+    """Create shifted versions of X relative to ref with padding.
 
-    `X_ref` is replicated to be the same shape as `y` and padded accordingly.
+    `ref` is replicated to have the same shape as `y` and padded accordingly.
 
     Parameters
     ----------
-    X : array, shape = (n_samples, [n_epochs, ][n_trials ])
+    X : array, shape = (n_samples[, n_epochs][, n_trials])
         Array to shift.
-    shifts : array
+    ref : array, shape = (n_samples[, n_epochs][, n_trials])
+        Reference array against which `X` is shifted.
+    shifts : array | int
         Array of shifts.
     fill_value : float
         Value to pad output axis by.
@@ -20,37 +22,41 @@ def relshift(X, X_ref, shifts, fill_value=0, axis=0):
 
     Returns
     -------
-    y : array, shape = (n_samples, [n_epochs, ][n_trials, ]n_shifts)
+    y : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
         Shifted array.
-    y_ref : array, shape = (n_samples, [n_epochs, ][n_trials, ]n_shifts)
-        Shifted array.
+    y_ref : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
+        Reference array, repeated to match `y.shape`. Padding matches that of
+        `y`.
 
     See Also
     --------
     multishift, shift, shiftnd
 
     """
-    if np.shape(X) != np.shape(X_ref):
-        raise AttributeError('X and X_ref should have the same shape')
+    shifts, n_shifts = _check_shifts(shifts)
+    X = _check_data(X)
+    ref = _check_data(ref)
+
+    if X.shape[0] != ref.shape[0]:
+        raise AttributeError('X and ref must have same n_times')
 
     # First we delay X
     y = multishift(X, shifts=shifts, axis=axis, fill_value=fill_value)
 
-    # Then we create as many copies of X_ref as there are lags
-    y_ref = multishift(X_ref, shifts=np.zeros(len(shifts)), axis=axis)
+    # Then we create as many copies of ref as there are lags
+    y_ref = multishift(ref, shifts=np.zeros(n_shifts), axis=axis)
 
     # We need to find out the indices of the padded values in `y`. For this we
     # use a hack where we feed in an array of ones to multishift(), with a
     # known `fill_value`.
     temp = multishift(np.ones_like(X), shifts=shifts, axis=axis, fill_value=0)
     mask = temp == 0
-
     y_ref[mask] = fill_value
 
     return y, y_ref
 
 
-def multishift(X, shifts, fill_value=0, axis=0, ):
+def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
     """Apply several shifts along specified axis.
 
     If `shifts` has multiple values, the output will contain one shift per
@@ -58,18 +64,20 @@ def multishift(X, shifts, fill_value=0, axis=0, ):
 
     Parameters
     ----------
-    X : array, shape = (n_samples, [n_epochs, ][n_trials ])
+    X : array, shape = (n_samples[, n_epochs][, n_trials])
         Array to shift.
     shifts : array
         Array of shifts.
-    fill_value : float
+    fill_value : float | np.nan
         Value to pad output axis by.
     axis : int, optional
         The axis along which elements are shifted.
+    keep_dims : bool
+        If True, keep singleton dimensions in output.
 
     Returns
     -------
-    y : array, shape = (n_samples, [n_epochs, ][n_trials, ]n_shifts)
+    y : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
         Shifted array.
 
     See Also
@@ -77,27 +85,16 @@ def multishift(X, shifts, fill_value=0, axis=0, ):
     relshift, shift, shiftnd
 
     """
-    if not isinstance(shifts, (np.ndarray, list)):
-        raise AttributeError('shifts should be a list or an array')
-    if isinstance(shifts, list):
-        shifts = np.array(shifts[:])
-
-    X = unsqueeze(X)
-    n_times, n_chans, n_trials = theshapeof(X)
-    n_shifts = shifts.size
-
-    if n_times <= max(shifts):
-        raise AttributeError('shifts should be no larger than n_samples')
+    shifts, n_shifts = _check_shifts(shifts)
+    X = _check_data(X)
 
     # Loop over shifts
-    y = np.zeros((n_times, n_chans, n_trials, n_shifts))
+    y = np.zeros(X.shape + (n_shifts,))
     for i, s in enumerate(shifts):
             y[..., i] = shift(X, shift=s, fill_value=fill_value, axis=axis)
 
-    if n_trials == 1:
-        y = np.squeeze(y, axis=2)
-    if n_chans == 1:
-        y = np.squeeze(y, axis=1)
+    if n_shifts == 1 and not keep_dims:
+        y = np.squeeze(y, axis=-1)
 
     return y
 
@@ -109,7 +106,7 @@ def shift(X, shift, fill_value=0, axis=0):
 
     Parameters
     ----------
-    X : array, shape = (n_samples, [n_epochs, ][n_trials ])
+    X : array, shape = (n_samples[, n_epochs][, n_trials])
         Multidimensional input array.
     shift : int
         The number of places by which elements are shifted along axis.
@@ -128,6 +125,9 @@ def shift(X, shift, fill_value=0, axis=0):
     relshift, multishift, shiftnd
 
     """
+    if not np.equal(np.mod(shift, 1), 0):
+        raise AttributeError('shift must be a single int')
+
     # reallocate empty array and assign slice.
     y = np.empty_like(X)
 
@@ -263,13 +263,18 @@ def theshapeof(X):
 
 def unsqueeze(X):
     """Append singleton dimensions to an array."""
-    if isinstance(X, list):
-        X = np.array(X)
-    return X.reshape(theshapeof(X))
+    X = _check_data(X)
+    if X.shape != theshapeof(X):
+        return X.reshape(theshapeof(X))
+    else:
+        return X
 
 
 def fold(X, epochsize):
     """Fold 2D X into 3D."""
+    if X.ndim != 2:
+        raise AttributeError('X must be 2D')
+
     n_chans = X.shape[0] // epochsize
     X = np.transpose(
         np.reshape(X, (epochsize, n_chans, X.shape[1]),
@@ -382,3 +387,28 @@ def normcol(X, weights=None):
                 (np.sum((X ** 2) * weights) / np.sum(weights)) ** -0.5
 
     return X_norm
+
+
+def _check_shifts(shifts):
+    """Check shifts."""
+    if not isinstance(shifts, (np.ndarray, list, np.integer, type(None))):
+        raise AttributeError('shifts should be a list, an array or an int')
+    if isinstance(shifts, (list, np.integer)):
+        shifts = np.array(shifts).flatten()
+    if shifts is None or len(shifts) == 0:
+        shifts = np.array([0])
+    n_shifts = np.size(shifts)
+    return shifts, n_shifts
+
+
+def _check_data(X):
+    """Check data is numpy array and has the proper dimensions."""
+    if not isinstance(X, (np.ndarray, list)):
+        raise AttributeError('data should be a list or a numpy array')
+
+    dtype = np.complex128 if np.any(np.iscomplex(X)) else np.float64
+    X = np.asanyarray(X, dtype=dtype)
+    if X.ndim > 3:
+        raise ValueError('Data must be 3D at most')
+
+    return X
