@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 
 from .matrix import (multishift, theshapeof, unsqueeze, relshift,
-                     _check_shifts)
+                     _check_shifts, _check_data)
 
 
 def cov_lags(X, Y, shifts=None):
@@ -32,28 +32,32 @@ def cov_lags(X, Y, shifts=None):
 
     """
     shifts, n_shifts = _check_shifts(shifts)
+    X, Y = unsqueeze(X), unsqueeze(Y)
 
-    n_samples1, n_chans1, n_trials1 = theshapeof(X)
+    n_samples, n_chans, n_trials = theshapeof(X)
     n_samples2, n_chans2, n_trials2 = theshapeof(Y)
 
-    if n_samples1 != n_samples2:
+    if n_samples != n_samples2:
         raise AttributeError('X and Y must have same n_times')
-    if n_trials1 != n_trials2:
+    if n_trials != n_trials2:
         raise AttributeError('X and Y must have same n_trials')
-    if n_samples1 <= max(shifts):
+    if n_samples <= max(shifts):
         raise AttributeError('shifts should be no larger than n_samples')
 
-    n_cov = n_chans1 + n_chans2  # sum of channels of X and Y
-    C = np.zeros(n_cov, n_cov, n_shifts)
-    for t in np.arange(n_trials1):
+    n_cov = n_chans + n_chans2  # sum of channels of X and Y
+    C = np.zeros((n_cov, n_cov, n_shifts))
+    for t in np.arange(n_trials):
         for i, s in enumerate(shifts):
             YY, XX = relshift(Y[..., t], ref=X[..., t], shifts=s)
-            XY = np.vstack(XX, YY)
-            C[:, :, i] += XY.T * XY
+            XY = np.hstack((XX, YY))
+            C[:, :, i] += np.dot(XY.T, XY)
 
-    tw = n_samples1 * n_trials1
+    if n_shifts == 1:
+        C = np.squeeze(C, 2)
 
-    return C, tw, n_chans1
+    tw = n_samples * n_trials
+
+    return C, tw, n_chans
 
 
 def tsxcov(X, Y, shifts=None, weights=None):
@@ -84,7 +88,7 @@ def tsxcov(X, Y, shifts=None, weights=None):
     weights = _check_weights(weights, X)
     shifts, n_shifts = _check_shifts(shifts)
 
-    n_times1, n_chans1, n_trials1 = theshapeof(X)
+    n_times, n_chans, n_trials = theshapeof(X)
     n_times2, n_chans2, n_trials2 = theshapeof(Y)
     X = unsqueeze(X)
     Y = unsqueeze(Y)
@@ -100,17 +104,17 @@ def tsxcov(X, Y, shifts=None, weights=None):
             N -= np.min(shifts)
         if len(shifts[shifts >= 0]):
             N += np.max(shifts)
-        tw = (n_chans1 * n_shifts - N) * n_trials1
+        tw = (n_chans * n_shifts - N) * n_trials
 
     # cross covariance
-    # C = np.zeros((n_chans1 * n_shifts, n_chans2 * n_shifts))
-    # for t in np.arange(n_trials1):
+    # C = np.zeros((n_chans * n_shifts, n_chans2 * n_shifts))
+    # for t in np.arange(n_trials):
     #     YY, XX = relshift(Y[..., t], ref=X[..., t], shifts=shifts)
-    #     XX = XX.reshape(n_times1, n_chans1 * n_shifts)
+    #     XX = XX.reshape(n_times, n_chans * n_shifts)
     #     YY = YY.reshape(n_times2, n_chans2 * n_shifts)
     #     C += np.dot(XX.T, YY)
-    C = np.zeros((n_chans1, n_chans2 * n_shifts))
-    for t in np.arange(n_trials1):
+    C = np.zeros((n_chans, n_chans2 * n_shifts))
+    for t in np.arange(n_trials):
         YY = multishift(Y[..., t], shifts=shifts)
         YY = YY.reshape(n_times2, n_chans2 * n_shifts)
         C += np.dot(X[..., t].T, YY)

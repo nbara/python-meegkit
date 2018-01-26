@@ -97,9 +97,9 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     weights_ref[idx, :, :] = weights
 
     # remove weighted means
-    data, mean1 = demean(data, weights_data)
+    data, mean1 = demean(data, weights_data, return_mean=True)
     # print "pre demean", ref[0:10,0,0]
-    ref = demean(ref, weights_ref)[0]
+    ref = demean(ref, weights_ref)
 
     # equalize power of ref channels, the equalize power of the ref PCs
     # print "pre", ref[0:10,0,0]
@@ -124,7 +124,8 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
             ref[:, :, trial], shifts)), regression)
         denoised_data[:, :, trial] = data[np.arange(z.shape[0]), :, trial] - z
 
-    denoised_data, mean2 = demean(denoised_data, weights_data)
+    denoised_data, mean2 = demean(denoised_data, weights_data,
+                                  return_mean=True)
 
     # idx = r_[offset1:initial_samples-offset2]
     idx = np.arange(offset1, initial_samples - offset2)

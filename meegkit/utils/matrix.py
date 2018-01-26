@@ -51,7 +51,8 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
     # known `fill_value`.
     temp = multishift(np.ones_like(X), shifts=shifts, axis=axis, fill_value=0)
     mask = temp == 0
-    y_ref[mask] = fill_value
+    if mask.any():
+        y_ref[mask] = fill_value
 
     return y, y_ref
 
@@ -248,8 +249,9 @@ def shiftnd(X, shift, fill_value=0, axis=None):
 
 def theshapeof(X):
     """Return the shape of X."""
-    if not isinstance(X, np.ndarray):
-        raise AttributeError('X must be a numpy array')
+    X = _check_data(X)
+    # if not isinstance(X, np.ndarray):
+    #     raise AttributeError('X must be a numpy array')
 
     if X.ndim == 3:
         return X.shape[0], X.shape[1], X.shape[2]
@@ -294,7 +296,7 @@ def unfold(X):
         return X
 
 
-def demean(X, weights=None):
+def demean(X, weights=None, return_mean=False):
     """Remove weighted mean over columns (samples)."""
     if weights is None:
         weights = np.array([])
@@ -322,8 +324,10 @@ def demean(X, weights=None):
 
     demeaned_X = fold(demeaned_X, n_samples)
 
-    # the_mean.shape = (1, the_mean.shape[0])
-    return demeaned_X, the_mean
+    if return_mean:
+        return demeaned_X, the_mean  # the_mean.shape = (1, the_mean.shape[0])
+    else:
+        return demeaned_X
 
 
 def normcol(X, weights=None):

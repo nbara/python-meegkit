@@ -39,12 +39,12 @@ def sns(data, n_neighbors=0, skip=0, weights=np.array([])):
     n_samples, n_chans, n_trials = theshapeof(data)
     data = unfold(data)
 
-    data, _ = demean(data)
+    data = demean(data)
     c, nc = tscov(data)
 
     if weights:
         weights = unfold(weights)
-        data, _ = demean(data, weights)
+        data = demean(data, weights)
         wc, nwc = tscov(data, shifts=None, weights=weights)
         r = sns0(c, n_neighbors, skip, wc)
     else:

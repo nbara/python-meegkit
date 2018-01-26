@@ -34,7 +34,7 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
 
     """
     n_samples, n_chans, n_trials = theshapeof(data)
-    data, data_mean = demean(data, weights)  # remove weighted mean
+    data = demean(data, weights)  # remove weighted mean
 
     # weighted mean over trials (--> bias function for DSS)
     xx, ww = mean_over_trials(data, weights)

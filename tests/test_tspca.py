@@ -23,8 +23,8 @@ def test_tspca_sns_dss():
     ref = np.random.random((800, 3, 200))
 
     # remove means
-    noisy_data, _ = demean(data)
-    noisy_ref, _ = demean(ref)
+    noisy_data = demean(data)
+    noisy_ref = demean(ref)
 
     # Apply TSPCA
     # -------------------------------------------------------------------------
@@ -45,7 +45,7 @@ def test_tspca_sns_dss():
     # -------------------------------------------------------------------------
     print('DSS...')
     # Keep all PC components
-    y_tspca_sns, _ = demean(y_tspca_sns)
+    y_tspca_sns = demean(y_tspca_sns)
     print(y_tspca_sns.shape)
     todss, fromdss, _, _ = dss.dss1(y_tspca_sns)
     print('\b OK!')
