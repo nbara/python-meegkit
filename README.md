@@ -1,5 +1,8 @@
 [![Build Status](https://travis-ci.org/nbara/python-meegkit.svg?branch=master)](https://travis-ci.org/nbara/python-meegkit)
 
+> **Disclaimer:** The project is in early stages of development, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the near future. Comments and suggestions are welcome.  
+
+
 ## Python implementation of TSPCA, SNS, and DSS denoising
   
 This is mostly a translation of Matlab code from the NoiseTools toolbox by
@@ -9,7 +12,7 @@ http://audition.ens.fr/adc/NoiseTools/
 Original python implementation by Pedro Alcocer:   
 https://github.com/pealco
 
-Python 2.7 and 3.5+ should be supported.
+Python 2.7 and 3.5+ should be supported. 
 
 ## References 
 
