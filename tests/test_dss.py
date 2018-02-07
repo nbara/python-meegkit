@@ -44,7 +44,7 @@ def test_dss0():
     c0, _ = tscov(data)
     c1, _ = tscov(np.mean(data, 2))
     [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
-    z = fold(np.dot(unfold(data), todss), epochsize=n_samples)
+    z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
 
     best_comp = np.mean(z[:, 0, :], -1)
     scale = np.ptp(best_comp) / np.ptp(source)
@@ -55,4 +55,4 @@ def test_dss0():
 
 if __name__ == '__main__':
     import nose
-    nose.run(defaultTest="")
+    nose.run(defaultTest=__name__)

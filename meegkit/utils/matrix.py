@@ -272,15 +272,15 @@ def unsqueeze(X):
         return X
 
 
-def fold(X, epochsize):
+def fold(X, epoch_size):
     """Fold 2D X into 3D."""
     if X.ndim != 2:
         raise AttributeError('X must be 2D')
 
-    n_chans = X.shape[0] // epochsize
-    X = np.transpose(
-        np.reshape(X, (epochsize, n_chans, X.shape[1]),
-                   order="F").copy(), [0, 2, 1])
+    n_chans = X.shape[0] // epoch_size
+    if X.shape[0] / epoch_size > 1:
+        X = np.transpose(np.reshape(X, (epoch_size, n_chans, X.shape[1]),
+                                    order="F").copy(), [0, 2, 1])
     return X
 
 
@@ -312,17 +312,19 @@ def demean(X, weights=None, return_mean=False):
                              'number of rows and pages.')
 
         if weights.shape[1] == 1 or weights.shape[1] == n_chans:
-            the_mean = np.sum(X * weights) // np.sum(weights)
+            the_mean = (np.sum(X * weights, axis=0) /
+                        np.sum(weights, axis=0))[None, :]
         else:
             raise ValueError('Weight array should have either the same ' +
                              'number of columns as X array, or 1 column.')
 
         demeaned_X = X - the_mean
     else:
-        the_mean = np.mean(X, 0)
+        the_mean = np.mean(X, axis=0, keepdims=True)
         demeaned_X = X - the_mean
 
-    demeaned_X = fold(demeaned_X, n_samples)
+    if n_trials > 1:
+        demeaned_X = fold(demeaned_X, n_samples)
 
     if return_mean:
         return demeaned_X, the_mean  # the_mean.shape = (1, the_mean.shape[0])
@@ -330,7 +332,7 @@ def demean(X, weights=None, return_mean=False):
         return demeaned_X
 
 
-def normcol(X, weights=None):
+def normcol(X, weights=None, return_norm=False):
     """Normalize each column so that its weighted mean square value is 1.
 
     If X is 3D, pages are concatenated vertically before calculating the
@@ -341,21 +343,33 @@ def normcol(X, weights=None):
 
     Parameters
     ----------
-    X: X to normalize
-    weights: weight
+    X : array
+        X to normalize.
+    weights : array
+        Weights.
+    return_norm : bool
+        If True, also return norm vector.
 
     Returns
     -------
-    X_norm: normalized X
+    X_norm : array
+        Normalized X.
+    norm : array
+        Norm.
 
     """
+    if weights is None:
+        weights = np.array([])
+
     if X.ndim == 3:
         n_samples, n_chans, n_trials = X.shape
         X = unfold(X)
-        if not weights.any():
-            # no weights
-            X_norm = fold(normcol(X), n_samples)
-        else:
+
+        if not weights.any():  # no weights
+            X_norm, N = normcol(X, return_norm=True)
+            X_norm = fold(X_norm, n_samples)
+
+        else:  # weights
             if weights.shape[0] != n_samples:
                 raise ValueError("Weight array should have same number of' \
                                  'columns as X")
@@ -367,12 +381,17 @@ def normcol(X, weights=None):
                 raise ValueError("Weight array should have be same shape as X")
 
             weights = unfold(weights)
-
-            X_norm = fold(normcol(X, weights), n_samples)
+            X_norm, N = normcol(X, weights)
+            X_norm = fold(X_norm, n_samples)
     else:
         n_samples, n_chans, n_trials = theshapeof(X)
+
         if not weights.any():
-            X_norm = X * ((np.sum(X ** 2) / n_samples) ** -0.5)
+            N = ((np.sum(X ** 2, axis=0) / n_samples) ** -0.5)[np.newaxis]
+            N[np.isinf(N)] = 0
+            N[np.isnan(N)] = 0
+            X_norm = X * N
+
         else:
             if weights.shape[0] != X.shape[0]:
                 raise ValueError('Weight array should have same number of ' +
@@ -387,10 +406,16 @@ def normcol(X, weights=None):
             if weights.shape[1] == 1:
                 weights = np.tile(weights, (1, n_chans))
 
-            X_norm = X * \
-                (np.sum((X ** 2) * weights) / np.sum(weights)) ** -0.5
+            N = (np.sum(X ** 2 * weights, axis=0) /
+                 np.sum(weights, axis=0)) ** -0.5
+            N[np.isinf(N)] = 0
+            N[np.isnan(N)] = 0
+            X_norm = X * N
 
-    return X_norm
+    if return_norm:
+        return X_norm, N
+    else:
+        return X_norm
 
 
 def _check_shifts(shifts):

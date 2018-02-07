@@ -2,7 +2,7 @@ import warnings
 import numpy as np
 
 from .matrix import (multishift, theshapeof, unsqueeze, relshift,
-                     _check_shifts, _check_data)
+                     _check_shifts)
 
 
 def cov_lags(X, Y, shifts=None):
