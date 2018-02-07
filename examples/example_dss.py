@@ -5,11 +5,16 @@ maximize repeatability over trials. Data are time * channel * trials.
 
 Uses dss0().
 """
+import os
+import sys
+
 import matplotlib.pyplot as plt
 import numpy as np
 
-from meegkit import dss
-from meegkit.utils import unfold, rms, fold, tscov
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from meegkit import dss  # noqa:E402
+from meegkit.utils import unfold, rms, fold, tscov  # noqa:E402
 
 
 # create synthetic data
@@ -41,7 +46,7 @@ data = noise / rms(noise.flatten()) + SNR * s / rms(s.flatten())
 c0, _ = tscov(data)
 c1, _ = tscov(np.mean(data, 2))
 [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
-z = fold(np.dot(unfold(data), todss), epochsize=n_samples)
+z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
 
 best_comp = np.mean(z[:, 0, :], -1)
 

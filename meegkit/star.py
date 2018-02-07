@@ -28,7 +28,7 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     n_iter : int
         Iterations to refine c0 (default: 3).
     verbose : bool
-        Set to 0 to shut up.
+        Verbosity.
 
     Returns
     -------
@@ -172,9 +172,9 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
         if verbose:
             print('depth: {}'.format(i_depth + 1))
-            print('n fixed channels: {}'.format(i_fixed))
-            print('n fixed samples: {}'.format(n_fixed))
-            print('ratio: {}'.format(np.round(wpwr(x)[0] / p00, 2)))
+            print('fixed channels: {}'.format(i_fixed))
+            print('fixed samples: {}'.format(n_fixed))
+            print('ratio: {:.2f}'.format(wpwr(x)[0] / p00))
 
     x = demean(x)
     x = x * norm
@@ -190,7 +190,7 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
         x[:, idx_zero] = 0
 
     if verbose:
-        print('power ratio: '.format(wpwr(x) / p0))
+        print('power ratio: {:.2f}'.format(wpwr(x)[0] / p0))
 
     return x, w, ww
 
