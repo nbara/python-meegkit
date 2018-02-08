@@ -4,7 +4,7 @@ This example shows how one can effectively combine STAR and DSS to recover
 signal components which would not have been discoverable with either these
 two techniques alone, due to the presence of strong artifacts.
 
-This example replicates figure 1 in [1]_
+This example replicates figure 1 in [1]_.
 
 References
 ----------
@@ -44,7 +44,7 @@ for k in np.arange(n_chans):
 x = x0 + 10 * artifact
 
 
-# Sinusoidal fit function
+# Basic function to fit a sinusoidal trend for DSS
 def _sine_fit(x):
     guess_mean = np.mean(x)
     guess_std = np.std(x)

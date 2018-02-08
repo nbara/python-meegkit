@@ -1,10 +1,14 @@
+# MEEGkit
+
 [![Build Status](https://travis-ci.org/nbara/python-meegkit.svg?branch=master)](https://travis-ci.org/nbara/python-meegkit)
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
+
+Denoising tools for M/EEG processing in Python.
 
 > **Disclaimer:** The project is in early stages of development, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the near future. Comments and suggestions are welcome.  
 
-
 ## Python implementation of STAR, SNS, and DSS denoising
-  
+
 This is mostly a translation of Matlab code from the NoiseTools toolbox by
 Alain de Cheveigné:  
 http://audition.ens.fr/adc/NoiseTools/
@@ -14,6 +18,9 @@ https://github.com/pealco
 
 Python 2.7 and 3.5+ should be supported. Only DSS and STAR have been properly
 tested so far. TSCPA and SNS seem to run fine but give inaccurate results.
+
+This code can be tested directly from your browser using
+[Binder](https://mybinder.org), by clicking on the binder badge above.
 
 ## References 
 
