@@ -14,7 +14,7 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     x : array, shape = (n_times, n_chans[, n_trials])
         Data to denoise.
     thresh : float
-        Threshold for excentricity measure (default: 1).
+        Threshold for eccentricity measure (default: 1).
     closest : array, shape = (n_chans, n_neighbours)
         Indices of channels that are closest to each channel (default: all).
     depth : int
@@ -22,7 +22,7 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     pca_thresh : float
         Threshold for discarding weak PCs (default: 1e-15)
     n_smooth : int
-        Samples, smoothing to apply to excentricity (default: 10).
+        Samples, smoothing to apply to eccentricity (default: 10).
     min_prop : float
         Minimum proportion of artifact free at first iteration (default: 0.3).
     n_iter : int
@@ -66,40 +66,31 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     if len(idx_zero) > 0:
         x[:, idx_zero] = np.random.randn(n_samples, np.size(idx_zero))
 
+    # initial covariance estimate
     x = demean(x)
-    c0, _ = tscov(x)  # initial covariance estimate
+    c0, _ = tscov(x)
 
-    # Find time intervals where at least one channel is excentric - -> w == 0.
-    eps = np.finfo(float).eps
+    # Phase 1
+    # -------------------------------------------------------------------------
+    # Find time intervals where at least one channel is excentric -> w == 0
+    # Compute covariance on artifact-free data.
+
     iter = n_iter
     while iter > 0:
         w = np.ones((n_samples, 1))
         for ch in np.arange(n_chans):
             neighbours = _closest_neighbours(closest, ch, n_chans)
 
-            # PCA other channels to remove weak dimensions
-            c01 = c0[neighbours, :][:, neighbours]
-            topcs, eigenvalues = pca(c01)
-            idx = np.where(eigenvalues / np.max(eigenvalues) > pca_thresh)[0]
-            topcs = topcs[:, idx]
+            # Compute channel data estimated from its neighbours
+            y = _project(x[:, neighbours], c0, ch, neighbours)
 
-            # Compute projection matrix to project this channel on other
-            # channels
-            # X = c0[ch, neighbours].dot(topcs) / (topcs.T.dot(c01).dot(topcs))
-            # In Matlab X = A / B performs mrdivide(), and solves for XB=A
-            # In python, the closest equivalent is np.dot(A, linalg.pinv(B))
-            A = c0[ch, neighbours].dot(topcs)[None, :]
-            B = topcs.T.dot(c01).dot(topcs)
-            proj = np.dot(A, linalg.pinv(B))
-            y = x[:, neighbours].dot(topcs.dot(proj.T))  # projection
-            dx = np.abs(y - x[:, ch][:, None])  # difference from projection
-            dx = dx + eps  # avoids error on simulated data
-
-            d = dx / np.mean(dx[w > 0], axis=0)  # excentricity measure
-            if n_smooth > 0:
-                d = filtfilt(np.ones((n_smooth,)) / n_smooth, 1, d, axis=0)
-
+            # Compute excentricity over time
+            d = _eccentricity(x[:, ch][:, None], y, w, n_smooth)
             d = d / thresh
+
+            # Aggregate weights over channels
+            # w == 0 : artifactual sample
+            # w == 1 : clean time sample
             w = np.min((w, (d < 1)), axis=0)  # w==0 for artifact part
 
         artifact_free = np.mean(w, axis=0)
@@ -114,23 +105,20 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
         else:
             iter = iter - 1
 
-        x = demean(x, w)
-        # restrict covariance estimate to non-artifactual part
-        c0, _ = tscov(x, None, w)  # TODO check tscov with weights
+    # restrict covariance estimate to non-artifactual part
+    x = demean(x, w)
+    c0, _ = tscov(x, None, w)  # TODO check tscov with weights
 
+    # Phase 2
+    # -------------------------------------------------------------------------
     # We now know which part contains channel-specific artifacts (w==0 for
     # artifact part), and we have an estimate of the covariance matrix of the
     # artifact-free part.
 
-    # Find which channel is most excentric at each time point. Here we use an
-    # excentricity measure based on the absolute value of the signal, rather
-    # than the difference between signal and projection.
-    # divide by std over non-artifact part
-    xx = np.abs(x) / np.nanstd(x[np.where(w)[0], :], axis=0)
-    if n_smooth > 0:
-        xx = filtfilt(np.ones((n_smooth,)) / n_smooth, 1, xx, axis=0)
+    # Second eccentricity measure
+    d = _eccentricity(x, None, w, n_smooth)
 
-    rank = np.argsort(xx, axis=1)[:, ::-1].astype(float)
+    rank = np.argsort(d, axis=1)[:, ::-1].astype(float)
     rank[np.where(w)[0], :] = np.nan  # exclude parts that are not excentric
 
     depth = np.min((depth, n_chans - 1))
@@ -146,7 +134,7 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
             bad_samples = np.where(ch == rank[:, i_depth])[0]
             if i_depth != 0:  # exclude if not very bad
                 bad_samples = np.delete(
-                    bad_samples, np.where(xx[bad_samples, ch] < thresh)[0])
+                    bad_samples, np.where(d[bad_samples, ch] < thresh)[0])
 
             n_fixed = n_fixed + np.size(bad_samples)
             if len(bad_samples) == 0:
@@ -155,19 +143,8 @@ def star(x, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
             ww[bad_samples, ch] = 0
 
-            # PCA other channels to remove weak dimensions
-            c01 = c0[neighbours, :][:, neighbours]
-            topcs, eigenvalues = pca(c01)  # PCA
-            idx = np.where(eigenvalues / np.max(eigenvalues) > pca_thresh)[0]
-            topcs = topcs[:, idx]
-
             # project this channel on other channels
-            # projection matrix
-            A = c0[ch, neighbours].dot(topcs)[None, :]
-            B = topcs.T.dot(c01).dot(topcs)
-            proj = np.dot(A, linalg.pinv(B))
-            # projection
-            y = x[bad_samples, :][:, neighbours].dot(topcs.dot(proj.T))
+            y = _project(x[bad_samples, :][:, neighbours], c0, ch, neighbours)
             x[bad_samples, ch] = y.squeeze()  # fix
 
         if verbose:
@@ -206,3 +183,50 @@ def _closest_neighbours(closest, ch, n_chans):
     neighbours = np.delete(neighbours, np.where(neighbours > n_chans)[0])
 
     return neighbours
+
+
+def _eccentricity(x, y, weights, n_smooth=0):
+    """Compute (smoothed) eccentricity of each time point.
+
+    If y is not defined, the eccentricity measure is based on the absolute
+    value of the signal.
+
+    If both x and y are defined, the eccentricity is based on distance between
+    x (a given channel's data), and y (the projection from all other channels).
+
+    """
+    if weights is None:
+        weights = np.ones((x.shape[0], 1))
+
+    if y is None:
+        e = np.abs(x) / np.nanstd(x[np.where(weights)[0], :], axis=0)
+    else:
+        eps = np.finfo(float).eps
+        # difference from projection, add eps to avoid error on simulated data
+        dx = np.abs(y - x) + eps
+        e = dx / np.mean(dx[weights > 0], axis=0)  # eccentricity measure
+
+    # Smooth eccentricity slightly over time
+    if n_smooth > 0:
+        e = filtfilt(np.ones((n_smooth,)) / n_smooth, 1, e, axis=0)
+
+    return e
+
+
+def _project(X, c0, ch, neighbours, pca_threshold=1e-15):
+    """Compute projection of a channel on other channels."""
+    # PCA other channels to remove weak dimensions
+    c01 = c0[neighbours, :][:, neighbours]
+    topcs, eigenvalues = pca(c01)
+    idx = np.where(eigenvalues / np.max(eigenvalues) > pca_threshold)[0]
+    topcs = topcs[:, idx]
+
+    # X = c0[ch, neighbours].dot(topcs) / (topcs.T.dot(c01).dot(topcs))
+    # In Matlab X = A / B performs mrdivide(), and solves for XB=A
+    # In python, the closest equivalent is np.dot(A, linalg.pinv(B))
+    A = c0[ch, neighbours].dot(topcs)[None, :]
+    B = topcs.T.dot(c01).dot(topcs)
+    proj = np.dot(A, linalg.pinv(B))
+    y = X.dot(topcs.dot(proj.T))  # projection
+
+    return y
