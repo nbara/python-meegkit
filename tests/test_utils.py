@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_equal
 
 from context import meegkit  # noqa
-from meegkit.utils import multishift, shiftnd, shift, relshift
+from meegkit.utils import multishift, shiftnd, shift, relshift, widen_mask
 
 
 def test_multishift():
@@ -72,6 +72,21 @@ def test_shift():
                                                   [0, 0, 0, 0, 0]]))
     assert_equal(shift(x2, 1, axis=1), np.array([[0, 0, 1, 2, 3],
                                                  [0, 5, 6, 7, 8]]))
+
+
+def test_widen_mask():
+    """Test binary mask operations."""
+    test = np.array([0, 0, 0, 1, 0, 0, 0])
+
+    # test 1d
+    assert_equal(widen_mask(test, -2), [0, 1, 1, 1, 0, 0, 0])
+    assert_equal(widen_mask(test, 2), [0, 0, 0, 1, 1, 1, 0])
+
+    # test nd
+    assert_equal(widen_mask(test[None, :], -2, axis=1),
+                 [[0, 1, 1, 1, 0, 0, 0], ])
+    assert_equal(widen_mask(test[None, None, :], -2, axis=2),
+                 [[[0, 1, 1, 1, 0, 0, 0], ], ])
 
 
 if __name__ == '__main__':

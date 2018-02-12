@@ -2,6 +2,86 @@
 import numpy as np
 
 
+def widen_mask(mask, widen=4, axis=0):
+    """Widen each 'bad' section of a binary mask by `n` cells.
+
+    Parameters
+    ----------
+    mask : array
+        Masking array. If an element of the mask is True (or 1), the
+        corresponding element of the associated array is masked (marked as
+        invalid).
+    widen : int
+        Number of cells to widen mask by.
+    axis : int
+        Axis to operate on.
+
+    Returns
+    -------
+    out : array
+        Widened mask, of same shape as input mask.
+
+    Examples
+    --------
+    >> test = widen_mask(np.array([False, False, False, True, False], 1)
+    >> print(test)
+    [False False False True True]]
+
+    """
+    dims = mask.ndim
+    dtype = mask.dtype
+
+    if axis > dims - 1:
+        raise AttributeError('Invalid `axis` value.')
+
+    if widen < 0:
+        # This places the desired axis at the front of the shape tuple, then
+        # reverses that first axis, and then returns it to its original
+        # position.
+        if dims > 1:
+            mask = np.swapaxes(np.swapaxes(mask, 0, axis)[::-1], 0, axis)
+        else:
+            mask = mask[::-1]
+
+    def repeat_or(a, n=1):
+        """Take a mask and applies logical OR to shifted versions of itself."""
+        m = a.copy().astype(bool)
+        k = m.copy()
+        if n == 0:
+            return k
+        n = n + 1  # trick so that n=1 means "expand mask by one"
+
+        # lenM and lenK : how many subsequent Trues there are at least
+        lenM, lenK = 1, 1
+
+        # run until a combination of both masks has n or more subsequent Trues
+        while lenM + lenK < n:
+            # append what we have in k to the end of what we have in m
+            m[lenM:] |= k[:-lenM]
+            m, k = k, m  # swap so that m is again the small one
+
+            # update the lengths
+            lenM, lenK = lenK, lenM + lenK
+
+        # see how much m has to be shifted in order to append the missing Trues
+        k[n - lenM:] |= m[:-n + lenM]
+
+        return k
+
+    if dims > 1:  # apply along given axis
+        out = np.apply_along_axis(repeat_or, axis, mask, n=np.abs(widen))
+    else:
+        out = repeat_or(mask, n=np.abs(widen))
+
+    if widen < 0:  # un-reverse axis
+        if dims > 1:
+            out = np.swapaxes(np.swapaxes(out, 0, axis)[::-1], 0, axis)
+        else:
+            out = out[::-1]
+
+    return out.astype(dtype)
+
+
 def relshift(X, ref, shifts, fill_value=0, axis=0):
     """Create shifted versions of X relative to ref with padding.
 
