@@ -3,7 +3,7 @@ import numpy as np
 from .utils import demean, fold, pca, theshapeof, tscov, tsregress, unfold
 
 
-def sns(data, n_neighbors=0, skip=0, weights=np.array([])):
+def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
     """Sensor Noise Suppresion.
 
     This algorithm will replace the data from each channel by its regression on
@@ -14,7 +14,7 @@ def sns(data, n_neighbors=0, skip=0, weights=np.array([])):
 
     Parameters
     ----------
-    data : array, shape = (n_samples, n_chans, n_trials)
+    X : array, shape = (n_samples, n_chans, n_trials)
         EEG data.
     n_neighbors : int
         Number of neighbors (based on correlation) to include in the
@@ -34,30 +34,28 @@ def sns(data, n_neighbors=0, skip=0, weights=np.array([])):
 
     """
     if not n_neighbors:
-        n_neighbors = data.shape[1] - 1
+        n_neighbors = X.shape[1] - 1
 
-    n_samples, n_chans, n_trials = theshapeof(data)
-    data = unfold(data)
+    n_samples, n_chans, n_trials = theshapeof(X)
+    X = unfold(X)
+    X = demean(X)
+    c, nc = tscov(X)
 
-    data = demean(data)
-    c, nc = tscov(data)
-
-    if weights:
+    if weights.any():
         weights = unfold(weights)
-        data = demean(data, weights)
-        wc, nwc = tscov(data, shifts=None, weights=weights)
+        X = demean(X, weights)
+        wc, nwc = tscov(X, shifts=None, weights=weights)
         r = sns0(c, n_neighbors, skip, wc)
     else:
-        weights = np.ones((n_chans, n_trials))
         r = sns0(c, n_neighbors, skip, c)
 
-    y = np.dot(np.squeeze(data), r)
+    y = np.dot(np.squeeze(X), r)
     y = fold(y, n_samples)
 
     return y, r
 
 
-def sns0(c, n_neighbors=0, skip=0, wc=[]):
+def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
     """Sensor Noise Suppresion from data covariance.
 
     Parameters
@@ -79,7 +77,7 @@ def sns0(c, n_neighbors=0, skip=0, wc=[]):
 
     """
     if not wc.any():
-        wc = c
+        wc = c.copy()
 
     n_chans = c.shape[0]
 
@@ -91,15 +89,19 @@ def sns0(c, n_neighbors=0, skip=0, wc=[]):
     r = np.zeros(c.shape)
 
     # normalize
-    eps = np.finfo(np.float64).eps
-    d = np.sqrt(1. / (np.diag(c) + eps))
-    c = c * d * d.T
+    eps = np.finfo(np.float32).eps
+    norm = np.diag(c).copy()
+    mask = norm > eps
+    norm[mask] = np.sqrt(1. / norm[mask])
+    norm[~mask] = 0
+    c = c * norm
+    c *= norm[:, np.newaxis]
+    del norm, mask
 
     for k in np.arange(n_chans):
         c1 = c[:, k]  # correlation of channel k with all other channels
         # sort by correlation, descending order
         idx = np.argsort(c1 ** 2, 0)[::-1]
-        c1 = c1[idx]
         idx = idx[skip + 1:skip + n_neighbors + 1]  # keep best
 
         # pca neighbors to orthogonalize them
@@ -108,72 +110,54 @@ def sns0(c, n_neighbors=0, skip=0, wc=[]):
 
         # Some of the eigenvalues could be zero or inf
         norm = np.zeros(len(eigval))
-        use_mask = np.logical_and(eigval > 100 * eps, np.isfinite(eigval))
-        norm[use_mask] = 1. / np.sqrt(eigval[use_mask])
+        mask = np.logical_and(eigval > eps, np.isfinite(eigval))
+        norm[mask] = 1. / np.sqrt(eigval[mask])
         eigvec *= norm
-        del eigval
+        del eigval, norm, mask
 
         r[k, idx] = np.dot(eigvec, np.dot(wc[k][idx], eigvec))
-
-        # Alternative implementation (from noisetools)
-        # augment rotation matrix to include this channel
-        # stack1 = np.hstack((1, np.zeros(eigvec.shape[0])))
-        # stack2 = np.hstack((np.zeros((eigvec.shape[0], 1)), eigvec))
-        # eigvec = np.vstack((stack1, stack2))
-        #
-        # # correlation matrix for rotated data
-        # c3 = np.dot(np.dot(
-        #     eigvec.T, wc[np.hstack((k, idx)), :][:, np.hstack((k, idx))]),
-        #     eigvec)
-        #
-        # # first row defines projection to clean component k
-        # c4 = np.dot(c3[0, 1:], eigvec[1:, 1:].T)
-        # c4.shape = (c4.shape[0], 1)
-        # insert new column into denoising matrix
-        # r[idx, k] = np.squeeze(c4)
 
         if r[k, k] != 0:
             raise RuntimeError('SNS operator should be zero along diagonal')
 
-    return r
+    return r.T
 
 
-def sns1(x, n_neighbors=0, skip=0):
+def sns1(X, n_neighbors=0, skip=0):
     """Sensor Noise Suppresion 1."""
-    if x.ndim > 2:
+    if X.ndim > 2:
         raise Exception("SNS1 works only with 2D matrices")
 
-    n_samples, n_chans, n_trials = theshapeof(x)
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     if n_neighbors == 0:
         n_neighbors = n_chans - skip - 1
     else:
         n_neighbors = np.min((n_neighbors, n_chans - skip - 1))
 
-    mn = np.mean(x)
-    x = (x - mn)  # remove mean
-    N = np.sqrt(np.sum(x ** 2))
+    mn = np.mean(X)
+    X = (X - mn)  # remove mean
+    N = np.sqrt(np.sum(X ** 2))
     NN = 1 / N
     NN[np.where(np.isnan(NN))] = 0
-    x = (x * NN)  # normalize
+    X = (X * NN)  # normalize
 
-    y = np.zeros(x.shape)
+    y = np.zeros(X.shape)
 
     for k in np.arange(n_chans):
-
-        c1 = x.T * x[:, k]  # correlation with neighbors
+        c1 = X.T * X[:, k]  # correlation with neighbors
         c1 = c1 / c1[k]
-        c1[k] = 0                           # demote self
+        c1[k] = 0  # demote self
         [c1, idx] = np.sort(c1 ** 2, 0)[::-1]  # sort
         idx = idx[1 + skip:n_neighbors + skip]   # keep best
 
         # pca neighbors to orthogonalize them
-        xx = x[:, idx]
+        xx = X[:, idx]
         c2 = xx.T * xx
         [eigvec, eigval] = pca(c2)
         eigvec = eigvec * np.diag(1 / np.sqrt(eigval))
 
-        y[:, k] = tsregress(x[:, k], xx * eigvec)
+        y[:, k] = tsregress(X[:, k], xx * eigvec)
 
     y = (y * N)
 

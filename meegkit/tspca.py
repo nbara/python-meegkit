@@ -59,7 +59,7 @@ def tsr(data, ref, shifts=None, weights_data=None, weights_ref=None, keep=None,
     if weights_ref:
         weights_ref = weights_ref[0:-offset1, :, :]
 
-    shifts += offset1  # shifts are now positive
+    shifts = shifts + offset1  # shifts are now positive
 
     # adjust size of data array
     offset2 = np.max((0, np.max(shifts)))

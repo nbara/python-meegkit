@@ -16,8 +16,9 @@ http://audition.ens.fr/adc/NoiseTools/
 Original python implementation by Pedro Alcocer:  
 https://github.com/pealco
 
-Python 2.7 and 3.5+ should be supported. Only DSS and STAR have been properly
-tested so far. TSCPA and SNS seem to run fine but give inaccurate results.
+Python 2.7 and 3.5+ should be supported. Only SNS, DSS and STAR have been
+properly tested so far. TSCPA seems to run fine but gives inaccurate
+results.
 
 This code can be tested directly from your browser using
 [Binder](https://mybinder.org), by clicking on the binder badge above.
