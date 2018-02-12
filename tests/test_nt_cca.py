@@ -32,11 +32,11 @@ def test_cca():
     X1 = np.dot(x, A)
     Y1 = np.dot(y, B)
 
-    cca = CCA(n_components=9)
+    cca = CCA(n_components=9, scale=False, max_iter=1e9)
     X2, Y2 = cca.fit_transform(x, y)
 
-    C1 = np.cov(np.hstack((X1, Y1)))
-    C2 = np.cov(np.hstack((X2, Y2)))
+    C1 = np.cov(np.hstack((X1, Y1)).T)
+    C2 = np.cov(np.hstack((X2, Y2)).T)
     # import matplotlib.pyplot as plt
     # f, (ax1, ax2) = plt.subplots(2, 1)
     # ax1.imshow(C1)

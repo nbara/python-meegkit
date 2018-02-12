@@ -6,7 +6,7 @@ from .utils import demean, tscov, mean_over_trials, pca, theshapeof
 def dss1(data, weights=None, keep1=None, keep2=1e-12):
     """DSS to maximise repeatability across trials.
 
-    Evoked-biased DSS desnoising.
+    Evoked-biased DSS denoising.
 
     Parameters
     ----------

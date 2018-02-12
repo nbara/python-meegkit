@@ -1,5 +1,4 @@
 """Test SNS functions."""
-import numpy as np
 from numpy.testing import assert_allclose
 
 from scipy.io import loadmat
@@ -10,7 +9,6 @@ from meegkit import sns
 
 def test_sns():
     """Test against NoiseTools."""
-
     mat = loadmat('./tests/data/snsdata.mat')
     x = mat['x']
     y_sns = mat['y_sns']
@@ -18,10 +16,10 @@ def test_sns():
     cx = mat['cx']
 
     r = sns.sns0(cx, n_neighbors=4)
-    assert_allclose(r, r_sns0)  # assert out results match Matlab's
+    assert_allclose(r, r_sns0)  # assert our results match Matlab's
 
     y, _ = sns.sns(x, n_neighbors=4)
-    assert_allclose(y, y_sns)  # assert out results match Matlab's
+    assert_allclose(y, y_sns)  # assert our results match Matlab's
 
 
 if __name__ == '__main__':

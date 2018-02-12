@@ -6,7 +6,7 @@ from meegkit.utils import demean, fold, unfold
 
 
 def test_tspca_sns_dss():
-    """Test TSPCA, SNS, DSS.
+    """Test TSPCA, SNS, DSS.                                               TODO
 
     Requires data stored in a time X channels X trials matrix.
 
@@ -14,9 +14,6 @@ def test_tspca_sns_dss():
     Remove sensor noise with SNS.
     Remove non-repeatable components with DSS.
     """
-    # x = mio.loadmat('data2.mat')
-    # data = x['data']
-    # ref  = x['ref']
 
     # Random data (time*chans*trials)
     data = np.random.random((800, 102, 200))
