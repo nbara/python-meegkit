@@ -10,37 +10,40 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
 
     Parameters
     ----------
-    X, Y : arrays
+    X, Y : arrays, shape = (n_times, n_chans[, n_trials])
         Data.
-    lags : array
+    lags : array, shape = (n_lags,)
         Array of lags. A positive lag means Y delayed relative to X.
-    C : array
+    C : array, shape = (n_chans, n_chans[, n_lags])
         Covariance matrix of [X, Y]. C can be 3D, which case CCA is derived
         independently from each page.
     m : int
-        Number of columns of X.
+        Number of channels of X.
     thresh: float
-        Discard PCs below this.
+        Discard principal components below this value.
 
     Returns
     -------
-    A, B : arrays
-        Transform matrices.
-    R :
+    A : array, shape = (n_chans_X, min(n_chans_X, n_chans_Y))
+        Transform matrix mapping `X` to canonical space.
+    B : array,  shape = (n_chans_Y, min(n_chans_X, n_chans_Y))
+        Transform matrix mapping `Y` to canonical space.
+    R : array, shape = (n_comps, n_lags)
         Correlation scores.
 
     Notes
     -----
-    Usage 1:
-    [A, B, R] = nt_cca(X, Y)  # CCA of X, Y
+    Usage 1: CCA of X, Y
+    >> [A, B, R] = nt_cca(X, Y)  # noqa
 
-    Usage 2:
-    [A, B, R] = nt_cca(X, Y, lags)  # CCA of X, Y for each value of lags.
+    Usage 2: CCA of X, Y for each value of lags.
+    >> [A, B, R] = nt_cca(X, Y, lags)  # noqa
+
     A positive lag indicates that Y is delayed relative to X.
 
-    Usage 3:
-    C = [X, Y].T * [X, Y] # covariance
-    [A, B, R] = nt_cca([], [], [], C, X.shape[1])  # CCA of X,Y
+    Usage 3: CCA from covariance matrix
+    >> C = [X, Y].T * [X, Y]  # noqa
+    >> [A, B, R] = nt_cca([], [], [], C, X.shape[1])  # noqa
 
     Use the third form to handle multiple files or large data (covariance C can
     be calculated chunk-by-chunk).
@@ -78,17 +81,17 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
         raise RuntimeError('covariance should be 3D at most')
 
     if C.ndim == 3:  # covariance is 3D: do a separate CCA for each trial
-        n_chans, _, n_trials = C.shape
+        n_chans, _, n_lags = C.shape
         N = np.min((m, n_chans - m))
-        A = np.zeros((m, N, n_trials))
-        B = np.zeros((n_chans - m, N, n_trials))
-        R = np.zeros((N, n_trials))
+        A = np.zeros((m, N, n_lags))
+        B = np.zeros((n_chans - m, N, n_lags))
+        R = np.zeros((N, n_lags))
 
-        for k in np.arange(1, n_trials).reshape(-1):
+        for k in np.arange(n_lags):
             AA, BB, RR = nt_cca(None, None, None, C[:, :, k], m, thresh)
             A[:AA.shape[0], :AA.shape[1], k] = AA
             B[:BB.shape[0], :BB.shape[1], k] = BB
-            R[:RR.shape[1], k] = RR
+            R[:, k] = RR
 
         return A, B, R
 

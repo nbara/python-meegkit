@@ -129,7 +129,8 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
     # We need to find out the indices of the padded values in `y`. For this we
     # use a hack where we feed in an array of ones to multishift(), with a
     # known `fill_value`.
-    temp = multishift(np.ones_like(X), shifts=shifts, axis=axis, fill_value=0)
+    temp = multishift(np.ones_like(ref), shifts=shifts, axis=axis,
+                      fill_value=0)
     mask = temp == 0
     if mask.any():
         y_ref[mask] = fill_value

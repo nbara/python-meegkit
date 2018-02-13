@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(
     name='meegkit',
     description='M/EEG denoising in Python',
-    url='http://github.com/eeginlscp/digitrack/',
+    url='http://github.com/nbara/python-meegkit/',
     author='N Barascud',
     author_email='nicolas.barascud@ens.fr',
     license='UNLICENSED',

@@ -5,7 +5,14 @@
 
 Denoising tools for M/EEG processing in Python.
 
-> **Disclaimer:** The project is in early stages of development, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the near future. Comments and suggestions are welcome.  
+> **Disclaimer:** The project mostly consists of development code, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the near future. Comments and suggestions are welcome.  
+
+Python 2.7 and 3.5+ should be supported. Only SNS, DSS and STAR have been
+properly tested so far. TSCPA seems to run fine but gives inaccurate
+results.
+
+This code can be tested directly from your browser using
+[Binder](https://mybinder.org), by clicking on the binder badge above.
 
 ## Python implementation of STAR, SNS, and DSS denoising
 
@@ -16,14 +23,7 @@ http://audition.ens.fr/adc/NoiseTools/
 Original python implementation by Pedro Alcocer:  
 https://github.com/pealco
 
-Python 2.7 and 3.5+ should be supported. Only SNS, DSS and STAR have been
-properly tested so far. TSCPA seems to run fine but gives inaccurate
-results.
-
-This code can be tested directly from your browser using
-[Binder](https://mybinder.org), by clicking on the binder badge above.
-
-## References 
+### References 
 
 If you use this code, you should cite the relevant methods from the original
 articles : 
