@@ -22,7 +22,7 @@ def pca(cov, max_components=None, thresh=0):
 
     Returns
     -------
-    eigenvectors: array, shape = (max_components, max_components)
+    eigvecs: array, shape = (max_components, max_components)
         Eigenvectors (matrix of PCA components).
     eigenvalues: PCA eigenvalues
 
@@ -32,49 +32,49 @@ def pca(cov, max_components=None, thresh=0):
     if thresh is not None and (thresh > 1 or thresh < 0):
         raise ValueError('Threshold must be between 0 and 1 (or None).')
 
-    eigenvalues, eigenvector = linalg.eig(cov)
+    eigvals, eigvecs = linalg.eig(cov)
 
-    eigenvalues = eigenvalues.real
-    eigenvector = eigenvector.real
+    eigvals = eigvals.real
+    eigvecs = eigvecs.real
 
-    idx = np.argsort(eigenvalues)[::-1]  # reverse sort ev order
-    eigenvalues = eigenvalues[idx]
+    idx = np.argsort(eigvals)[::-1]  # reverse sort ev order
+    eigvals = eigvals[idx]
 
     # Truncate
-    eigenvectors = eigenvector[:, idx]
-    eigenvectors = eigenvectors[:, np.arange(max_components)]
-    eigenvalues = eigenvalues[np.arange(max_components)]
+    eigvecs = eigvecs[:, idx]
+    eigvecs = eigvecs[:, np.arange(max_components)]
+    eigvals = eigvals[np.arange(max_components)]
 
     if thresh is not None:
-        suprathresh = np.where(eigenvalues / eigenvalues.max() > thresh)[0]
-        eigenvalues = eigenvalues[suprathresh]
-        eigenvectors = eigenvectors[:, suprathresh]
+        suprathresh = np.where(eigvals / eigvals.max() > thresh)[0]
+        eigvals = eigvals[suprathresh]
+        eigvecs = eigvecs[:, suprathresh]
 
-    return eigenvectors, eigenvalues
+    return eigvecs, eigvals
 
 
 def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
     """Compute regression matrix from cross covariance."""
     # PCA of regressor
-    [topcs, eigenvalues] = pca(cyy)
+    [topcs, eigvals] = pca(cyy)
 
     # discard negligible regressor PCs
     if keep:
         keep = max(keep, topcs.shape[1])
         topcs = topcs[:, 0:keep]
-        eigenvalues = eigenvalues[0:keep]
+        eigvals = eigvals[0:keep]
 
     if threshold:
-        idx = np.where(eigenvalues / max(eigenvalues) > threshold)
+        idx = np.where(eigvals / max(eigvals) > threshold)
         topcs = topcs[:, idx]
-        eigenvalues = eigenvalues[idx]
+        eigvals = eigvals[idx]
 
     # cross-covariance between data and regressor PCs
     cxy = cxy.T
     r = np.dot(topcs.T, cxy)
 
     # projection matrix from regressor PCs
-    r = (r.T * 1 / eigenvalues).T
+    r = (r.T * 1 / eigvals).T
 
     # projection matrix from regressors
     r = np.dot(np.squeeze(topcs), np.squeeze(r))

@@ -1,8 +1,7 @@
-import warnings
 import numpy as np
 
 from .matrix import (multishift, theshapeof, unsqueeze, relshift,
-                     _check_shifts)
+                     _check_shifts, _check_weights)
 
 
 def cov_lags(X, Y, shifts=None):
@@ -85,13 +84,13 @@ def tsxcov(X, Y, shifts=None, weights=None):
     tw : total weight
 
     """
-    weights = _check_weights(weights, X)
-    shifts, n_shifts = _check_shifts(shifts)
-
     n_times, n_chans, n_trials = theshapeof(X)
     n_times2, n_chans2, n_trials2 = theshapeof(Y)
     X = unsqueeze(X)
     Y = unsqueeze(Y)
+
+    weights = _check_weights(weights, X)
+    shifts, n_shifts = _check_shifts(shifts)
 
     # Apply weights if any
     if weights.any():
@@ -147,18 +146,17 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
         Total weight (C/tw is the normalized covariance).
 
     """
-    weights = _check_weights(weights, X)
-    shifts, n_shifts = _check_shifts(shifts)
-
     n_times, n_chans, n_trials = theshapeof(X)
     X = unsqueeze(X)
+
+    weights = _check_weights(weights, X)
+    shifts, n_shifts = _check_shifts(shifts)
 
     if not assume_centered:
         X = X - X.sum(0, keepdims=1) / n_chans
 
     if weights.any():  # weights
         X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult
-        weights = weights[:n_times, :, :]
         tw = np.sum(weights[:])
     else:  # no weights
         N = 0
@@ -175,24 +173,3 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
         C += np.dot(XX.T, XX)
 
     return C, tw
-
-
-def _check_weights(weights, X):
-    """Check weights dimensions against X."""
-    if not isinstance(weights, (np.ndarray, list)):
-        if weights is not None:
-            warnings.warn('weights should be a list or a numpy array.')
-        weights = np.array([])
-
-    if len(weights) > 0:
-        dtype = np.complex128 if np.any(np.iscomplex(weights)) else np.float64
-        weights = np.asanyarray(weights, dtype=dtype)
-        if weights.ndim > 3:
-            raise ValueError('Weights must be 3D at most')
-        if weights.ndim != X.ndim:
-            raise ValueError("Weights array should be the same ndim as X.")
-        if weights.shape[1] > 1:
-            raise ValueError("Weights array should have a single column.")
-        weights = unsqueeze(weights)
-
-    return weights

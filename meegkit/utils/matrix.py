@@ -1,4 +1,6 @@
 """Matrix operation utility functions."""
+import warnings
+
 import numpy as np
 
 
@@ -355,8 +357,8 @@ def unsqueeze(X):
 
 def fold(X, epoch_size):
     """Fold 2D X into 3D."""
-    if X.ndim != 2:
-        raise AttributeError('X must be 2D')
+    if X.ndim > 2:
+        raise AttributeError('X must be 2D at most')
 
     n_chans = X.shape[0] // epoch_size
     if X.shape[0] / epoch_size > 1:
@@ -366,7 +368,7 @@ def fold(X, epoch_size):
 
 
 def unfold(X):
-    """Unfold 3D X."""
+    """Unfold 3D X into 2D (concatenate trials)."""
     n_samples, n_chans, n_trials = theshapeof(X)
 
     if n_trials > 1:
@@ -379,8 +381,7 @@ def unfold(X):
 
 def demean(X, weights=None, return_mean=False):
     """Remove weighted mean over columns (samples)."""
-    if weights is None:
-        weights = np.array([])
+    weights = _check_weights(weights, X)
 
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
@@ -439,11 +440,11 @@ def normcol(X, weights=None, return_norm=False):
         Norm.
 
     """
-    if weights is None:
-        weights = np.array([])
+    weights = _check_weights(weights, X)
+
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     if X.ndim == 3:
-        n_samples, n_chans, n_trials = X.shape
         X = unfold(X)
 
         if not weights.any():  # no weights
@@ -464,11 +465,12 @@ def normcol(X, weights=None, return_norm=False):
             weights = unfold(weights)
             X_norm, N = normcol(X, weights)
             X_norm = fold(X_norm, n_samples)
-    else:
-        n_samples, n_chans, n_trials = theshapeof(X)
 
+    else:
         if not weights.any():
-            N = ((np.sum(X ** 2, axis=0) / n_samples) ** -0.5)[np.newaxis]
+            with np.errstate(divide='ignore'):
+                N = ((np.sum(X ** 2, axis=0) / n_samples) ** -0.5)[np.newaxis]
+
             N[np.isinf(N)] = 0
             N[np.isnan(N)] = 0
             X_norm = X * N
@@ -522,3 +524,31 @@ def _check_data(X):
         raise ValueError('Data must be 3D at most')
 
     return X
+
+
+def _check_weights(weights, X):
+    """Check weights dimensions against X."""
+    if not isinstance(weights, (np.ndarray, list)):
+        if weights is not None:
+            warnings.warn('weights should be a list or a numpy array.')
+        weights = np.array([])
+
+    if len(weights) > 0:
+        dtype = np.complex128 if np.any(np.iscomplex(weights)) else np.float64
+        weights = np.asanyarray(weights, dtype=dtype)
+        if weights.ndim > 3:
+            raise ValueError('Weights must be 3D at most')
+        if weights.shape[0] != X.shape[0]:
+            raise ValueError("Weights should be the same n_times as X.")
+
+        if X.ndim == 2 and weights.ndim == 1:
+            weights = weights[:, np.newaxis]
+        if X.ndim == 3 and weights.ndim == 2:
+            weights = weights[:, np.newaxis, :]
+        if X.ndim == 3 and weights.ndim == 1:
+            weights = weights[:, np.newaxis, np.newaxis]
+
+        if weights.shape[1] > 1:
+            raise ValueError("Weights array should have a single column.")
+
+    return weights

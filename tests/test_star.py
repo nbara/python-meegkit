@@ -40,6 +40,11 @@ def test_star1():
     y, w, _ = star(x, 2)
     assert_allclose(demean(y), x0)  # check that denoised signal ~ x0
 
+    # Test an all-zero channel is properly handled
+    x = x - x[:, 0][:, np.newaxis]
+    y, w, _ = star(x, 2)
+    assert_allclose(demean(y)[:, 0], x[:, 0])
+
 
 if __name__ == '__main__':
     import nose

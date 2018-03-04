@@ -59,19 +59,35 @@ def bootstrap_ci_chan(average, n_bootstrap=2000):
     return ci_low, ci_up
 
 
-def bootstrap_ci(epochs, n_bootstrap=2000, CI=(5, 95)):
-    """Get confidence intervals from non-parametric bootstrap resampling."""
-    n_channels = len(epochs.ch_names)
-    indices = np.arange(len(epochs.selection), dtype=int)
-    gfps_bs = np.empty((n_bootstrap, n_channels, len(epochs.times)))
+def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=0):
+    """Confidence intervals from non-parametric bootstrap resampling.
 
-    ci_low = np.zeros((n_channels, len(epochs.times)))
-    ci_up = np.zeros((n_channels, len(epochs.times)))
+    Bootstrap is computed *with* replacement.
+
+    Parameters
+    ----------
+    X : 2D array, shape = (n_chans, n_times)
+        Input data.
+    n_bootstrap : int
+        Number of bootstrap resamplings.
+    ci : length-2 tuple
+        Confidence interval.
+    axis : int
+        Axis to operate on.
+
+    Returns
+    -------
+    ci_low, ci_up : confidence intervals
+
+    """
+    indices = np.arange(X.shape[axis], dtype=int)
+
+    gfps_bs = np.nan * np.ones((n_bootstrap, X.shape[~axis]))
     for i in range(n_bootstrap):
         bs_indices = np.random.choice(indices, replace=True, size=len(indices))
-        gfps_bs[i, :] = np.mean(epochs._data[bs_indices, :, :], 0)
+        gfps_bs[i] = np.mean(np.take(X, bs_indices, axis=axis), axis=axis)
 
-    ci_low, ci_up = np.percentile(gfps_bs, CI, axis=0)
+    ci_low, ci_up = np.percentile(gfps_bs, ci, axis=0)
 
     return ci_low, ci_up
 
@@ -231,7 +247,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
 
     Parameters
     ----------
-    data : ndarray , shape = (Nconds, Nchans, Nsamples) or (Nchans, Nsamples)
+    data : ndarray , shape = ([n_trials, ]n_chans, n_samples)
         Power spectrum.
     n_avg : int
         Number of neighbour bins to estimate noise over. Make sure that this
@@ -242,7 +258,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
 
     Returns
     -------
-        SNR : ndarray, shape ()
+        SNR : ndarray, shape = (Nconds, Nchans, Nsamples) or (Nchans, Nsamples)
             Signal-to-Noise-corrected spectrum
 
     References
@@ -253,6 +269,8 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
     .. [2] Cottereau, B. R., McKee, S. P., & Norcia, A. M. (2014). Dynamics and
        cortical distribution of neural responses to 2D and 3D motion in human.
        Journal of neurophysiology, 111(3), 533-543.
+    .. [3] de Heering, A., & Rossion, B. (2015). Rapid categorization of
+       natural face images in the infant right hemisphere. Elife, 4.
 
     """
     if data.ndim == 3:
