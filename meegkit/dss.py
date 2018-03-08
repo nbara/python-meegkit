@@ -90,7 +90,7 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
         raise ValueError('NaN or INF in c1')
 
     # derive PCA and whitening matrix from unbiased covariance
-    eigvec0, eigval0 = pca(c0, max_components=keep1, thresh=keep2)
+    eigvec0, eigval0 = pca(c0, max_comps=keep1, thresh=keep2)
 
     # apply whitening and PCA matrices to the biased covariance
     # (== covariance of bias whitened data)
@@ -100,7 +100,7 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     c2 = (W * eigvec0.squeeze()).T.dot(c1).dot(eigvec0.squeeze()) * W
 
     # proj. matrix from whitened data space to a space maximizing bias
-    eigvec2, eigval2 = pca(c2, max_components=keep1, thresh=keep2)
+    eigvec2, eigval2 = pca(c2, max_comps=keep1, thresh=keep2)
 
     # DSS matrix (raw data to normalized DSS)
     todss = (W[np.newaxis, :] * eigvec0).dot(eigvec2)

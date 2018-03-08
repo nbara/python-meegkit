@@ -16,19 +16,6 @@ def rms(x, axis=0):
     return np.sqrt(np.mean(x ** 2, axis=axis, keepdims=True))
 
 
-# def rms2(epochs, window):
-#     """Compute RMS in given window."""
-#     idx = epochs.time_as_index(window)
-
-#     y = epochs.average().data  # average over trials
-#     y = y[:, idx]  # only take time samples in window
-
-#     r = np.empty(y.shape[0])
-#     for ch in range(len(epochs.ch_names)):
-#         r[ch] = np.sqrt(np.mean(y**2))  # rms
-#     return r
-
-
 def robust_mean(x, axis=0, percentile=[5, 95]):
     """Do robust mean based on JR Kings implementation."""
     x = np.array(x)

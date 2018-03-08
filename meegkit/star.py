@@ -6,7 +6,7 @@ from .utils import demean, fold, normcol, pca, theshapeof, tscov, unfold, wpwr
 
 
 def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
-         min_prop=0.3, n_iter=3, verbose=True):
+         min_prop=0.5, n_iter=3, verbose=True):
     """Sparse time-artifact removal.
 
     Parameters
@@ -62,9 +62,9 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     idx_nan = np.all(np.isnan(X), axis=0)
     idx_zero = np.all(X == 0, axis=0)
     if idx_nan.any():
-        X[:, idx_nan] = np.random.randn(n_samples, np.sum(idx_nan))
+        X[:, idx_nan] = np.random.randn(X.shape[0], np.sum(idx_nan))
     if idx_zero.any():
-        X[:, idx_zero] = np.random.randn(n_samples, np.sum(idx_zero))
+        X[:, idx_zero] = np.random.randn(X.shape[0], np.sum(idx_zero))
 
     # initial covariance estimate
     X = demean(X)
@@ -77,7 +77,7 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
     iter = n_iter
     while iter > 0:
-        w = np.ones((n_samples,))
+        w = np.ones((X.shape[0],))
         d = np.zeros_like(X)
         for ch in np.arange(n_chans):
             neighbours = _closest_neighbours(closest, ch, n_chans)
@@ -96,12 +96,12 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
         artifact_free = np.mean(w, axis=0)
         if verbose:
-            print('proportion artifact free: {}'.format(artifact_free))
+            print('proportion artifact free: {:.2f}'.format(artifact_free))
 
         if iter == n_iter and artifact_free < min_prop:
             thresh = thresh * 1.1
             if verbose:
-                print('Warning: increasing threshold to {}'.format(thresh))
+                print('Warning: increasing threshold to {:.2f}'.format(thresh))
             w = np.ones(w.shape)
         else:
             iter = iter - 1

@@ -9,75 +9,81 @@ from .matrix import fold, theshapeof, unfold, demean
 from .covariances import tscov, tsxcov
 
 
-def pca(cov, max_components=None, thresh=0):
-    """PCA rotation from covariance.
+def pca(cov, max_comps=None, thresh=0):
+    """PCA from covariance.
 
     Parameters
     ----------
     cov:  array, shape = (n_chans, n_chans)
         Covariance matrix.
-    max_components : int | None
+    max_comps : int | None
         Maximum number of components to retain after decomposition. ``None``
         (the default) keeps all suprathreshold components (see ``thresh``).
+    thresh : float
+        Discard components below this threshold.
 
     Returns
     -------
-    eigvecs: array, shape = (max_components, max_components)
+    V : array, shape = (max_comps, max_comps)
         Eigenvectors (matrix of PCA components).
-    eigenvalues: PCA eigenvalues
+    d : array, shape = (max_comps,)
+        PCA eigenvalues
 
     """
-    if not max_components:
-        max_components = cov.shape[0]  # keep all components
     if thresh is not None and (thresh > 1 or thresh < 0):
         raise ValueError('Threshold must be between 0 and 1 (or None).')
 
-    eigvals, eigvecs = linalg.eig(cov)
+    d, V = linalg.eigh(cov)
+    d = d.real
+    V = V.real
 
-    eigvals = eigvals.real
-    eigvecs = eigvecs.real
+    idx = np.argsort(d)[::-1]  # reverse sort ev order
+    d = d[idx]
+    V = V[:, idx]
 
-    idx = np.argsort(eigvals)[::-1]  # reverse sort ev order
-    eigvals = eigvals[idx]
-
-    # Truncate
-    eigvecs = eigvecs[:, idx]
-    eigvecs = eigvecs[:, np.arange(max_components)]
-    eigvals = eigvals[np.arange(max_components)]
-
+    # Truncate weak components
     if thresh is not None:
-        suprathresh = np.where(eigvals / eigvals.max() > thresh)[0]
-        eigvals = eigvals[suprathresh]
-        eigvecs = eigvecs[:, suprathresh]
+        idx = np.where(d / d.max() > thresh)[0]
+        d = d[idx]
+        V = V[:, idx]
 
-    return eigvecs, eigvals
+    # Keep a fixed number of components
+    if max_comps is None:
+        max_comps = V.shape[1]
+    else:
+        max_comps = np.min(max_comps, V.shape[1])
+
+    V = V[:, np.arange(max_comps)]
+    d = d[np.arange(max_comps)]
+
+    return V, d
 
 
 def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
     """Compute regression matrix from cross covariance."""
     # PCA of regressor
-    [topcs, eigvals] = pca(cyy)
+    [V, d] = pca(cyy)
 
     # discard negligible regressor PCs
     if keep:
-        keep = max(keep, topcs.shape[1])
-        topcs = topcs[:, 0:keep]
-        eigvals = eigvals[0:keep]
+        keep = max(keep, V.shape[1])
+        V = V[:, 0:keep]
+        d = d[0:keep]
 
     if threshold:
-        idx = np.where(eigvals / max(eigvals) > threshold)
-        topcs = topcs[:, idx]
-        eigvals = eigvals[idx]
+        idx = np.where(d / max(d) > threshold)
+        V = V[:, idx]
+        d = d[idx]
 
     # cross-covariance between data and regressor PCs
     cxy = cxy.T
-    r = np.dot(topcs.T, cxy)
+    r = np.dot(V.T, cxy)
 
     # projection matrix from regressor PCs
-    r = (r.T * 1 / eigvals).T
+    r = (r.T * 1 / d).T
 
     # projection matrix from regressors
-    r = np.dot(np.squeeze(topcs), np.squeeze(r))
+    r = np.dot(np.squeeze(V), np.squeeze(r))
 
     return r
 

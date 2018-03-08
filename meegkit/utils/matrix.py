@@ -357,6 +357,8 @@ def unsqueeze(X):
 
 def fold(X, epoch_size):
     """Fold 2D X into 3D."""
+    if X.ndim == 1:
+        X = X[:, np.newaxis]
     if X.ndim > 2:
         raise AttributeError('X must be 2D at most')
 

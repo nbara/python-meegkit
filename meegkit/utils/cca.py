@@ -3,6 +3,7 @@ from scipy import linalg
 
 from .covariances import cov_lags
 from .matrix import _check_shifts
+from .denoise import pca
 
 
 def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
@@ -97,8 +98,8 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
 
     # Calculate CCA given C = [X,Y].T * [X,Y] and m = x.shape[1]
     # -------------------------------------------------------------------------
-    Cxw = nt_whiten(C[:m, :m], thresh)  # sphere X
-    Cyw = nt_whiten(C[m:, m:], thresh)  # sphere Y
+    Cxw = whiten_nt(C[:m, :m], thresh)  # sphere X
+    Cyw = whiten_nt(C[m:, m:], thresh)  # sphere Y
 
     # apply sphering matrices to C
     W = np.zeros((Cxw.shape[0] + Cyw.shape[0], Cxw.shape[1] + Cyw.shape[1]))
@@ -110,10 +111,8 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
     N = np.min((Cxw.shape[1], Cyw.shape[1]))
 
     # PCA
-    d, V = linalg.eig(C)
-    d, V = np.real(d), np.real(V)
-    idx = np.argsort(d)[::-1]
-    d, V = d[idx], V[:, idx]
+    V, d = pca(C)
+
     A = np.dot(Cxw, V[:Cxw.shape[1], :N]) * np.sqrt(2)
     B = np.dot(Cyw, V[Cxw.shape[1]:, :N]) * np.sqrt(2)
     R = d[:N] - 1
@@ -124,41 +123,52 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
 def whiten(C, fudge=1e-18):
     """Whiten covariance matrix C of X.
 
-    If X should has shape = (observations, components), X_white = np.dot(X, W).
+    If X has shape = (observations, components), X_white = np.dot(X, W).
 
     References
     ----------
     https://stackoverflow.com/questions/6574782/how-to-whiten-matrix-in-pca
 
     """
-    d, V = linalg.eigh(C)  # eigenvalue decomposition of the covariance
+    eigvals, V = linalg.eigh(C)  # eigenvalue decomposition of the covariance
 
     # a fudge factor can be used so that eigenvectors associated with
     # small eigenvalues do not get overamplified.
-    D = np.diag(1. / np.sqrt(d + fudge))
+    D = np.diag(1. / np.sqrt(eigvals + fudge))
     W = np.dot(np.dot(V, D), V.T)   # whitening matrix
 
     return W
 
 
-def nt_whiten(C, thresh=1e-12):
-    """Whiten function from noisetools."""
-    d, V = linalg.eig(C)
-    d, V = np.real(d), np.real(V)
+def whiten_nt(C, thresh=1e-12):
+    """Covariance whitening function from noisetools."""
+    d, V = linalg.eigh(C)  # eigh if matrix symmetric, eig otherwise
+    d = np.real(d)
+    V = np.real(V)
+
+    # Sort eigenvalues
     idx = np.argsort(d)[::-1]
     d = d[idx]
+    V = V[:, idx]
+
+    # Remove small eigenvalues
     keep = (d / np.max(d)) > thresh
-    V = V[:, idx[keep]]
     d = d[keep]
+    V = V[:, keep]
+
+    # break symmetry when x and y perfectly correlated (otherwise cols of x*A
+    # and y*B are not orthogonal)
     d = d ** (1 - thresh)
-    Cw = np.dot(V, np.diag(np.sqrt((1. / d))).T)
 
-    return Cw
+    D = np.diag(np.sqrt((1. / d)))
+    W = np.dot(V, D)
+
+    return W
 
 
-def svd_whiten(X):
+def whiten_svd(X):
     """SVD whitening."""
-    U, s, Vt = linalg.svd(X, full_matrices=False)
+    U, S, Vt = linalg.svd(X, full_matrices=False)
 
     # U and Vt are the singular matrices, and s contains the singular values.
     # Since the rows of both U and Vt are orthonormal vectors, then U * Vt
@@ -166,3 +176,28 @@ def svd_whiten(X):
     X_white = np.dot(U, Vt)
 
     return X_white
+
+
+def whiten_zca(C, thresh=None):
+    """Compute ZCA whitening matrix (aka Mahalanobis whitening).
+
+    Parameters
+    ----------
+    C : array
+        Covariance matrix.
+    thresh : float
+        Whitening constant, it prevents division by zero.
+
+    Returns
+    -------
+    ZCA: array, shape (n_chans, n_chans)
+        ZCA matrix, to be multiplied with data.
+
+    """
+    U, S, V = np.linalg.svd(C)  # Singular Value Decomposition
+
+    # ZCA Whitening matrix
+    D = np.diag(1. / np.sqrt(S + thresh))
+    ZCA = np.dot(np.dot(U, D), U.T)
+
+    return ZCA
