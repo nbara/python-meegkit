@@ -88,7 +88,7 @@ def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
     return r
 
 
-def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
+def tsregress(X, y, shifts=np.array([0]), keep=np.array([]),
               threshold=np.array([]), toobig1=np.array([]),
               toobig2=np.array([])):
     """Time-shift regression."""
@@ -96,51 +96,51 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
     mn = shifts.min()
     if mn < 0:
         shifts = shifts - mn
-        x = x[-mn + 1:, :, :]
+        X = X[-mn + 1:, :, :]
         y = y[-mn + 1:, :, :]
 
     n_shifts = shifts.size
 
-    # flag outliers in x and y
+    # flag outliers in X and y
     if toobig1 or toobig2:
-        xw = find_outliers(x, toobig1, toobig2)
+        xw = find_outliers(X, toobig1, toobig2)
         yw = find_outliers(y, toobig1, toobig2)
     else:
         xw = []
         yw = []
 
-    if x.ndim == 3:
-        [Mx, Nx, Ox] = x.shape
+    if X.ndim == 3:
+        [Mx, Nx, Ox] = X.shape
         [My, Ny, Oy] = y.shape
-        x = unfold(x)
+        X = unfold(X)
         y = unfold(y)
-        [x, xmn] = demean(x, xw)
+        [X, xmn] = demean(X, xw)
         [y, ymn] = demean(y, yw)
-        x = fold(x, Mx)
+        X = fold(X, Mx)
         y = fold(y, My)
     else:
-        [x, xmn] = demean(x, xw)
+        [X, xmn] = demean(X, xw)
         [y, ymn] = demean(y, yw)
 
     # covariance of y
     [cyy, totalweight] = tscov(y, shifts.T, yw)
     cyy = cyy / totalweight
 
-    # cross-covariance of x and y
-    [cxy, totalweight] = tsxcov(x, y, shifts.T, xw, yw)
+    # cross-covariance of X and y
+    [cxy, totalweight] = tsxcov(X, y, shifts.T, xw, yw)
     cxy = cxy / totalweight
 
     # regression matrix
     r = regcov(cxy, cyy, keep, threshold)
 
     # regression
-    if x.ndim == 3:
-        x = unfold(x)
+    if X.ndim == 3:
+        X = unfold(X)
         y = unfold(y)
 
-        [n_samples, n_chans, n_trials] = x.shape
+        [n_samples, n_chans, n_trials] = X.shape
         mm = n_samples - max(shifts)
-        z = np.zeros(x.shape)
+        z = np.zeros(X.shape)
 
         for k in range(n_shifts):
             kk = shifts(k)
@@ -151,7 +151,7 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
         z = fold(z, Mx)
         z = z[0:-max(shifts), :, :]
     else:
-        n_samples, n_chans = x.shape
+        n_samples, n_chans = X.shape
         z = np.zeros((n_samples - max(shifts), n_chans))
         for k in range(n_shifts):
             kk = shifts(k)
@@ -165,32 +165,32 @@ def tsregress(x, y, shifts=np.array([0]), keep=np.array([]),
     return z, idx
 
 
-def wmean(x, weights=[], axis=0):
+def wmean(X, weights=[], axis=0):
     """Weighted mean."""
     if not weights:
-        y = np.mean(x, axis)
+        y = np.mean(X, axis)
     else:
-        if x.shape[0] != weights.shape[0]:
+        if X.shape[0] != weights.shape[0]:
             raise Exception("data and weight must have same nrows")
         if weights.shape[1] == 1:
-            weights = np.tile(weights, (1, x.shape(1)))
-        if weights.shape[1] != x.shape[1]:
+            weights = np.tile(weights, (1, X.shape(1)))
+        if weights.shape[1] != X.shape[1]:
             raise Exception("weight must have same ncols as data, or 1")
 
-        y = np.sum(x * weights, axis) / np.sum(weights, axis)
+        y = np.sum(X * weights, axis) / np.sum(weights, axis)
 
     return y
 
 
-def mean_over_trials(x, weights=None):
+def mean_over_trials(X, weights=None):
     """Compute mean over trials."""
     if weights is None:
         weights = np.array([])
 
-    n_samples, n_chans, n_trials = theshapeof(x)
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     if not weights.any():
-        y = np.mean(x, 2)
+        y = np.mean(X, 2)
         tw = np.ones((n_samples, n_chans, 1)) * n_trials
     else:
         m, n, o = theshapeof(weights)
@@ -199,71 +199,71 @@ def mean_over_trials(x, weights=None):
         if o != n_trials:
             raise "!"
 
-        x = unfold(x)
+        X = unfold(X)
         weights = unfold(weights)
 
         if n == n_chans:
-            x = x * weights
-            x = fold(x, n_samples)
+            X = X * weights
+            X = fold(X, n_samples)
             weights = fold(weights, n_samples)
-            y = np.sum(x, 3) / np.sum(weights, 3)
+            y = np.sum(X, 3) / np.sum(weights, 3)
         elif n == 1:
-            x = x * weights
-            x = fold(x, n_samples)
+            X = X * weights
+            X = fold(X, n_samples)
             weights = fold(weights, n_samples)
-            y = np.sum(x, 3) * 1 / np.sum(weights, 3)
+            y = np.sum(X, 3) * 1 / np.sum(weights, 3)
 
         tw = np.sum(weights, 3)
 
     return y, tw
 
 
-def wpwr(x, weights=None):
+def wpwr(X, weights=None):
     """Weighted power."""
     if weights is None:
         weights = np.array([])
 
-    x = unfold(x)
+    X = unfold(X)
     weights = unfold(weights)
 
     if weights:
-        x = x * weights
-        y = np.sum(x ** 2)
+        X = X * weights
+        y = np.sum(X ** 2)
         tweight = np.sum(weights)
     else:
-        y = np.sum(x ** 2)
-        tweight = x.size
+        y = np.sum(X ** 2)
+        tweight = X.size
 
     return y, tweight
 
 
-def find_outliers(x, toobig1, toobig2=[]):
+def find_outliers(X, toobig1, toobig2=[]):
     """Find outlier trials using an absolute threshold."""
-    n_samples, n_chans, n_trials = theshapeof(x)
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     # remove mean
-    x = unfold(x)
-    x = demean(x)[0]
+    X = unfold(X)
+    X = demean(X)[0]
 
     # apply absolute threshold
-    weights = np.ones(x.shape)
+    weights = np.ones(X.shape)
     if toobig1:
-        weights[np.where(abs(x) > toobig1)] = 0
-        x = demean(x, weights)[0]
+        weights[np.where(abs(X) > toobig1)] = 0
+        X = demean(X, weights)[0]
 
-        weights[np.where(abs(x) > toobig1)] = 0
-        x = demean(x, weights)[0]
+        weights[np.where(abs(X) > toobig1)] = 0
+        X = demean(X, weights)[0]
 
-        weights[np.where(abs(x) > toobig1)] = 0
-        x = demean(x, weights)[0]
+        weights[np.where(abs(X) > toobig1)] = 0
+        X = demean(X, weights)[0]
     else:
-        weights = np.ones(x.shape)
+        weights = np.ones(X.shape)
 
     # apply relative threshold
     if toobig2:
-        X = wmean(x ** 2, weights)
-        X = np.tile(X, (x.shape[0], 1))
-        idx = np.where(x**2 > (X * toobig2))
+        X = wmean(X ** 2, weights)
+        X = np.tile(X, (X.shape[0], 1))
+        idx = np.where(X**2 > (X * toobig2))
         weights[idx] = 0
 
     weights = fold(weights, n_samples)
@@ -271,7 +271,7 @@ def find_outliers(x, toobig1, toobig2=[]):
     return weights
 
 
-def find_outlier_trials(x, thresh=None, disp_flag=True):
+def find_outlier_trials(X, thresh=None, disp_flag=True):
     """Find outlier trials.
 
     For example thresh=2 rejects trials that deviate from the mean by
@@ -279,8 +279,8 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
 
     Parameters
     ----------
-    x : ndarray
-        Data array (n_trials * n_chans * time).
+    X : ndarray, shape = (n_times, n_chans[, n_trials])
+        Data array.
     thresh : float or array of floats
         Keep trials less than thresh from mean.
     disp_flag : bool
@@ -299,35 +299,31 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
     elif isinstance(thresh, float) or isinstance(thresh, int):
         thresh = [thresh]
 
-    if x.ndim > 3:
-        raise ValueError('x should be 2D or 3D')
-    elif x.ndim == 3:
-        n_chans, n_chans, n_trials = x.shape  # n_trials * n_chans * time
-        x = np.reshape(x, (n_chans, n_chans * n_trials))
+    if X.ndim > 3:
+        raise ValueError('X should be 2D or 3D')
+    elif X.ndim == 3:
+        n_samples, n_chans, n_trials = theshapeof(X)
+        X = np.reshape(X, (n_samples * n_chans, n_trials))
     else:
-        n_chans, _ = x.shape
+        n_chans, n_trials = X.shape
 
-    n_samples = np.mean(x, axis=0)  # mean over trials
-    n_samples = np.tile(n_samples, (n_chans, 1))  # repeat mean
-    d = x - n_samples  # difference from mean
-    dd = np.zeros(n_chans)
-    for i_trial in range(n_chans):
-        dd[i_trial] = np.sum(d[i_trial, :] ** 2)
-    d = dd / (np.sum(x.flatten() ** 2) / n_chans)
+    avg = np.mean(X, axis=-1, keepdims=True)  # mean over trials
+    d = X - avg  # difference from mean
+    d = np.sum(d ** 2, axis=0)
+
+    d = d / (np.sum(X ** 2) / n_trials)
     idx = np.where(d < thresh[0])[0]
-    del dd
 
     if disp_flag:
         plt.figure(figsize=(7, 4))
         gs = gridspec.GridSpec(1, 2)
-
         plt.suptitle('Outlier trial detection')
 
         # Before
         ax1 = plt.subplot(gs[0, 0])
         ax1.plot(d, ls='-')
-        ax1.plot(np.setdiff1d(np.arange(n_chans), idx),
-                 d[np.setdiff1d(np.arange(n_chans), idx)], color='r', ls=' ',
+        ax1.plot(np.setdiff1d(np.arange(n_trials), idx),
+                 d[np.setdiff1d(np.arange(n_trials), idx)], color='r', ls=' ',
                  marker='.')
         ax1.axhline(y=thresh[0], color='grey', linestyle=':')
         ax1.set_xlabel('Trial #')
@@ -338,7 +334,7 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
 
         # After
         ax2 = plt.subplot(gs[0, 1])
-        _, dd = find_outlier_trials(x[idx, :], None, False)
+        _, dd = find_outlier_trials(X[:, idx], None, False)
         ax2.plot(dd, ls='-')
         ax2.set_xlabel('Trial #')
         ax2.set_title('After, ' + str(len(idx)), fontsize=10)
@@ -348,12 +344,12 @@ def find_outlier_trials(x, thresh=None, disp_flag=True):
 
     thresh.pop()
     if thresh:
-        bads2, _ = find_outlier_trials(x[idx, :], thresh, disp_flag)
+        bads2, _ = find_outlier_trials(X[:, idx], thresh, disp_flag)
         idx2 = idx[bads2]
         idx = np.setdiff1d(idx, idx2)
 
     bads = []
-    if len(idx) < n_chans:
-        bads = np.setdiff1d(range(n_chans), idx)
+    if len(idx) < n_trials:
+        bads = np.setdiff1d(range(n_trials), idx)
 
     return bads, d
