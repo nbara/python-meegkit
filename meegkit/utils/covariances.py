@@ -5,7 +5,7 @@ from .matrix import (multishift, theshapeof, unsqueeze, relshift,
 
 
 def cov_lags(X, Y, shifts=None):
-    """Empirical covariance of [X,Y] with lags.
+    """Empirical covariance of the joint array [X, Y] with lags.
 
     Parameters
     ----------

@@ -1,5 +1,4 @@
 """Utility functions."""
-from .cca import nt_cca
 from .covariances import tscov, tsxcov, cov_lags
 from .denoise import (find_outlier_trials, find_outliers,
                       mean_over_trials, pca, regcov, tsregress, wmean, wpwr)

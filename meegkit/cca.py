@@ -1,12 +1,105 @@
+"""CCA functions."""
+import sys
 import numpy as np
 from scipy import linalg
 
-from .covariances import cov_lags
-from .matrix import _check_shifts
-from .denoise import pca
+from .utils.covariances import cov_lags
+from .utils.matrix import _check_shifts, normcol, relshift, _times_to_delays
+from .utils.denoise import pca
 
 
-def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
+def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False):
+    """CCA with cross-validation.
+
+    Parameters
+    ----------
+    xx : list of arrays
+        If a list is provided, each element should have shape = (n_times,
+        n_chans). If array, it should be 3D of shape = (n_times, n_chans,
+        n_trials).
+    yy : list of arrays
+        If a list is provided, each element should have shape = (n_times,
+        n_chans). If array, it should be 3D of shape = (n_times, n_chans,
+        n_trials).
+    shifts:
+        Array of shifts to apply to y relative to x (can be negative).
+    surrogate:
+        If True, estimate sd of correlation over non-matching pairs.
+
+    Returns
+    -------
+    AA, BB : arrays
+        Cell arrays of transform matrices.
+    RR : array
+        Correlations (2D).
+    SD : array
+        Standard deviation of correlation over non-matching pairs (2D).
+
+    """
+    if isinstance(xx, list) and isinstance(yy, list):
+        assert len(xx) == len(yy)
+    elif isinstance(xx, np.ndarray) and isinstance(yy, np.ndarray):
+        assert xx.shape[-1] == yy.shape[-1]
+        # Convert xx and yy to lists
+        xx = [xx[..., t] for t in np.arange(xx.shape[-1])]
+        yy = [yy[..., t] for t in np.arange(yy.shape[-1])]
+    else:
+        raise AttributeError('xx and yy both must be lists of same length, ' +
+                             'or arrays os same n_trials.')
+
+    # Calculate covariance matrices
+    print('Calculate all covariances...')
+    shifts = _times_to_delays(shifts, sfreq)
+    shifts, n_shifts = _check_shifts(shifts)
+    n_trials = len(xx)
+    n_feats = xx[0].shape[1] + yy[0].shape[1]  # sum of channels
+
+    C = np.zeros((n_feats, n_feats, n_shifts, n_trials)).squeeze()
+    for iTrial in range(n_trials):
+        C[..., iTrial], _, _ = cov_lags(xx[iTrial], yy[iTrial], shifts)
+
+    # Calculate leave-one-out CCAs
+    print('Calculate CCAs...')
+    AA = list()
+    BB = list()
+    for t in range(n_trials):
+        # covariance of all trials except t
+        CC = np.sum(C[..., np.arange(n_trials) != t], axis=-1, keepdims=True)
+        if CC.ndim == 4:
+            CC = np.squeeze(CC, 3)
+
+        # corresponding CCA
+        [A, B, R] = nt_cca(None, None, None, CC, xx[0].shape[1])
+        AA.append(A)
+        BB.append(B)
+
+    del C, CC
+
+    # Calculate leave-one-out correlation coefficients
+    sys.stdout.write('Calculate cross-correlations...')
+    sys.stdout.flush()
+    n_comps = A.shape[1]
+    r = np.zeros((n_comps, n_shifts))
+    RR = np.zeros((n_comps, n_shifts, n_trials))
+    for t in range(n_trials):
+        A = AA[t]
+        B = BB[t]
+        for s in range(n_shifts):
+            x, y = relshift(xx[t], yy[t], shifts[s])
+            a = A[:, :, s]
+            b = B[:, :, s]
+            r[:, s] = np.diag(
+                np.dot(normcol(np.dot(x, a)).T,
+                       normcol(np.dot(y, b)))) / x.shape[0]
+
+        RR[:, :, t] = r
+
+    sys.stdout.write('\b OK!\n')
+
+    return AA, BB, RR
+
+
+def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None, sfreq=1):
     """Compute CCA from covariance.
 
     Parameters
@@ -14,7 +107,8 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
     X, Y : arrays, shape = (n_times, n_chans[, n_trials])
         Data.
     lags : array, shape = (n_lags,)
-        Array of lags. A positive lag means Y delayed relative to X.
+        Array of lags. A positive lag means Y delayed relative to X. If
+        :attr:`sfreq` is > 1, lags are interpreted as times in seconds.
     C : array, shape = (n_chans, n_chans[, n_lags])
         Covariance matrix of [X, Y]. C can be 3D, which case CCA is derived
         independently from each page.
@@ -22,6 +116,8 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
         Number of channels of X.
     thresh: float
         Discard principal components below this value.
+    sfreq : float
+        Sampling frequency. If not 1, lags are assumed to be given in seconds.
 
     Returns
     -------
@@ -65,6 +161,7 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None):
         raise AttributeError('Either *both* X and Y should be defined, or C!')
 
     if X is not None:
+        lags = _times_to_delays(lags, sfreq)
         lags, n_lags = _check_shifts(lags)
         C, _, m = cov_lags(X, Y, lags)
         A, B, R = nt_cca(None, None, None, C, m, thresh)

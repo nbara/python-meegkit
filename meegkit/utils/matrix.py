@@ -554,3 +554,31 @@ def _check_weights(weights, X):
             raise ValueError("Weights array should have a single column.")
 
     return weights
+
+
+def _times_to_delays(lags, sfreq):
+    """Convert a lags in seconds to delays."""
+    if lags is None:
+        return np.array([0])
+    if not isinstance(sfreq, (int, float, np.int_)):
+        raise ValueError('`sfreq` must be an integer or float')
+    sfreq = float(sfreq)
+
+    if not all([isinstance(ii, (int, float, np.int_)) for ii in lags]):
+        raise ValueError('lags must be an integer or float')
+
+    if len(lags) == 2 and sfreq != 1:
+        tmin = lags[0]
+        tmax = lags[1]
+
+        if not tmin <= tmax:
+            raise ValueError('tmin must be <= tmax')
+
+        # Convert seconds to samples
+        delays = np.arange(int(np.round(tmin * sfreq)),
+                           int(np.round(tmax * sfreq) + 1), step=2)
+
+    else:
+        delays = lags
+
+    return delays

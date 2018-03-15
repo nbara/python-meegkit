@@ -6,7 +6,8 @@ from scipy.io import loadmat
 from sklearn.cross_decomposition import CCA
 
 from context import meegkit  # noqa
-from meegkit.utils import nt_cca, tscov
+from meegkit.utils import tscov
+from meegkit.cca import nt_cca, cca_crossvalidate
 
 
 def test_cca():
@@ -105,6 +106,37 @@ def test_cca_lags():
     for c in np.arange(3):  # test first 3 components have peaks at 0
         assert_equal(lags[np.argmax(R1[c, :])], 0)
 
+
+def test_cca_crossvalidate():
+    """Test CCA with crossvalidation."""
+    # x = np.random.randn(1000, 11)
+    # y = np.random.randn(1000, 9)
+    # xx = [x, x, x]
+    # yy = [x[:, :9], y, y]
+
+    mat = loadmat('./tests/data/ccadata2.mat')
+    xx = mat['x']
+    yy = mat['y']
+    R1 = mat['R']  # no shifts
+
+    # Test with no shifts
+    A, B, R = cca_crossvalidate(xx, yy,)
+
+    assert_almost_equal(R, R1, decimal=2)
+
+    # Test with shifts
+    A, B, R = cca_crossvalidate(xx, yy, shifts=[1, 2, 3, 4, 5])
+    # assert_almost_equal(R, R2, decimal=1)  # won't work as correlations ~0
+
+    # Create data where 1st comps should be uncorrelated, and 2nd and 3rd comps
+    # are very correlated
+    x = np.random.randn(1000, 10)
+    y = np.random.randn(1000, 10)
+    xx = [x, x, x]
+    yy = [y, x, x]
+    A, B, R = cca_crossvalidate(xx, yy)
+    assert_almost_equal(R[:, :, 0], 0, decimal=1)
+    assert_almost_equal(R[:, :, 1:], 1, decimal=1)
 
 if __name__ == '__main__':
     import nose
