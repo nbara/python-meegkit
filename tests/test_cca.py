@@ -120,7 +120,7 @@ def test_cca_crossvalidate():
     R1 = mat['R']  # no shifts
 
     # Test with no shifts
-    A, B, R = cca_crossvalidate(xx, yy,)
+    A, B, R = cca_crossvalidate(xx, yy)
 
     assert_almost_equal(R, R1, decimal=2)
 

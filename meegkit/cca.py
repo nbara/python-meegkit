@@ -8,7 +8,8 @@ from .utils.matrix import _check_shifts, normcol, relshift, _times_to_delays
 from .utils.denoise import pca
 
 
-def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False):
+def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
+                      plot=False):
     """CCA with cross-validation.
 
     Parameters
@@ -21,16 +22,18 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False):
         If a list is provided, each element should have shape = (n_times,
         n_chans). If array, it should be 3D of shape = (n_times, n_chans,
         n_trials).
-    shifts:
+    shifts : array, shape = (n_shifts,)
         Array of shifts to apply to y relative to x (can be negative).
-    surrogate:
+    surrogate : bool
         If True, estimate sd of correlation over non-matching pairs.
+    plot : bool
+        Produce some plots.
 
     Returns
     -------
     AA, BB : arrays
         Cell arrays of transform matrices.
-    RR : array
+    RR : array, shape = (n_comps, n_shifts, n_trials)
         Correlations (2D).
     SD : array
         Standard deviation of correlation over non-matching pairs (2D).
@@ -88,13 +91,53 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False):
             x, y = relshift(xx[t], yy[t], shifts[s])
             a = A[:, :, s]
             b = B[:, :, s]
-            r[:, s] = np.diag(
-                np.dot(normcol(np.dot(x, a)).T,
-                       normcol(np.dot(y, b)))) / x.shape[0]
-
+            r[:, s] = np.diag(np.dot(normcol(np.dot(x, a)).T,
+                                     normcol(np.dot(y, b)))) / x.shape[0]
         RR[:, :, t] = r
 
+        # if surrogate:
+        #     ss = np.zeros_like(RR)
+        #     next = np.mod(t, n_trials)  # correlate with next in list
+        #     for s in np.arange(n_shifts):
+        #         [x, y] = relshift(xx[t], yy[next], shifts[s])
+        #         a = A[:, :, s]
+        #         b = B[:, :, s]
+        #         m = np.min((x.shape[0], y.shape[0]))
+        #         s[:, s] = np.diag(np.dot(normcol(np.dot(x, a)).T,
+        #                                  normcol(np.dot(y, b)))) / m
+        #     ss[:, :, t] = s
+
     sys.stdout.write('\b OK!\n')
+
+    # if surrogate:
+    #     var = (np.sum(ss ** 2, 2) - np.sum(ss, 2) ** 2 / n_trials) /\
+    #           (n_trials - 1)
+    #     SD = np.sqrt(var)
+
+    if plot:
+        import matplotlib.pyplot as plt
+        f, (ax1) = plt.subplots(1, 1)
+        for k in range(RR.shape[0]):
+            ax1.plot(shifts, np.mean(RR[k, :, :], 1).T, label='CC{}'.format(k))
+        ax1.set_title('correlation for each CC')
+        ax1.set_xlabel('shift')
+        ax1.set_ylabel('correlation')
+        ax1.legend()
+
+        # if surrogate:
+        #     ax1.plot(SD.T, ':')
+
+        f2, axes = plt.subplots(min(4, RR.shape[0]), 1)
+        for k, ax in zip(np.arange(min(4, RR.shape[0])), axes):
+            idx = np.argmax(np.mean(RR[k, :, :], 1))
+            [x, y] = relshift(xx[0], yy[0], shifts[idx])
+            ax.plot(np.dot(x, A[:, k, idx]).T, label='CC{}'.format(k))
+            ax.plot(np.dot(y, B[:, k, idx]).T, ':')
+            ax.legend()
+
+        ax.set_xlabel('sample')
+        f2.set_tight_layout(True)
+        plt.show()
 
     return AA, BB, RR
 
