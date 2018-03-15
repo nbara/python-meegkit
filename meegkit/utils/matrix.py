@@ -183,6 +183,49 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
     return y
 
 
+def multismooth(X, smooths, axis=0, keep_dims=False):
+    """Apply several shifts along specified axis.
+
+    If `shifts` has multiple values, the output will contain one shift per
+    trial. Shifted data are padded with `fill_value`.
+
+    Parameters
+    ----------
+    X : array, shape = (n_samples[, n_epochs][, n_trials])
+        Array to shift.
+    smooths : array
+        Array of smoothing values (in samples).
+    axis : int, optional
+        The axis along which elements are shifted (default: 0).
+    keep_dims : bool
+        If True, keep singleton dimensions in output.
+
+    Returns
+    -------
+    y : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
+        Shifted array.
+
+    See Also
+    --------
+    multishift, smooth
+
+    """
+    from .signal import smooth
+
+    smooths, n_smooths = _check_shifts(smooths)
+    X = _check_data(X)
+
+    # Loop over shifts
+    y = np.zeros(X.shape + (n_smooths,))
+    for i, s in enumerate(smooths):
+            y[..., i] = smooth(X, window_len=s, axis=axis)
+
+    if n_smooths == 1 and not keep_dims:
+        y = np.squeeze(y, axis=-1)
+
+    return y
+
+
 def shift(X, shift, fill_value=0, axis=0):
     """Shift array along its first, second or last dimension.
 
@@ -505,13 +548,15 @@ def normcol(X, weights=None, return_norm=False):
 
 def _check_shifts(shifts):
     """Check shifts."""
-    if not isinstance(shifts, (np.ndarray, list, np.integer, type(None))):
+    if not isinstance(shifts, (np.ndarray, list, int, np.int_, type(None))):
         raise AttributeError('shifts should be a list, an array or an int')
-    if isinstance(shifts, (list, np.integer)):
+    if isinstance(shifts, (list, int, np.int_)):
         shifts = np.array(shifts).flatten()
     if shifts is None or len(shifts) == 0:
         shifts = np.array([0])
+
     n_shifts = np.size(shifts)
+
     return shifts, n_shifts
 
 

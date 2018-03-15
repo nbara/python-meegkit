@@ -1,8 +1,11 @@
 import numpy as np
+
 from numpy.testing import assert_equal
 
 from context import meegkit  # noqa
-from meegkit.utils import multishift, shiftnd, shift, relshift, widen_mask
+
+from meegkit.utils import (multishift, relshift, shift, shiftnd, multismooth,
+                           widen_mask)
 
 
 def test_multishift():
@@ -87,6 +90,19 @@ def test_widen_mask():
                  [[0, 1, 1, 1, 0, 0, 0], ])
     assert_equal(widen_mask(test[None, None, :], -2, axis=2),
                  [[[0, 1, 1, 1, 0, 0, 0], ], ])
+
+
+def test_multismooth():
+    """Test smoothing."""
+    x = (np.random.randn(1000, 1) / 2 +
+         np.cos(2 * np.pi * 3 * np.linspace(0, 20, 1000))[:, None])
+
+    for i in np.arange(1, 10, 1):
+        y = multismooth(x, i)
+        assert x.shape == y.shape
+
+    y = multismooth(x, np.arange(5) + 1)
+    assert y.shape == x.shape + (5, )
 
 
 if __name__ == '__main__':
