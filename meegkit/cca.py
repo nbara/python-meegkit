@@ -1,11 +1,18 @@
 """CCA functions."""
-import sys
 import numpy as np
 from scipy import linalg
 
 from .utils.covariances import cov_lags
 from .utils.matrix import _check_shifts, normcol, relshift, _times_to_delays
 from .utils.denoise import pca
+
+try:
+    from tqdm import tqdm
+except ImportError:
+    def tqdm(*args, **kwargs):  # noqa
+        if args:
+            return args[0]
+        return kwargs.get('iterable', None)
 
 
 def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
@@ -23,9 +30,9 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         n_chans). If array, it should be 3D of shape = (n_times, n_chans,
         n_trials).
     shifts : array, shape = (n_shifts,)
-        Array of shifts to apply to y relative to x (can be negative).
+        Array of shifts to apply to `y` relative to `x` (can be negative).
     surrogate : bool
-        If True, estimate sd of correlation over non-matching pairs.
+        If True, estimate SD of correlation over non-matching pairs.
     plot : bool
         Produce some plots.
 
@@ -50,22 +57,22 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         raise AttributeError('xx and yy both must be lists of same length, ' +
                              'or arrays os same n_trials.')
 
-    # Calculate covariance matrices
-    print('Calculate all covariances...')
     shifts = _times_to_delays(shifts, sfreq)
     shifts, n_shifts = _check_shifts(shifts)
     n_trials = len(xx)
     n_feats = xx[0].shape[1] + yy[0].shape[1]  # sum of channels
 
+    # Calculate covariance matrices
+    print('Calculate all covariances...')
     C = np.zeros((n_feats, n_feats, n_shifts, n_trials)).squeeze()
-    for iTrial in range(n_trials):
-        C[..., iTrial], _, _ = cov_lags(xx[iTrial], yy[iTrial], shifts)
+    for t in tqdm(np.arange(n_trials)):
+        C[..., t], _, _ = cov_lags(xx[t], yy[t], shifts)
 
     # Calculate leave-one-out CCAs
     print('Calculate CCAs...')
     AA = list()
     BB = list()
-    for t in range(n_trials):
+    for t in tqdm(np.arange(n_trials)):
         # covariance of all trials except t
         CC = np.sum(C[..., np.arange(n_trials) != t], axis=-1, keepdims=True)
         if CC.ndim == 4:
@@ -79,12 +86,11 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
     del C, CC
 
     # Calculate leave-one-out correlation coefficients
-    sys.stdout.write('Calculate cross-correlations...')
-    sys.stdout.flush()
+    print('Calculate cross-correlations...')
     n_comps = A.shape[1]
     r = np.zeros((n_comps, n_shifts))
     RR = np.zeros((n_comps, n_shifts, n_trials))
-    for t in range(n_trials):
+    for t in tqdm(np.arange(n_trials)):
         A = AA[t]
         B = BB[t]
         for s in range(n_shifts):
@@ -107,8 +113,6 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         #                                  normcol(np.dot(y, b)))) / m
         #     ss[:, :, t] = s
 
-    sys.stdout.write('\b OK!\n')
-
     # if surrogate:
     #     var = (np.sum(ss ** 2, 2) - np.sum(ss, 2) ** 2 / n_trials) /\
     #           (n_trials - 1)
@@ -123,7 +127,6 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         ax1.set_xlabel('shift')
         ax1.set_ylabel('correlation')
         ax1.legend()
-
         # if surrogate:
         #     ax1.plot(SD.T, ':')
 
@@ -142,7 +145,7 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
     return AA, BB, RR
 
 
-def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None, sfreq=1):
+def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
     """Compute CCA from covariance.
 
     Parameters
@@ -197,9 +200,6 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None, sfreq=1):
     nt_cov_lags, nt_relshift, nt_cov, nt_pca in NoiseTools.
 
     """
-    if thresh is None:
-        thresh = 1e-12
-
     if (X is None and Y is not None) or (Y is None and X is not None):
         raise AttributeError('Either *both* X and Y should be defined, or C!')
 
@@ -232,29 +232,29 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=None, sfreq=1):
             AA, BB, RR = nt_cca(None, None, None, C[:, :, k], m, thresh)
             A[:AA.shape[0], :AA.shape[1], k] = AA
             B[:BB.shape[0], :BB.shape[1], k] = BB
-            R[:, k] = RR
+            R[:RR.size, k] = RR
 
         return A, B, R
 
     # Calculate CCA given C = [X,Y].T * [X,Y] and m = x.shape[1]
     # -------------------------------------------------------------------------
-    Cxw = whiten_nt(C[:m, :m], thresh)  # sphere X
-    Cyw = whiten_nt(C[m:, m:], thresh)  # sphere Y
+    Wx = whiten_nt(C[:m, :m], thresh)  # sphere X
+    Wy = whiten_nt(C[m:, m:], thresh)  # sphere Y
 
     # apply sphering matrices to C
-    W = np.zeros((Cxw.shape[0] + Cyw.shape[0], Cxw.shape[1] + Cyw.shape[1]))
-    W[:Cxw.shape[0], :Cxw.shape[1]] = Cxw
-    W[Cxw.shape[0]:, Cxw.shape[1]:] = Cyw
+    W = np.zeros((Wx.shape[0] + Wy.shape[0], Wx.shape[1] + Wy.shape[1]))
+    W[:Wx.shape[0], :Wx.shape[1]] = Wx
+    W[Wx.shape[0]:, Wx.shape[1]:] = Wy
     C = np.dot(np.dot(W.T, C), W)
 
     # Number of CCA componenets
-    N = np.min((Cxw.shape[1], Cyw.shape[1]))
+    N = np.min((Wx.shape[1], Wy.shape[1]))
 
     # PCA
     V, d = pca(C)
 
-    A = np.dot(Cxw, V[:Cxw.shape[1], :N]) * np.sqrt(2)
-    B = np.dot(Cyw, V[Cxw.shape[1]:, :N]) * np.sqrt(2)
+    A = np.dot(Wx, V[:Wx.shape[1], :N]) * np.sqrt(2)
+    B = np.dot(Wy, V[Wx.shape[1]:, :N]) * np.sqrt(2)
     R = d[:N] - 1
 
     return A, B, R

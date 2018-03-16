@@ -1,10 +1,71 @@
 import numpy as np
 
 from .utils import (demean, fold, multishift, normcol, pca, regcov, tscov,
-                    tsxcov, unfold)
+                    tsxcov, unfold, theshapeof)
+from .utils.matrix import _check_shifts, _check_weights
 
 
-def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=None):
+def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
+          demean=False):
+    """Time-shift PCA.
+
+    Parameters
+    ----------
+    X : array, shape = (n_times, n_chans[, n_trials])
+        Data array.
+    shifts: array, shape = (n_shifts,)
+        Array of shifts to apply.
+    keep: int
+        Number of components (shifted regressor PCs) to keep (default: all).
+    threshold:
+        Discard PCs with eigenvalues below this (default: 1e-6).
+    weights : array
+        Ignore samples with absolute value above this.
+    demean : bool
+        If True, Epochs are centered before comuting PCA (default: 0).
+
+    Returns
+    -------
+    comps : array
+        Principal components array.
+    idx : array
+        `X[idx]` maps to principal comps.
+
+    """
+    shifts, n_shifts = _check_shifts(shifts)
+    weights = _check_weights(weights, X)
+
+    n_samples, n_chans, n_trials = theshapeof(X)
+
+    # offset of components relative to data
+    offset = np.max((0, -np.min((shifts, 0))))
+    shifts += offset
+    idx = offset + (np.arange(n_samples) - np.max(shifts))
+
+    # remove mean
+    if demean:
+        X = unfold(X)
+        X = demean(X, weights)
+        X = fold(X, n_samples)
+
+    # covariance
+    C = tscov(X, shifts, weights)[0]
+
+    # PCA matrix
+    V, _ = pca(C, max_comps=keep, thresh=threshold)
+
+    # apply PCA matrix to time-shifted data
+    comps = np.zeros((np.size(idx), V.shape[1], n_trials))
+
+    for t in np.arange(n_trials):
+        comps[:, :, t] = np.dot(
+            np.squeeze(multishift(X[:, :, t], shifts)),
+            np.squeeze(V))
+
+    return comps, idx
+
+
+def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     """Time-shift regression.
 
     The basic idea is to project the signal `X` on a basis formed by the
@@ -36,23 +97,16 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=None):
     y : array
         Denoised data.
     idx : array
-        Data[idx] is aligned with `y`.
+        X[idx] is aligned with `y`.
     mean : array
         Channel means (removed by TSR).
     weights : array
         Weights applied by TSR.
 
     """
-    if shifts is None:
-        shifts = np.array([0])
-    if not wX:
-        wX = np.array([])
-    if not wR:
-        wR = np.array([])
-    if not keep:
-        keep = np.array([])
-    if not thresh:
-        thresh = 1e-12
+    shifts, n_shifts = _check_shifts(shifts)
+    wX = _check_weights(wX, X)
+    wR = _check_weights(wR, R)
 
     # adjust to make shifts non-negative
     initial_samples = X.shape[0]
@@ -60,12 +114,10 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=None):
     offset1 = np.max((0, -np.min(shifts)))
     idx = np.arange(offset1, X.shape[0])
     X = X[idx, :, :]
+    R = R[:R.shape[0] - offset1, :, :]
 
     if wX:
         wX = wX[idx, :, :]
-
-    R = R[:R.shape[0] - offset1, :, :]
-
     if wR:
         wR = wR[0:-offset1, :, :]
 
@@ -92,14 +144,14 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=None):
     elif not wR:
         weights[:, :, :] = wX[:, :, :]
     elif not wX:
-        for trial in np.arange(n_trials_X):
-            wr = multishift(wR[:, :, trial], shifts).min(1)
-            weights[:, :, trial] = wr
+        for t in np.arange(n_trials_X):
+            wr = multishift(wR[:, :, t], shifts).min(1)
+            weights[:, :, t] = wr
     else:
-        for trial in np.arange(n_trials_X):
-            wr = multishift(wR[:, :, trial], shifts).min(1)
-            # wr = (wr, wx[0:wr.shape[0], :, trial]).min() # TODO
-            weights[:, :, trial] = wr
+        for t in np.arange(n_trials_X):
+            wr = multishift(wR[:, :, t], shifts).min(1)
+            # wr = (wr, wx[0:wr.shape[0], :, t]).min() # TODO
+            weights[:, :, t] = wr
 
     wX = weights
     wR = np.zeros((n_samples_R, 1, n_trials_R))
@@ -115,11 +167,11 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=None):
     R = normcol(R, wR)
 
     # covariances and cross-covariance with time-shifted refs
-    cref, twcref = tscov(R, shifts, wR)
-    cxref, twcxref = tsxcov(X, R, shifts, wX)
+    Cr, twcr = tscov(R, shifts, wR)
+    Cxr, twcxr = tsxcov(X, R, shifts, wX)
 
     # regression matrix of x on time-shifted refs
-    regression = regcov(cxref / twcxref, cref / twcref, keep, thresh)
+    regression = regcov(Cxr / twcxr, Cr / twcr, keep, thresh)
 
     # TSPCA: clean x by removing regression on time-shifted refs
     y = np.zeros((n_samples_X, n_chans_X, n_trials_X))
@@ -134,80 +186,3 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=None):
     weights = wR
 
     return y, idx, mean_total, weights
-
-
-def tspca(X, shifts=None, keep=None, threshold=None, weights=None):
-    """Time-shift PCA.
-
-    Parameters
-    ----------
-    X : array, shape = (n_times, n_chans[, n_trials])
-        Data array.
-    shifts: array, shape = (n_shifts,)
-        Array of shifts to apply.
-    keep: int
-        Number of components shifted regressor PCs to keep (default: all).
-    threshold:
-        Discard PCs with eigenvalues below this (default: 1e-6).
-    weights:
-        Ignore samples with absolute value above this.
-
-    Returns
-    -------
-    components : array
-        Principal components array.
-    idx : array
-        `X[idx]` maps to principal components.
-
-    """
-    if not shifts:
-        shifts = np.array([0])
-    if not keep:
-        keep = np.array([])
-    if not threshold:
-        threshold = 10 ** -6
-    if not weights:
-        weights = np.array([])
-
-    n_samples, n_chans, n_trials = X.shape
-
-    # offset of z relative to data
-    offset = max(0, -min(shifts, 0))
-    shifts += offset
-    idx = offset + (np.arange(n_samples) - max([shifts]))
-
-    # remove mean
-    X = unfold(X)
-    X = demean(X, weights)
-    X = fold(X, n_samples)
-
-    # covariance
-    if not any(weights):
-        c = tscov(X, shifts)[0]
-    else:
-        if sum(weights) == 0:
-            raise ValueError("Weights are all zero.")
-        c = tscov(X, shifts, weights)[0]
-
-    # PCA matrix
-    topcs, eigenvalues = pca(c)
-
-    # truncate
-    if keep:
-        topcs = topcs[:, np.arange(keep)]
-        eigenvalues = eigenvalues[np.arange(keep)]
-
-    if threshold:
-        ii = eigenvalues / eigenvalues[0] > threshold
-        topcs = topcs[:, ii]
-        eigenvalues = eigenvalues[ii]
-
-    # apply PCA matrix to time-shifted data
-    components = np.zeros((idx.size, topcs.shape[1], n_trials))
-
-    for trial in np.arange(n_trials):
-        components[:, :, trial] = np.dot(
-            np.squeeze(multishift(X[:, :, trial], shifts)),
-            np.squeeze(topcs))
-
-    return components, idx

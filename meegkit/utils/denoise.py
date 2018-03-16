@@ -5,8 +5,7 @@ import numpy as np
 from matplotlib import gridspec
 from scipy import linalg
 
-from .matrix import fold, theshapeof, unfold, demean
-from .covariances import tscov, tsxcov
+from .matrix import demean, fold, theshapeof, unfold
 
 
 def pca(cov, max_comps=None, thresh=0):
@@ -51,7 +50,7 @@ def pca(cov, max_comps=None, thresh=0):
     if max_comps is None:
         max_comps = V.shape[1]
     else:
-        max_comps = np.min(max_comps, V.shape[1])
+        max_comps = np.min((max_comps, V.shape[1]))
 
     V = V[:, np.arange(max_comps)]
     d = d[np.arange(max_comps)]
@@ -59,110 +58,40 @@ def pca(cov, max_comps=None, thresh=0):
     return V, d
 
 
-def regcov(cxy, cyy, keep=np.array([]), threshold=np.array([])):
-    """Compute regression matrix from cross covariance."""
+def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
+    """Compute regression matrix from cross covariance.
+
+    Parameters
+    ----------
+    Cxy : array
+        Cross-covariance matrix between data and regressor.
+    Cyy : array
+        Covariance matrix of regressor.
+    keep : array
+        Number of regressor PCs to keep (default: all).
+    threshold : float
+        Eigenvalue threshold for discarding regressor PCs (default: 0).
+
+    Returns
+    -------
+    R : array
+        Matrix to apply to regressor to best model data.
+
+    """
     # PCA of regressor
-    [V, d] = pca(cyy)
-
-    # discard negligible regressor PCs
-    if keep:
-        keep = max(keep, V.shape[1])
-        V = V[:, 0:keep]
-        d = d[0:keep]
-
-    if threshold:
-        idx = np.where(d / max(d) > threshold)
-        V = V[:, idx]
-        d = d[idx]
+    [V, d] = pca(Cyy, max_comps=keep, thresh=threshold)
 
     # cross-covariance between data and regressor PCs
-    cxy = cxy.T
-    r = np.dot(V.T, cxy)
+    Cxy = Cxy.T
+    R = np.dot(V.T, Cxy)
 
     # projection matrix from regressor PCs
-    r = (r.T * 1 / d).T
+    R = (R.T * 1 / d).T
 
     # projection matrix from regressors
-    r = np.dot(np.squeeze(V), np.squeeze(r))
+    R = np.dot(np.squeeze(V), np.squeeze(R))
 
-    return r
-
-
-def tsregress(X, y, shifts=np.array([0]), keep=np.array([]),
-              threshold=np.array([]), toobig1=np.array([]),
-              toobig2=np.array([])):
-    """Time-shift regression."""
-    # shifts must be non-negative
-    mn = shifts.min()
-    if mn < 0:
-        shifts = shifts - mn
-        X = X[-mn + 1:, :, :]
-        y = y[-mn + 1:, :, :]
-
-    n_shifts = shifts.size
-
-    # flag outliers in X and y
-    if toobig1 or toobig2:
-        xw = find_outliers(X, toobig1, toobig2)
-        yw = find_outliers(y, toobig1, toobig2)
-    else:
-        xw = []
-        yw = []
-
-    if X.ndim == 3:
-        [Mx, Nx, Ox] = X.shape
-        [My, Ny, Oy] = y.shape
-        X = unfold(X)
-        y = unfold(y)
-        [X, xmn] = demean(X, xw)
-        [y, ymn] = demean(y, yw)
-        X = fold(X, Mx)
-        y = fold(y, My)
-    else:
-        [X, xmn] = demean(X, xw)
-        [y, ymn] = demean(y, yw)
-
-    # covariance of y
-    [cyy, totalweight] = tscov(y, shifts.T, yw)
-    cyy = cyy / totalweight
-
-    # cross-covariance of X and y
-    [cxy, totalweight] = tsxcov(X, y, shifts.T, xw, yw)
-    cxy = cxy / totalweight
-
-    # regression matrix
-    r = regcov(cxy, cyy, keep, threshold)
-
-    # regression
-    if X.ndim == 3:
-        X = unfold(X)
-        y = unfold(y)
-
-        [n_samples, n_chans, n_trials] = X.shape
-        mm = n_samples - max(shifts)
-        z = np.zeros(X.shape)
-
-        for k in range(n_shifts):
-            kk = shifts(k)
-            idx1 = np.r_[kk + 1:kk + mm]
-            idx2 = k + np.r_[0:y.shape[1]] * n_shifts
-            z[0:mm, :] = z[0:mm, :] + y[idx1, :] * r[idx2, :]
-
-        z = fold(z, Mx)
-        z = z[0:-max(shifts), :, :]
-    else:
-        n_samples, n_chans = X.shape
-        z = np.zeros((n_samples - max(shifts), n_chans))
-        for k in range(n_shifts):
-            kk = shifts(k)
-            idx1 = np.r_[kk + 1:kk + z.shape[0]]
-            idx2 = k + np.r_[0:y.shape[1]] * n_shifts
-            z = z + y[idx1, :] * r[idx2, :]
-
-    offset = max(0, -mn)
-    idx = np.r_[offset + 1:offset + z.shape[0]]
-
-    return z, idx
+    return R
 
 
 def wmean(X, weights=[], axis=0):

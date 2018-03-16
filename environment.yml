@@ -16,3 +16,4 @@ dependencies:
   - codespell
   - pydocstyle
   - sphinx_bootstrap_theme
+  - tqdm

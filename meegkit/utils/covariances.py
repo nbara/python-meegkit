@@ -139,7 +139,7 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
 
     Returns
     -------
-    C : array, shape = (n_channels * n_shifts, n_channels * n_shifts)
+    C : array, shape = (n_chans * n_shifts, n_chans * n_shifts)
         Covariance matrix. This matrix is made up of a (n_times, n_times)
         matrix of submatrices of dimensions (n_shifts, n_shifts).
     tw : array

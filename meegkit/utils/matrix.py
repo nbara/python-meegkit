@@ -148,7 +148,7 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
 
     Parameters
     ----------
-    X : array, shape = (n_samples[, n_epochs][, n_trials])
+    X : array, shape = (n_samples[, n_chans][, n_trials])
         Array to shift.
     shifts : array
         Array of shifts.
@@ -161,7 +161,7 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
 
     Returns
     -------
-    y : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
+    y : array, shape = (n_samples[, n_chans][, n_trials], n_shifts)
         Shifted array.
 
     See Also

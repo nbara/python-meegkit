@@ -1,6 +1,7 @@
 import numpy as np
 
-from .utils import demean, fold, pca, theshapeof, tscov, tsregress, unfold
+from .utils import demean, fold, pca, theshapeof, tscov, unfold
+from .tspca import tsr
 
 
 def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
@@ -123,14 +124,17 @@ def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
     return r.T
 
 
-def sns1(X, n_neighbors=0, skip=0):
-    """Sensor Noise Suppresion 1."""
+def sns1(X, n_neighbors=None, skip=0):
+    """Sensor Noise Suppresion 1.
+
+    This version of SNS first regresses out major shared components.
+    """
     if X.ndim > 2:
         raise Exception("SNS1 works only with 2D matrices")
 
     n_samples, n_chans, n_trials = theshapeof(X)
 
-    if n_neighbors == 0:
+    if n_neighbors is None:
         n_neighbors = n_chans - skip - 1
     else:
         n_neighbors = np.min((n_neighbors, n_chans - skip - 1))
@@ -157,7 +161,7 @@ def sns1(X, n_neighbors=0, skip=0):
         [eigvec, eigval] = pca(c2)
         eigvec = eigvec * np.diag(1 / np.sqrt(eigval))
 
-        y[:, k] = tsregress(X[:, k], xx * eigvec)
+        y[:, k] = tsr(X[:, k], xx * eigvec)
 
     y = (y * N)
 

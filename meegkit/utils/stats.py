@@ -262,18 +262,18 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
     """
     if data.ndim == 3:
         n_trials = data.shape[0]
-        n_channels = data.shape[1]
+        n_chans = data.shape[1]
         n_samples = data.shape[-1]
     elif data.ndim == 2:
         n_trials = 1
-        n_channels = data.shape[0]
+        n_chans = data.shape[0]
         n_samples = data.shape[-1]
     else:
-        raise ValueError('Data must have shape (n_trials, n_channels, n_times)'
-                         ' or (n_channels, n_times)')
+        raise ValueError('Data must have shape (n_trials, n_chans, n_times)'
+                         ' or (n_chans, n_times)')
 
     # Number of points to get desired resolution
-    data = np.reshape(data, (n_trials * n_channels, n_samples))
+    data = np.reshape(data, (n_trials * n_chans, n_samples))
     SNR = np.zeros_like(data)
 
     for i_bin in range(n_samples):
@@ -310,7 +310,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
         # SNR at central bin is ratio between (power at central
         # bin) to (average of N surrounding bins)
         # --------------------------------------------------------------------------
-        for i_trial in range(n_trials * n_channels):
+        for i_trial in range(n_trials * n_chans):
 
             # RMS of signal over fundamental+harmonics
             A = data[i_trial, bin_peaks]
@@ -321,7 +321,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
 
                 if n_trials > 1:
                     # Mean over samples and median over trials
-                    B[h] = np.median(np.mean(data[i_trial::n_channels,
+                    B[h] = np.median(np.mean(data[i_trial::n_chans,
                                                   bin_noise[h]],
                                              1))
                 else:
@@ -339,7 +339,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
             del B
 
     # Reshape matrix if necessary
-    if np.min((n_trials, n_channels)) > 1:
-        SNR = np.reshape(SNR, (n_trials, n_channels, n_samples))
+    if np.min((n_trials, n_chans)) > 1:
+        SNR = np.reshape(SNR, (n_trials, n_chans, n_samples))
 
     return SNR
