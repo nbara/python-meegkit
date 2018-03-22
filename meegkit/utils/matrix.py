@@ -210,7 +210,7 @@ def multismooth(X, smooths, axis=0, keep_dims=False):
     multishift, smooth
 
     """
-    from .signal import smooth
+    from .sig import smooth
 
     smooths, n_smooths = _check_shifts(smooths)
     X = _check_data(X)
