@@ -47,7 +47,7 @@ def cov_lags(X, Y, shifts=None):
     C = np.zeros((n_cov, n_cov, n_shifts))
     for t in np.arange(n_trials):
         for i, s in enumerate(shifts):
-            YY, XX = relshift(Y[..., t], ref=X[..., t], shifts=s)
+            XX, YY = relshift(X[..., t], ref=Y[..., t], shifts=s)
             XY = np.hstack((XX, YY))
             C[:, :, i] += np.dot(XY.T, XY)
 

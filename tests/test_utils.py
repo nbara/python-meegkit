@@ -17,6 +17,16 @@ def test_multishift():
     assert_equal(multishift(x, [1], axis=0), np.array([[0, 0, 0, 0],
                                                        [1, 2, 3, 4]]))
 
+    # multishift 3d, solution='valid'
+    x = np.ones((4, 4, 3))
+    x[..., 1] *= 2
+    x[..., 2] *= 3
+    xx = multishift(x, [-1, -2], reshape=True, solution='valid')
+    assert_equal(xx[..., 0], np.array([[1., 1., 1., 1., 1., 1., 1., 1.],
+                                       [1., 1., 1., 1., 1., 1., 1., 1.]]))
+    assert_equal(xx[..., 1], np.array([[1., 1., 1., 1., 1., 1., 1., 1.],
+                                       [1., 1., 1., 1., 1., 1., 1., 1.]]) * 2)
+
     # relshift() 1d
     y, y_ref = relshift([1, 2, 3, 4], [11, 12, 13, 14], [1], axis=0)
     assert_equal(y.flatten(), [0, 1, 2, 3])

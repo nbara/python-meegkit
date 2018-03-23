@@ -140,7 +140,8 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
     return y, y_ref
 
 
-def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
+def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
+               reshape=False, solution='full'):
     """Apply several shifts along specified axis.
 
     If `shifts` has multiple values, the output will contain one shift per
@@ -150,7 +151,7 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
     ----------
     X : array, shape = (n_samples[, n_chans][, n_trials])
         Array to shift.
-    shifts : array
+    shifts : array, shape = (n_shifts,)
         Array of shifts.
     fill_value : float | np.nan
         Value to pad output axis by.
@@ -158,6 +159,12 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
         The axis along which elements are shifted.
     keep_dims : bool
         If True, keep singleton dimensions in output.
+    reshape : bool
+        If True, concatenate channels and lags, yielding an array of shape
+        (n_samples, n_chans*n_shifts[, n_trials])
+    solution : {'valid', 'full'}
+        If `valid`, the output's is cropped along `axis` by `n_shifts` in order
+        to remove edge artifacts. If `full`, the output has the same size as X.
 
     Returns
     -------
@@ -171,14 +178,27 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False):
     """
     shifts, n_shifts = _check_shifts(shifts)
     X = _check_data(X)
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     # Loop over shifts
     y = np.zeros(X.shape + (n_shifts,))
     for i, s in enumerate(shifts):
             y[..., i] = shift(X, shift=s, fill_value=fill_value, axis=axis)
 
+    if reshape is True:
+        if X.ndim == 3:  # n_samples, n_chans, n_trials, n_shifts
+            y = np.swapaxes(y, 2, 3)
+            y = np.reshape(y, (n_samples, n_chans * n_shifts, n_trials))
+        elif X.ndim == 2:  # n_samples, n_chans, n_shifts
+            y = np.reshape(y, (n_samples, n_chans * n_shifts))
+
     if n_shifts == 1 and not keep_dims:
         y = np.squeeze(y, axis=-1)
+
+    if solution == 'valid':
+        max_neg_shift = np.abs(np.min(np.min(shifts), 0))
+        max_pos_shift = np.max((np.max(shifts), 0))
+        y = y[max_pos_shift:-max_neg_shift, ...]
 
     return y
 
@@ -487,13 +507,13 @@ def normcol(X, weights=None, return_norm=False):
     """
     weights = _check_weights(weights, X)
 
-    n_samples, n_chans, n_trials = theshapeof(X)
-
     if X.ndim == 3:
+        n_samples, n_chans, n_trials = theshapeof(X)
         X = unfold(X)
 
         if not weights.any():  # no weights
             X_norm, N = normcol(X, return_norm=True)
+            N = N ** 2
             X_norm = fold(X_norm, n_samples)
 
         else:  # weights
@@ -509,9 +529,12 @@ def normcol(X, weights=None, return_norm=False):
 
             weights = unfold(weights)
             X_norm, N = normcol(X, weights)
+            N = N ** 2
             X_norm = fold(X_norm, n_samples)
 
     else:
+        n_samples, n_chans, n_trials = theshapeof(X)
+
         if not weights.any():
             with np.errstate(divide='ignore'):
                 N = ((np.sum(X ** 2, axis=0) / n_samples) ** -0.5)[np.newaxis]
@@ -541,7 +564,7 @@ def normcol(X, weights=None, return_norm=False):
             X_norm = X * N
 
     if return_norm:
-        return X_norm, N
+        return X_norm, np.sqrt(N)
     else:
         return X_norm
 

@@ -6,7 +6,7 @@ from scipy.io import loadmat
 from sklearn.cross_decomposition import CCA
 
 from context import meegkit  # noqa
-from meegkit.utils import tscov
+from meegkit.utils import tscov, multishift
 from meegkit.cca import nt_cca, cca_crossvalidate
 
 
@@ -45,6 +45,40 @@ def test_cca():
     C2 = tscov(np.hstack((X2, Y2)))[0]
 
     assert_almost_equal(C1, C2)
+
+
+def test_cca2():
+    """Simulate correlations."""
+    # import matplotlib.pyplot as plt
+
+    x = np.random.randn(10000, 20)
+    y = np.random.randn(10000, 8)
+    y[:, :2] = x[:, :2]
+    # perfectly correlated
+    y[:, 2:4] = x[:, 2:4] + np.random.randn(10000, 2)
+    #  1/2 correlated
+    y[:, 4:6] = x[:, 4:6] + np.random.randn(10000, 2) * 3
+    #  1/4 correlated
+    y[:, 6:8] = np.random.randn(10000, 2)
+    # uncorrelated
+    [A, B, R] = nt_cca(x, y)
+
+    assert_almost_equal(np.dot(np.dot(x, A).T, np.dot(x, A)), np.eye(8))
+    assert_almost_equal(np.dot(np.dot(y, B).T, np.dot(y, B)), np.eye(8))
+
+    # f, ax = plt.subplots(3, 2)
+    # ax[0, 0].imshow(A, aspect='auto')
+    # ax[0, 0].set_title('A')
+    # ax[0, 1].imshow(B, aspect='auto')
+    # ax[0, 1].set_title('B')
+    # ax[1, 0].plot(R, '.-')
+    # ax[1, 0].set_title('R')
+    # ax[1, 1].imshow(np.dot(np.dot(x, A).T, np.dot(x, A)), aspect='auto')
+    # ax[1, 1].set_title('covariance of x * A')
+    # ax[2, 0].imshow(np.dot(np.dot(y, B).T, np.dot(y, B)), aspect='auto')
+    # ax[2, 0].set_title('covariance of y * B')
+    # f.set_tight_layout(True)
+    # plt.show()
 
 
 def test_canoncorr():
@@ -124,10 +158,6 @@ def test_cca_crossvalidate():
 
     assert_almost_equal(R, R1, decimal=2)
 
-    # Test with shifts
-    A, B, R = cca_crossvalidate(xx, yy, shifts=[1, 2, 3, 4, 5])
-    # assert_almost_equal(R, R2, decimal=1)  # won't work as correlations ~0
-
     # Create data where 1st comps should be uncorrelated, and 2nd and 3rd comps
     # are very correlated
     x = np.random.randn(1000, 10)
@@ -137,6 +167,59 @@ def test_cca_crossvalidate():
     A, B, R = cca_crossvalidate(xx, yy)
     assert_almost_equal(R[:, :, 0], 0, decimal=1)
     assert_almost_equal(R[:, :, 1:], 1, decimal=1)
+
+
+def test_cca_crossvalidate_shifts():
+    """Test CCA crossvalidation with shifts."""
+    n_times, n_trials = 10000, 2
+    x = np.random.randn(n_times, 20, n_trials)
+    y = np.random.randn(n_times, 8, n_trials)
+    # perfectly correlated
+    y[:, :2, :] = x[:, :2, :]
+    # 1/2 correlated
+    y[:, 2:4, :] = x[:, 2:4, :] + np.random.randn(n_times, 2, n_trials)
+    # 1/4 correlated
+    y[:, 4:6, :] = x[:, 4:6, :] + np.random.randn(n_times, 2, n_trials) * 3
+    # uncorrelated
+    y[:, 6:8, :] = np.random.randn(n_times, 2, n_trials)
+
+    xx = multishift(x, -np.arange(1, 4), reshape=True, solution='valid')
+    yy = multishift(y, -np.arange(1, 4), reshape=True, solution='valid')
+
+    # Test with shifts
+    A, B, R = cca_crossvalidate(xx, yy, shifts=[-3, -2, -1, 0, 1, 2, 3])
+
+    # import matplotlib.pyplot as plt
+    # f, ax = plt.subplots(n_trials, 1)
+    # for i in range(n_trials):
+    #     ax[i].plot(R[:, :, i].T)
+    # f.set_tight_layout(True)
+    # plt.show()
+
+
+def test_cca_crossvalidate_shifts2():
+    """Test CCA crossvalidation with shifts."""
+    mat = loadmat('./tests/data/ccacrossdata.mat')
+    xx = mat['xx2']
+    yy = mat['yy2']
+    R2 = mat['R']
+
+    # Test with shifts
+    A, B, R = cca_crossvalidate(xx, yy, shifts=[-3, -2, -1, 0, 1, 2, 3])
+
+    # correlations are ~ those of Maltab (very loose check, suspect numerical
+    # inaccuracy in normcol)
+    assert_almost_equal(R[:3, 1:-1, ...], R2[:3, 1:-1, ...], decimal=2)
+    assert_almost_equal(R, R2, decimal=1)
+
+    # import matplotlib.pyplot as plt
+    # n_trials = xx.shape[-1]
+    # f, ax = plt.subplots(n_trials, 1)
+    # for i in range(n_trials):
+    #     ax[i].plot(R[:, :, i].T)
+    # f.set_tight_layout(True)
+    # plt.show()
+
 
 if __name__ == '__main__':
     import nose

@@ -82,23 +82,27 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         [A, B, R] = nt_cca(None, None, None, CC, xx[0].shape[1])
         AA.append(A)
         BB.append(B)
+        del A, B
 
     del C, CC
 
     # Calculate leave-one-out correlation coefficients
     print('Calculate cross-correlations...')
-    n_comps = A.shape[1]
+    n_comps = AA[0].shape[1]
     r = np.zeros((n_comps, n_shifts))
     RR = np.zeros((n_comps, n_shifts, n_trials))
     for t in tqdm(np.arange(n_trials)):
-        A = AA[t]
-        B = BB[t]
-        for s in range(n_shifts):
+        for s in np.arange(n_shifts):
             x, y = relshift(xx[t], yy[t], shifts[s])
-            a = A[:, :, s]
-            b = B[:, :, s]
+            a = AA[t][:, :, s]
+            b = BB[t][:, :, s]
             r[:, s] = np.diag(np.dot(normcol(np.dot(x, a)).T,
                                      normcol(np.dot(y, b)))) / x.shape[0]
+            # tt = np.dot(x, a).T
+            # tu = np.dot(y, b).T
+            # for i in range(tt.shape[0]):
+            #     r[i, s] = np.corrcoef(tt[i, :], tu[i, :])[0, 1]
+
         RR[:, :, t] = r
 
         # if surrogate:
@@ -134,8 +138,8 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         for k, ax in zip(np.arange(min(4, RR.shape[0])), axes):
             idx = np.argmax(np.mean(RR[k, :, :], 1))
             [x, y] = relshift(xx[0], yy[0], shifts[idx])
-            ax.plot(np.dot(x, A[:, k, idx]).T, label='CC{}'.format(k))
-            ax.plot(np.dot(y, B[:, k, idx]).T, ':')
+            ax.plot(np.dot(x, AA[0][:, k, idx]).T, label='CC{}'.format(k))
+            ax.plot(np.dot(y, BB[0][:, k, idx]).T, ':')
             ax.legend()
 
         ax.set_xlabel('sample')
@@ -233,6 +237,7 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
             A[:AA.shape[0], :AA.shape[1], k] = AA
             B[:BB.shape[0], :BB.shape[1], k] = BB
             R[:RR.size, k] = RR
+            del AA, BB, RR
 
         return A, B, R
 
