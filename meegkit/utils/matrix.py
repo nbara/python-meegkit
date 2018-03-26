@@ -528,7 +528,7 @@ def normcol(X, weights=None, return_norm=False):
                 raise ValueError("Weight array should have be same shape as X")
 
             weights = unfold(weights)
-            X_norm, N = normcol(X, weights)
+            X_norm, N = normcol(X, weights, return_norm=True)
             N = N ** 2
             X_norm = fold(X_norm, n_samples)
 

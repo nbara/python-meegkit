@@ -36,6 +36,8 @@ def pca(cov, max_comps=None, thresh=0):
     d = d.real
     V = V.real
 
+    p0 = d.sum()  # total power
+
     idx = np.argsort(d)[::-1]  # reverse sort ev order
     d = d[idx]
     V = V[:, idx]
@@ -54,6 +56,11 @@ def pca(cov, max_comps=None, thresh=0):
 
     V = V[:, np.arange(max_comps)]
     d = d[np.arange(max_comps)]
+
+    var = 100 * d.sum() / p0
+    if var < 99:
+        print('[PCA] Explained variance of selected components : {:.2f}%'.
+              format(var))
 
     return V, d
 

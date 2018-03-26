@@ -28,6 +28,8 @@ def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
     -------
     comps : array
         Principal components array.
+    V : array, shape = (n_chans, n_comps)
+        PCA weights.
     idx : array
         `X[idx]` maps to principal comps.
 
@@ -62,7 +64,7 @@ def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
             np.squeeze(multishift(X[:, :, t], shifts)),
             np.squeeze(V))
 
-    return comps, idx
+    return comps, V, idx
 
 
 def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
@@ -114,7 +116,7 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     offset1 = np.max((0, -np.min(shifts)))
     idx = np.arange(offset1, X.shape[0])
     X = X[idx, :, :]
-    R = R[:R.shape[0] - offset1, :, :]
+    # R = R[:R.shape[0] - offset1, :, :]
 
     if wX:
         wX = wX[idx, :, :]
