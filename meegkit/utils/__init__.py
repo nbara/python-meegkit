@@ -7,5 +7,5 @@ from .matrix import (demean, fold, multishift, multismooth, normcol, relshift,
 from .sig import (AuditoryFilterbank, GammatoneFilterbank, erb2hz, erbspace,
                   hilbert_envelope, hz2erb, smooth)
 from .stats import (bootstrap_ci, bootstrap_snr, cronbach, rms, robust_mean,
-                    snr_spectrum)
+                    rolling_corr, snr_spectrum)
 from .viz import plot_montage

@@ -40,9 +40,9 @@ def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
     n_samples, n_chans, n_trials = theshapeof(X)
 
     # offset of components relative to data
-    offset = np.max((0, -np.min((shifts, 0))))
+    offset = np.max((0, -np.min(shifts)))
     shifts += offset
-    idx = offset + (np.arange(n_samples) - np.max(shifts))
+    idx = offset + (np.arange(n_samples - np.max(shifts)))
 
     # remove mean
     if demean:

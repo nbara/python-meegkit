@@ -1,9 +1,9 @@
 """Benchmark utility functions."""
 from __future__ import division, print_function
 
-import random
-
 import numpy as np
+
+from .matrix import theshapeof
 
 try:
     import mne
@@ -33,32 +33,79 @@ def robust_mean(x, axis=0, percentile=[5, 95]):
     return m
 
 
-def bootstrap_ci_chan(average, n_bootstrap=2000):
-    """Get confidence intervals from non-parametric bootstrap resampling."""
-    indices = np.arange(len(average.ch_names), dtype=int)
-    gfps_bs = np.empty((n_bootstrap, len(average.times)))
-
-    for i in range(n_bootstrap):
-        bs_indices = np.random.choice(indices, replace=True, size=len(indices))
-        gfps_bs[i] = np.sum(average.data[bs_indices] ** 2, 0)
-    gfps_bs = mne.baseline.rescale(gfps_bs, average.times, baseline=(None, 0))
-    ci_low, ci_up = np.percentile(gfps_bs, (2.5, 97.5), axis=0)
-    return ci_low, ci_up
-
-
-def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=0):
-    """Confidence intervals from non-parametric bootstrap resampling.
-
-    Bootstrap is computed *with* replacement.
+def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
+    """Calculate rolling correlation between some data and a reference signal.
 
     Parameters
     ----------
-    X : 2D array, shape = (n_chans, n_times)
+    X: array, shape = (n_times, n_chans[, n_epochs])
+        Test signal. First dimension should be time.
+    y: array, shape = (n_times[, n_epochs])
+        Reference signal.
+    window : int
+        Number of timepoints for to include for each correlation calculation.
+    fs: int
+        Sampling frequency.
+    step : int
+        If greater than 1, only compute correlations every `step` samples.
+
+    Returns
+    -------
+    corr: array, shape = (n_times - window, n_channels[, n_epochs])
+        Rolling window correlation.
+    t_corr : array
+        Correspodning time vector.
+
+    """
+    if window is None:
+        window = X.shape[0] - 1
+    if y.ndim == 3:
+        y = np.squeeze(y)
+    if X.ndim > 3:
+        raise AttributeError('Data must be 2D or 3D.')
+    if y.shape[0] != X.shape[0]:
+        raise AttributeError('X and y must share the same time axis.')
+    if y.ndim > 2:
+        raise AttributeError('y must be at most 2D.')
+
+    n_times, n_chans, n_epochs = theshapeof(X)
+    timebins = np.arange(n_times - window, 0, -step)[::-1]
+
+    corr = np.zeros((len(timebins), n_chans, n_epochs))
+    for i, t in enumerate(timebins):
+        for ep in range(n_epochs):
+            epy = np.squeeze(np.take(y[t:t + window, ...], ep, -1))
+            for ch in range(n_chans):
+                epx = np.squeeze(np.take(X[t:t + window, ch, ...], ep, -1))
+                corr[i, ch, ep] = np.corrcoef(epx, epy)[0, 1]
+
+    if n_epochs == 1:
+        corr = corr.squeeze(-1)
+
+    t_corr = (timebins + window) / float(fs)
+
+    assert len(t_corr) == corr.shape[0]
+
+    return corr, t_corr
+
+
+def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=-1):
+    """Confidence intervals from non-parametric bootstrap resampling.
+
+    Bootstrap is computed over the chosen axis, *with* replacement. By default,
+    the resampling is performed over the last dimension (trials), but this can
+    also be done over channels (axis=1).
+
+    Parameters
+    ----------
+    X : array, shape = (n_times, n_chans[, n_trials])
         Input data.
     n_bootstrap : int
-        Number of bootstrap resamplings.
+        Number of bootstrap resamplings (default: 2000). For publication
+        quality results, it is usually recommended to have more than 5000
+        iterations.
     ci : length-2 tuple
-        Confidence interval.
+        Confidence interval (default: (5, 95)).
     axis : int
         Axis to operate on.
 
@@ -67,14 +114,15 @@ def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=0):
     ci_low, ci_up : confidence intervals
 
     """
-    indices = np.arange(X.shape[axis], dtype=int)
+    n_samples, n_chans, n_trials = theshapeof(X)
+    idx = np.arange(X.shape[axis], dtype=int)
 
-    gfps_bs = np.nan * np.ones((n_bootstrap, X.shape[~axis]))
+    bootstraps = np.nan * np.ones((n_bootstrap, X.shape[~axis]))
     for i in range(n_bootstrap):
-        bs_indices = np.random.choice(indices, replace=True, size=len(indices))
-        gfps_bs[i] = np.mean(np.take(X, bs_indices, axis=axis), axis=axis)
+        temp_idx = np.random.choice(idx, replace=True, size=len(idx))
+        bootstraps[i] = np.mean(np.take(X, temp_idx, axis=axis), axis=axis)
 
-    ci_low, ci_up = np.percentile(gfps_bs, ci, axis=0)
+    ci_low, ci_up = np.percentile(bootstraps, ci, axis=0)
 
     return ci_low, ci_up
 
@@ -219,7 +267,7 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
 
     alpha = np.empty(n_bootstrap)
     for b in np.arange(n_bootstrap):  # take K trials randomly
-        idx = random.sample(range(epochs._data.shape[0]), K)
+        idx = np.random.choice(range(epochs._data.shape[0]), K)
         X = epochs._data[idx, 0, tmin:tmax]
         sigmaY = X.var(axis=1)  # var over time
         sigmaX = X.sum(axis=0).var()  # var of average

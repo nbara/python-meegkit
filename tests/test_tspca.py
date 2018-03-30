@@ -1,12 +1,12 @@
 import numpy as np
 
 from context import meegkit  # noqa
-from meegkit import dss, sns
+from meegkit import dss, sns, tspca
 from meegkit.utils import demean, fold, unfold
 
 
-def test_tspca_sns_dss():
-    """Test TSPCA, SNS, DSS.                                               TODO
+def test_tspca_sns_dss():  # TODO
+    """Test TSPCA, SNS, DSS.
 
     Requires data stored in a time X channels X trials matrix.
 
@@ -14,7 +14,6 @@ def test_tspca_sns_dss():
     Remove sensor noise with SNS.
     Remove non-repeatable components with DSS.
     """
-
     # Random data (time*chans*trials)
     data = np.random.random((800, 102, 200))
     ref = np.random.random((800, 3, 200))
@@ -25,7 +24,7 @@ def test_tspca_sns_dss():
 
     # Apply TSPCA
     # -------------------------------------------------------------------------
-    # shifts = np.r_[-50:51]
+    # shifts = np.arange(-50, 51)
     # print('TSPCA...')
     # y_tspca, idx = tspca.tsr(noisy_data, noisy_ref, shifts)[0:2]
     # print('\b OK!')
@@ -56,4 +55,4 @@ def test_tspca_sns_dss():
 
 if __name__ == '__main__':
     import nose
-    nose.run(defaultTest="")
+    nose.run(defaultTest=__name__)

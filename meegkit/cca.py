@@ -172,9 +172,11 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
     Returns
     -------
     A : array, shape = (n_chans_X, min(n_chans_X, n_chans_Y))
-        Transform matrix mapping `X` to canonical space.
-    B : array,  shape = (n_chans_Y, min(n_chans_X, n_chans_Y))
-        Transform matrix mapping `Y` to canonical space.
+        Transform matrix mapping `X` to canonical space, where `n_comps` is
+        equal to `min(n_chans_X, n_chans_Y)`.
+    B : array,  shape = (n_chans_Y, n_comps)
+        Transform matrix mapping `Y` to canonical space, where `n_comps` is
+        equal to `min(n_chans_X, n_chans_Y)`.
     R : array, shape = (n_comps, n_lags)
         Correlation scores.
 
@@ -225,12 +227,12 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
     if C.ndim > 3:
         raise RuntimeError('covariance should be 3D at most')
 
-    if C.ndim == 3:  # covariance is 3D: do a separate CCA for each trial
+    if C.ndim == 3:  # covariance is 3D: do a separate CCA for each page
         n_chans, _, n_lags = C.shape
-        N = np.min((m, n_chans - m))
-        A = np.zeros((m, N, n_lags))
-        B = np.zeros((n_chans - m, N, n_lags))
-        R = np.zeros((N, n_lags))
+        n_comps = np.min((m, n_chans - m))
+        A = np.zeros((m, n_comps, n_lags))
+        B = np.zeros((n_chans - m, n_comps, n_lags))
+        R = np.zeros((n_comps, n_lags))
 
         for k in np.arange(n_lags):
             AA, BB, RR = nt_cca(None, None, None, C[:, :, k], m, thresh)

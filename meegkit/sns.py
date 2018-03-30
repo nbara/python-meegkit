@@ -15,7 +15,7 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
 
     Parameters
     ----------
-    X : array, shape = (n_samples, n_chans, n_trials)
+    X : array, shape = (n_times, n_chans, n_trials)
         EEG data.
     n_neighbors : int
         Number of neighbors (based on correlation) to include in the
@@ -28,7 +28,7 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
 
     Returns
     -------
-    y : array, shape = (n_samples, n_chans, n_trials)
+    y : array, shape = (n_times, n_chans, n_trials)
         Denoised data.
     r : array, shape = (n_chans, n_chans)
         Denoising matrix.
