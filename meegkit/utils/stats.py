@@ -74,9 +74,9 @@ def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
     corr = np.zeros((len(timebins), n_chans, n_epochs))
     for i, t in enumerate(timebins):
         for ep in range(n_epochs):
-            epy = np.squeeze(np.take(y[t:t + window, ...], ep, -1))
+            epy = np.take(y[t:t + window, ...], ep, -1).squeeze()
             for ch in range(n_chans):
-                epx = np.squeeze(np.take(X[t:t + window, ch, ...], ep, -1))
+                epx = np.take(X[t:t + window, ch, ...], ep, -1).squeeze()
                 corr[i, ch, ep] = np.corrcoef(epx, epy)[0, 1]
 
     if n_epochs == 1:
