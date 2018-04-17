@@ -5,6 +5,107 @@ import numpy as np
 import scipy.signal as ss
 
 
+def modulation_index(phase, amp, n_bins=18):
+    r"""Compute the Modulation Index (MI) between two signals.
+
+    MI is a measure of the amount of phase-amplitude coupling. Phase angles are
+    expected to be in radians [1]_. MI is derived from the Kullbach-Leibner
+    distance, a measure for the disparity of two distributions, which is also
+    returned here. MI is recommend the modulation index for noisy and short
+    data epochs with unknown forms of coupling [2]_.
+
+    Parameters
+    ----------
+    phase : array
+        Phase vector, in radians.
+    amp : array
+        Amplitude vector.
+    n_bins : int
+        Number of bins in which to discretize phase (default: 18 bins, giving
+        a 20-degree resolution).
+
+    Returns
+    -------
+    MI : array
+        Tort's Modulation index.
+    KL : array
+        Kullbach-Leibner distance.
+
+    Examples
+    --------
+    >> phas = np.random.rand(100, 1) * 2 * np.pi - np.pi
+    >> ampl = np.random.randn(100, 1) * 30 + 100
+    >> MI, KL = modulation_index(phas, ampl)
+
+    Notes
+    -----
+    Phase and amplitude can be derived directly from any time series through
+    the analytic signal:
+    >> analytic_signal = hilbert(filtered_data)
+    >> phase = np.phase(analytic_signal)
+    >> amplitude = np.abs(analytic_signal)
+
+    MI can be subjected to permutation testing to assess significance. For
+    permutation testing, the observed coupling value is compared to a
+    distribution of shuffled coupling values. Shuffled coupling values are
+    constructed by calculating the coupling value between the original phase
+    time series and a permuted amplitude time series. The permuted amplitude
+    time series can be constructed by cutting the amplitude time series at a
+    random time point and reversing the order of both parts [2]_. The observed
+    coupling value is standardized to the distribution of the shuffled coupling
+    values according to the following formula: MI_z = (MI_observed −
+    µ_MI_shuffled) / σ_MI_shuffled, where μ denotes the mean and σ the standard
+    deviation. Only when the observed phase-locking value is larger than 95 %
+    of shuffled values, it is defined as significant. See [2]_ for details.
+
+    References
+    ----------
+    .. [1] Tort AB, Komorowski R, Eichenbaum H, Kopell N. Measuring
+       phase-amplitude coupling between neuronal oscillations of different
+       frequencies. J Neurophysiol. 2010 Aug;104(2):1195-210. doi:
+       10.1152/jn.00106.2010.
+    .. [2] Huelsemann, M. J., Naumann, E., & Rasch, B. (2018). Quantification
+       of Phase-Amplitude Coupling in Neuronal Oscillations: Comparison of
+       Phase-Locking Value, Mean Vector Length, and Modulation Index. bioRxiv,
+       290361.
+
+    """
+    phase = phase.squeeze()
+    amp = amp.squeeze()
+    if phase.shape != amp.shape or phase.ndims > 1 or amp.ndims:
+        raise AttributeError('Inputs must be 1D vectors of same length.')
+
+    # Convert phase to degrees
+    phasedeg = np.degrees(phase)
+
+    # Calculate mean amplitude in each phase bin
+    binsize = 360 / n_bins
+    phase_lo = np.arange(-180, 180, binsize)
+    mean_amp = np.zeros(len(phase_lo))
+    for b in range(len(phase_lo)):
+        phaserange = np.logical_and(phasedeg >= phase_lo[b],
+                                    phasedeg < (phase_lo[b] + binsize))
+        mean_amp[b] = np.mean(amp[phaserange])
+
+    # Compute the probability of an amplitude unit being in a phase bin
+    p_j = mean_amp / np.sum(mean_amp)
+
+    # Get a meaningful KL distance when observed probability in a bin is 0
+    if np.any(p_j == 0):
+        p_j[p_j == 0] = np.finfo(float).eps
+
+    # Phase-amplitude coupling is defined by a distribution that significantly
+    # deviates from the uniform distribution. Kullback-Leibler distance is
+    # calculated by the following formula: KL = log(N) − H(p), where H is
+    # Shannon entropy, ans N is the number of bins.
+    H = -np.sum(p_j * np.log10(p_j))
+    Hmax = np.log10(n_bins)
+    KL = Hmax - H
+    MI = KL / Hmax
+
+    return MI, KL
+
+
 def smooth(x, window_len, window='square', axis=0):
     """Smooth a signal using a window with requested size along a given axis.
 
