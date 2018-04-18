@@ -118,3 +118,9 @@ def test_multismooth():
 if __name__ == '__main__':
     import nose
     nose.run(defaultTest=__name__)
+
+    # import matplotlib.pyplot as plt
+    # x = np.random.randn(1000,)
+    # y = multismooth(x, np.arange(1, 200, 4))
+    # plt.imshow(y.T, aspect='auto')
+    # plt.show()

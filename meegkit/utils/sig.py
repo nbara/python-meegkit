@@ -106,7 +106,7 @@ def modulation_index(phase, amp, n_bins=18):
     return MI, KL
 
 
-def smooth(x, window_len, window='square', axis=0):
+def smooth(x, window_len, window='square', axis=0, align='left'):
     """Smooth a signal using a window with requested size along a given axis.
 
     This method is based on the convolution of a scaled window with the signal.
@@ -125,6 +125,11 @@ def smooth(x, window_len, window='square', axis=0):
         'blackman' flat window will produce a moving average smoothing.
     axis : int
         Axis along which smoothing will be applied (default: 0).
+    align : {'left' | 'center'}
+        If `left` (default), the convolution if computed in a causal way by
+        shifting the output of a normal convolution by the kernel size. If
+        `center`, the center of the impulse is used as the location where the
+        convolution is summed.
 
     Returns
     -------
@@ -158,7 +163,7 @@ def smooth(x, window_len, window='square', axis=0):
     if window_len == 1:
         return x
 
-    def _smooth1d(x, n):
+    def _smooth1d(x, n, align='left'):
         if x.ndim != 1:
             raise ValueError('Smooth only accepts 1D arrays')
         if window == 'square':  # moving average
@@ -171,7 +176,10 @@ def smooth(x, window_len, window='square', axis=0):
         s = np.r_[a, x, b]
         out = np.convolve(w / w.sum(), s, mode='same')
 
-        return out[len(a):-len(b)]
+        if align == 'center':
+            return out[len(a):-len(b)]
+        if align == 'left':
+            return out[:len(x)]
 
     if x.ndim > 1:  # apply along given axis
         y = np.apply_along_axis(_smooth1d, axis, x, n=window_len)
@@ -255,12 +263,12 @@ def lowpass_env_filtering(x, cutoff=150., n=1, sfreq=22050):
     return ss.lfilter(b, a, x)
 
 
-def hilbert_envelope(signal):
+def hilbert_envelope(x):
     """Calculate the Hilbert envelope of a signal.
 
     Parameters
     ----------
-    signal : array
+    x : array
         Signal on which to calculate the hilbert envelope. The calculation
         is done along the last axis (i.e. ``axis=-1``).
 
@@ -272,13 +280,40 @@ def hilbert_envelope(signal):
     def next_pow_2(x):
         return 1 if x == 0 else 2**(x - 1).bit_length()
 
-    signal = np.asarray(signal)
+    signal = np.asarray(x)
     N_orig = signal.shape[-1]
     # Next power of 2.
     N = next_pow_2(N_orig)
     y_h = ss.hilbert(signal, N)
     # Return signal with same shape as original
     return np.abs(y_h[..., :N_orig])
+
+
+def spectral_envelope(x, sfreq, lowpass=64):
+    """Compute envelope with convolution.
+
+    Notes
+    -----
+    The signal is first padded to avoid edge effects. To align the envelope
+    with the input signal, we return :
+    >> y[(window_len / 2 - 1):-(window_len / 2)]  # noqa
+
+    """
+    x = np.squeeze(x)
+    if x.ndim > 1:
+        raise AttributeError('x must be 1D')
+    if lowpass is None:
+        lowpass = sfreq / 2
+
+    # Pad signal with reflection
+    win = sfreq // lowpass  # window size in samples
+    a = x[win - 1:0:-1]
+    b = x[-2:-win - 1:-1]
+    s = np.r_[a, x, b]
+
+    # Convolve squared signal with a square window and take cubic root
+    y = np.convolve(s ** 2, np.ones((win,)) / win, mode='same') ** (1 / 3)
+    return y[len(a):-len(b)]
 
 
 class GammatoneFilterbank():
@@ -451,7 +486,7 @@ class AuditoryFilterbank(GammatoneFilterbank):
             sfreq=sfreq, cf=cf, b=b, order=order, q=q, min_bw=min_bw)
 
 
-if __name__ is "__main__":
+if __name__ == "__main__":
     # import matplotlib.pyplot as plt
 
     # x = (np.random.randn(1000, 1) / 2 +
