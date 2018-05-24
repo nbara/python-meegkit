@@ -118,8 +118,8 @@ def smooth(x, window_len, window='square', axis=0, align='left'):
     ----------
     x : array
         The input signal.
-    window_len : int
-        The dimension of the smoothing window.
+    window_len : float
+        The dimension of the smoothing window (in samples). Can be fractionary.
     window : str
         The type of window from 'flat', 'hanning', 'hamming', 'bartlett',
         'blackman' flat window will produce a moving average smoothing.
@@ -166,20 +166,26 @@ def smooth(x, window_len, window='square', axis=0, align='left'):
     def _smooth1d(x, n, align='left'):
         if x.ndim != 1:
             raise ValueError('Smooth only accepts 1D arrays')
-        if window == 'square':  # moving average
-            w = np.ones(window_len, 'd')
-        else:
-            w = eval('np.' + window + '(window_len)')
 
-        a = x[window_len - 1:0:-1]
-        b = x[-2:-window_len - 1:-1]
-        s = np.r_[a, x, b]
-        out = np.convolve(w / w.sum(), s, mode='same')
+        frac, n = np.modf(n)
+        n = int(n)
+
+        if window == 'square':  # moving average
+            w = np.ones(n, 'd')
+            w = np.r_[w, frac]
+        else:
+            w = eval('np.' + window + '(n)')
 
         if align == 'center':
+            a = x[n - 1:0:-1]
+            b = x[-2:-n - 1:-1]
+            s = np.r_[a, x, b]
+            out = np.convolve(w / w.sum(), s, mode='same')
             return out[len(a):-len(b)]
-        if align == 'left':
-            return out[:len(x)]
+
+        elif align == 'left':
+            out = ss.lfilter(w / w.sum(), 1, x)
+            return out
 
     if x.ndim > 1:  # apply along given axis
         y = np.apply_along_axis(_smooth1d, axis, x, n=window_len)

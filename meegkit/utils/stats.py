@@ -45,16 +45,16 @@ def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
     window : int
         Number of timepoints for to include for each correlation calculation.
     fs: int
-        Sampling frequency.
+        Sampling frequency (default: 1).
     step : int
-        If greater than 1, only compute correlations every `step` samples.
+        If > 1, only compute correlations every `step` samples.
 
     Returns
     -------
     corr: array, shape = (n_times - window, n_channels[, n_epochs])
         Rolling window correlation.
     t_corr : array
-        Correspodning time vector.
+        Corresponding time vector.
 
     """
     if window is None:
@@ -82,6 +82,7 @@ def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
     if n_epochs == 1:
         corr = corr.squeeze(-1)
 
+    # Times relative to end of window
     t_corr = (timebins + window) / float(fs)
 
     assert len(t_corr) == corr.shape[0]
