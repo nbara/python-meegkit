@@ -10,9 +10,9 @@ def cov_lags(X, Y, shifts=None):
     Parameters
     ----------
     X: array, shape = (n_times, n_chans_x[, n_trials])
-        Data.
-    Y: array, shape = (n_times, n_chans_y[, n_trials])
         Time shifted data.
+    Y: array, shape = (n_times, n_chans_y[, n_trials])
+        Reference data.
     shifts: array, shape = (n_shifts,)
         Positive lag means Y is delayed relative to X.
 

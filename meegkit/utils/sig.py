@@ -97,7 +97,7 @@ def modulation_index(phase, amp, n_bins=18):
     # Phase-amplitude coupling is defined by a distribution that significantly
     # deviates from the uniform distribution. Kullback-Leibler distance is
     # calculated by the following formula: KL = log(N) − H(p), where H is
-    # Shannon entropy, ans N is the number of bins.
+    # Shannon entropy, and N is the number of bins.
     H = -np.sum(p_j * np.log10(p_j))
     Hmax = np.log10(n_bins)
     KL = Hmax - H
@@ -448,7 +448,7 @@ class GammatoneFilterbank():
         -------
         ndarray
             Filtered signals with shape ``(M, N)``, where ``M`` is the number
-            of channels, and ``N`` is the input signal's nubmer of samples.
+            of channels, and ``N`` is the input signal's number of samples.
         """
         coefs = self._get_coefs()
         output = np.zeros((coefs[:, 9].shape[0], X.shape[0]))

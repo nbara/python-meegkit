@@ -15,6 +15,68 @@ except ImportError:
         return kwargs.get('iterable', None)
 
 
+def mcca(C, n_channels, n_keep=[]):
+    """Multiway canonical correlation analysis.
+
+    Parameters
+    ----------
+    C : array, shape = (n_channels * n_datasets, n_channels * n_datasets)
+        Covariance matrix of aggregated data sets.
+    n_channels : int
+        Number of channels of each data set.
+    n_keep: int
+        Number of components to keep (for orthogonal transforms).
+
+    Returns
+    -------
+    A : array, shape = (n_channels * n_datasets, n_channels * n_datasets)
+        Transform matrix.
+    score:
+        Commonality score (ranges from 1 to N^2).
+    AA : list of arrays, shapes = (n_channels, n_channels * n_datasets)
+        Subject-specific MCCA transform matrices.
+
+    References
+    ----------
+    .. [1] de Cheveigne, A., Di Liberto, G. M., Arzounian, D., Wong, D.,
+       Hjortkjaer, J., Fuglsang, S. A., & Parra, L. C. (2018). Multiway
+       Canonical Correlation Analysis of Brain Signals. bioRxiv, 344960.
+
+    """
+    if C.shape[0] != C.shape[1]:
+        raise ValueError('Covariance must be square !')
+    if np.mod(C.shape[0], n_channels) != 0:
+        raise ValueError('!')
+
+    # Whiten covariance by blocks
+    n_blocks = C.shape[0] // n_channels
+    A = np.zeros((n_channels * n_blocks, n_channels * n_blocks))
+    for b in range(n_blocks):
+
+        # Extract block covariance
+        ix0 = b * n_channels
+        ix1 = ix0 + n_channels
+        CC = C[ix0:ix1, ix0:ix1]
+
+        # Sphere it
+        W = whiten_nt(CC)
+        A[ix0:ix1, ix0:ix1] = W
+
+    C = A.T.dot(C.dot(A))
+
+    # final PCA
+    V, d = pca(C)
+    A = A.dot(V)
+    C = V.T.dot(C.dot(V))
+    score = np.diag(C)
+
+    AA = []
+    for b in range(n_blocks):
+        AA.append(A[n_channels * b + np.arange(n_channels), :])
+
+    return A, score, AA
+
+
 def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
                       plot=False):
     """CCA with cross-validation.
