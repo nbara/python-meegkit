@@ -31,7 +31,7 @@ def mcca(C, n_channels, n_keep=[]):
     -------
     A : array, shape = (n_channels * n_datasets, n_channels * n_datasets)
         Transform matrix.
-    score:
+    scores : array, shape = (n_comps,)
         Commonality score (ranges from 1 to N^2).
     AA : list of arrays, shapes = (n_channels, n_channels * n_datasets)
         Subject-specific MCCA transform matrices.
@@ -59,22 +59,22 @@ def mcca(C, n_channels, n_keep=[]):
         CC = C[ix0:ix1, ix0:ix1]
 
         # Sphere it
-        W = whiten_nt(CC)
+        W = whiten_nt(CC, keep=True)
         A[ix0:ix1, ix0:ix1] = W
 
     C = A.T.dot(C.dot(A))
 
     # final PCA
-    V, d = pca(C)
+    V, d = pca(C, thresh=None)  # don't threshold the PCA to keep n_channels
     A = A.dot(V)
     C = V.T.dot(C.dot(V))
-    score = np.diag(C)
+    scores = np.diag(C)
 
     AA = []
     for b in range(n_blocks):
         AA.append(A[n_channels * b + np.arange(n_channels), :])
 
-    return A, score, AA
+    return A, scores, AA
 
 
 def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
@@ -349,8 +349,20 @@ def whiten(C, fudge=1e-18):
     return W
 
 
-def whiten_nt(C, thresh=1e-12):
-    """Covariance whitening function from noisetools."""
+def whiten_nt(C, thresh=1e-12, keep=False):
+    """Covariance whitening function from noisetools.
+
+    Parameters
+    ----------
+    C : array
+        Covariance matrix.
+    thresh : float
+        PCA threshold.
+    keep : bool
+        If True, infrathreshold components are set to zero. If False (default),
+        infrathreshold components are truncated.
+
+    """
     d, V = linalg.eigh(C)  # eigh if matrix symmetric, eig otherwise
     d = np.real(d)
     V = np.real(V)
@@ -361,15 +373,22 @@ def whiten_nt(C, thresh=1e-12):
     V = V[:, idx]
 
     # Remove small eigenvalues
-    keep = (d / np.max(d)) > thresh
-    d = d[keep]
-    V = V[:, keep]
+    good = (d / np.max(d)) > thresh
+    if keep is True:
+        d[~good] = 0
+        V[:, ~good] = 0
+    else:
+        d = d[good]
+        V = V[:, good]
 
     # break symmetry when x and y perfectly correlated (otherwise cols of x*A
     # and y*B are not orthogonal)
     d = d ** (1 - thresh)
 
-    D = np.diag(np.sqrt((1. / d)))
+    dd = np.zeros_like(d)
+    dd[d > thresh] = (1. / d[d > thresh])
+
+    D = np.diag(np.sqrt(dd))
     W = np.dot(V, D)
 
     return W

@@ -207,7 +207,7 @@ def find_outliers(X, toobig1, toobig2=[]):
     return weights
 
 
-def find_outlier_trials(X, thresh=None, disp_flag=True):
+def find_outlier_trials(X, thresh=None, show=True):
     """Find outlier trials.
 
     For example thresh=2 rejects trials that deviate from the mean by
@@ -219,7 +219,7 @@ def find_outlier_trials(X, thresh=None, disp_flag=True):
         Data array.
     thresh : float or array of floats
         Keep trials less than thresh from mean.
-    disp_flag : bool
+    show : bool
         If true plot trial deviations before and after.
 
     Returns
@@ -250,7 +250,7 @@ def find_outlier_trials(X, thresh=None, disp_flag=True):
     d = d / (np.sum(X ** 2) / n_trials)
     idx = np.where(d < thresh[0])[0]
 
-    if disp_flag:
+    if show:
         plt.figure(figsize=(7, 4))
         gs = gridspec.GridSpec(1, 2)
         plt.suptitle('Outlier trial detection')
@@ -280,7 +280,7 @@ def find_outlier_trials(X, thresh=None, disp_flag=True):
 
     thresh.pop()
     if thresh:
-        bads2, _ = find_outlier_trials(X[:, idx], thresh, disp_flag)
+        bads2, _ = find_outlier_trials(X[:, idx], thresh, show)
         idx2 = idx[bads2]
         idx = np.setdiff1d(idx, idx2)
 
