@@ -1,0 +1,8 @@
+[report]
+include = */meegkit/*
+omit =
+    */python?.?/*
+    */site-packages/nose/*
+    */setup.py
+    */tests/*
+    */examples/*

@@ -13,6 +13,7 @@ dependencies:
 - flake8
 - pip:
   - nose
+  - codecov
   - codespell
   - pydocstyle
   - sphinx_bootstrap_theme
