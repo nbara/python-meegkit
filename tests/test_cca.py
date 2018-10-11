@@ -202,24 +202,22 @@ def test_cca_crossvalidate_shifts2():
     mat = loadmat('./tests/data/ccacrossdata.mat')
     xx = mat['xx2']
     yy = mat['yy2']
-    R2 = mat['R']
+    R2 = mat['R'][:, ::-1, :]  # shifts go in reverse direction in noisetools
 
     # Test with shifts
     A, B, R = cca_crossvalidate(xx, yy, shifts=[-3, -2, -1, 0, 1, 2, 3])
 
-    # correlations are ~ those of Maltab (very loose check, suspect numerical
-    # inaccuracy in normcol)
-    assert_almost_equal(R[:3, 1:-1, ...], R2[:3, 1:-1, ...], decimal=2)
-    assert_almost_equal(R, R2, decimal=1)
+    # correlations are ~ those of Matlab
+    assert_almost_equal(R, R2, decimal=3)
 
     # import matplotlib.pyplot as plt
     # n_trials = xx.shape[-1]
-    # f, ax = plt.subplots(n_trials, 1)
+    # f, ax = plt.subplots(n_trials, 2)
     # for i in range(n_trials):
-    #     ax[i].plot(R[:, :, i].T)
+    #     ax[i, 0].plot(R[:, :, i].T)
+    #     ax[i, 1].plot(R2[:, :, i].T)
     # f.set_tight_layout(True)
     # plt.show()
-
 
 if __name__ == '__main__':
     import nose
