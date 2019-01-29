@@ -1,6 +1,5 @@
 import numpy as np
 
-from context import meegkit  # noqa
 from meegkit import dss, sns, tspca
 from meegkit.utils import demean, fold, unfold
 
@@ -54,5 +53,5 @@ def test_tspca_sns_dss():  # TODO
 
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])

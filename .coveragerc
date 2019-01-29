@@ -2,7 +2,7 @@
 include = */meegkit/*
 omit =
     */python?.?/*
-    */site-packages/nose/*
+    */site-packages/pytest/*
     */setup.py
     */tests/*
     */examples/*

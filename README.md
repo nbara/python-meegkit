@@ -5,7 +5,10 @@
 
 Denoising tools for M/EEG processing in Python.
 
-> **Disclaimer:** The project mostly consists of development code, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the near future. Comments and suggestions are welcome.  
+> **Disclaimer:** The project mostly consists of development code, although
+> some modules and functions are already working. Bugs and performance problems
+> are to be expected, so use at your own risk. More tests and improvements will
+> be added in the near future. Comments and suggestions are welcome.  
 
 Python 2.7 and 3.5+ should be supported.
 
@@ -30,7 +33,7 @@ pip install .
 *Note* : Use developer mode with the `-e` flag (`pip install -e .`) to be able
 to modify the sources even after install.
 
-## Python implementation of CCA, STAR, SNS, and DSS denoising
+## Python implementation of CCA, STAR, SNS, DSS, and robust detrending
 
 This is mostly a translation of Matlab code from the NoiseTools toolbox by
 Alain de Cheveigné:  
@@ -39,8 +42,9 @@ http://audition.ens.fr/adc/NoiseTools/
 Original python implementation by Pedro Alcocer:  
 https://github.com/pealco
 
-Only CCA, SNS, DSS and STAR have been properly tested so far. TSCPA gives
-inaccurate results.
+Only CCA, SNS, DSS, STAR and robust detrending have been properly tested so
+far. TSCPA may give inaccurate results due to insufficient testing (PR
+welcome!)
 
 ### References
 
@@ -48,7 +52,9 @@ If you use this code, you should cite the relevant methods from the original
 articles :
 
 ```text
- de Cheveigne, A., Di Liberto, G. M., Arzounian, D., Wong, D., Hjortkjaer, J., Fuglsang, S. A., 
+de Cheveigné, A., & Arzounian, D. (2018). Robust detrending, rereferencing, outlier detection, 
+    and inpainting for multichannel data. NeuroImage, 172, 903-912.
+de Cheveigne, A., Di Liberto, G. M., Arzounian, D., Wong, D., Hjortkjaer, J., Fuglsang, S. A., 
     & Parra, L. C. (2018). Multiway Canonical Correlation Analysis of Brain Signals. bioRxiv, 
     344960.
 de Cheveigné A (2016). Sparse Time Artifact Removal, Journal of Neuroscience Methods, 262, 14-20

@@ -196,7 +196,7 @@ def smooth(x, window_len, window='square', axis=0, align='left'):
 
 
 def erb_bandwidth(fc):
-    """Bandwitdh of an Equivalent Rectangular Bandwidth (ERB).
+    """Bandwidth of an Equivalent Rectangular Bandwidth (ERB).
 
     Parameters
     ----------
@@ -295,7 +295,7 @@ def hilbert_envelope(x):
     return np.abs(y_h[..., :N_orig])
 
 
-def spectral_envelope(x, sfreq, lowpass=64):
+def spectral_envelope(x, sfreq, lowpass=32):
     """Compute envelope with convolution.
 
     Notes

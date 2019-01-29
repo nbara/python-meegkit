@@ -1,13 +1,10 @@
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_equal
-
 from scipy.io import loadmat
-
 from sklearn.cross_decomposition import CCA
 
-from context import meegkit  # noqa
-from meegkit.utils import tscov, multishift
-from meegkit.cca import nt_cca, cca_crossvalidate
+from meegkit.cca import cca_crossvalidate, nt_cca
+from meegkit.utils import multishift, tscov
 
 
 def test_cca():
@@ -220,5 +217,5 @@ def test_cca_crossvalidate_shifts2():
     # plt.show()
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])

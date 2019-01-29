@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from context import meegkit  # noqa
 from meegkit.utils import tscov, tsxcov
 
 
@@ -50,5 +49,5 @@ def test_tscov():
     #      0     0     0     0     0     0
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])

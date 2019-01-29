@@ -1,10 +1,7 @@
 import numpy as np
-
 from numpy.testing import assert_equal
 
-from context import meegkit  # noqa
-
-from meegkit.utils import (multishift, relshift, shift, shiftnd, multismooth,
+from meegkit.utils import (multishift, multismooth, relshift, shift, shiftnd,
                            widen_mask)
 
 
@@ -116,8 +113,8 @@ def test_multismooth():
 
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])
 
     # import matplotlib.pyplot as plt
     # x = np.random.randn(1000,)

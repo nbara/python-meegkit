@@ -162,7 +162,7 @@ def wpwr(X, weights=None):
     X = unfold(X)
     weights = unfold(weights)
 
-    if weights:
+    if weights.size > 0:
         X = X * weights
         y = np.sum(X ** 2)
         tweight = np.sum(weights)

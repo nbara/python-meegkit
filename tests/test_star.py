@@ -2,9 +2,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from context import meegkit  # noqa
 from meegkit.star import star
-from meegkit.utils import normcol, demean
+from meegkit.utils import demean, normcol
 
 
 def test_star1():
@@ -47,5 +46,5 @@ def test_star1():
 
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])

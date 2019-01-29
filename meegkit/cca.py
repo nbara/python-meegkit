@@ -116,7 +116,7 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         xx = [xx[..., t] for t in np.arange(xx.shape[-1])]
         yy = [yy[..., t] for t in np.arange(yy.shape[-1])]
     else:
-        raise AttributeError('xx and yy both must be lists of same length, ' +
+        raise AttributeError('xx and yy both must be lists of same length, '
                              'or arrays os same n_trials.')
 
     shifts = _times_to_delays(shifts, sfreq)

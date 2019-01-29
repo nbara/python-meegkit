@@ -1,9 +1,7 @@
 """Test SNS functions."""
 from numpy.testing import assert_allclose
-
 from scipy.io import loadmat
 
-from context import meegkit  # noqa
 from meegkit import sns
 
 
@@ -23,5 +21,5 @@ def test_sns():
 
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])

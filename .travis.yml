@@ -1,12 +1,14 @@
 notifications:
   email: false
 language: python
+sudo: required
+dist: xenial
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
   - "3.5"
   - "3.6"
-  # - "3.7"
+  - "3.7"
 install:
   - sudo apt-get update
   # We do this conditionally because it saves us some downloading if the
@@ -29,7 +31,7 @@ install:
   - conda env create -f environment.yml
   - source activate meegkit
   - python setup.py install
-# script: nosetests
-script: nosetests  --with-coverage --cover-package=meegkit
+script: make pep
+script: pytest --cov=./
 after_success:
-  - codecov
+  - bash <(curl -s https://codecov.io/bash)

@@ -2,9 +2,8 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
-from context import meegkit  # noqa
 from meegkit import dss
-from meegkit.utils import rms, tscov, fold, unfold
+from meegkit.utils import fold, rms, tscov, unfold
 
 
 def test_dss0():
@@ -54,5 +53,5 @@ def test_dss0():
 
 
 if __name__ == '__main__':
-    import nose
-    nose.run(defaultTest=__name__)
+    import pytest
+    pytest.main([__file__])

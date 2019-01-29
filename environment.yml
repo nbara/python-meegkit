@@ -12,7 +12,8 @@ dependencies:
 - numpydoc
 - flake8
 - pip:
-  - nose
+  - pytest
+  - pytest-cov
   - codecov
   - codespell
   - pydocstyle
