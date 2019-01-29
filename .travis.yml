@@ -30,8 +30,8 @@ install:
   - conda info -a
   - conda env create -f environment.yml
   - source activate meegkit
-  - python setup.py install
+  - python setup.py develop
 script: make pep
-script: pytest --cov=./
+script: pytest --cov=meegkit tests/
 after_success:
   - bash <(curl -s https://codecov.io/bash)
