@@ -436,6 +436,9 @@ def unfold(X):
     """Unfold 3D X into 2D (concatenate trials)."""
     n_samples, n_chans, n_trials = theshapeof(X)
 
+    if X.shape == (n_samples,):
+        X = X[:, None]
+
     if n_trials > 1:
         return np.reshape(
             np.transpose(X, (0, 2, 1)),
@@ -603,7 +606,8 @@ def _check_weights(weights, X):
             warnings.warn('weights should be a list or a numpy array.')
         weights = np.array([])
 
-    if len(weights) > 0:
+    weights = np.asanyarray(weights)
+    if weights.size > 0:
         dtype = np.complex128 if np.any(np.iscomplex(weights)) else np.float64
         weights = np.asanyarray(weights, dtype=dtype)
         if weights.ndim > 3:
@@ -618,8 +622,9 @@ def _check_weights(weights, X):
         if X.ndim == 3 and weights.ndim == 1:
             weights = weights[:, np.newaxis, np.newaxis]
 
-        if weights.shape[1] > 1:
-            raise ValueError("Weights array should have a single column.")
+        if weights.ndim > 1:
+            if weights.shape[1] > 1 and weights.shape[1] != X.shape[1]:
+                raise ValueError("Weights array should have a single column.")
 
     return weights
 

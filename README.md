@@ -1,6 +1,7 @@
 # MEEGkit
 
 [![Build Status](https://travis-ci.org/nbara/python-meegkit.svg?branch=master)](https://travis-ci.org/nbara/python-meegkit)
+[![codecov](https://codecov.io/gh/nbara/python-meegkit/branch/master/graph/badge.svg)](https://codecov.io/gh/nbara/python-meegkit)
 [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
 
 Denoising tools for M/EEG processing in Python.
