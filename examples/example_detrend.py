@@ -15,9 +15,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.gridspec import GridSpec
 
-from meegkit.detrend import regress
+from meegkit.detrend import regress, detrend
 
 np.random.seed(9)
+
+# Regression
+# =============================================================================
 
 # Simple regression example, no weights
 # -----------------------------------------------------------------------------
@@ -72,8 +75,55 @@ w = np.ones(y.shape[0])
 [b, z] = regress(y, x, w)
 
 plt.figure(4)
-plt.plot(y, label='data')
-plt.plot(z, ls=':', label='fit')
+plt.plot(y, label='data', color='C0')
+plt.plot(z, ls=':', label='fit', color='C1')
 plt.title('Channel-wise regression')
+plt.legend()
+
+
+# Detrending
+# =============================================================================
+
+# Basic example with a linear trend
+# -----------------------------------------------------------------------------
+x = np.arange(100)[:, None]
+x = x + np.random.randn(*x.shape)
+y, _, _ = detrend(x, 1)
+
+plt.figure(5)
+plt.plot(x, label='original')
+plt.plot(y, label='detrended')
+plt.legend()
+
+# Detrend biased random walk
+# -----------------------------------------------------------------------------
+x = np.cumsum(np.random.randn(1000, 1) + 0.1)
+y, _, _ = detrend(x, 3)
+
+plt.figure(6)
+plt.plot(x, label='original')
+plt.plot(y, label='detrended')
+plt.legend()
+
+# Detrend with weights
+# -----------------------------------------------------------------------------
+x = np.linspace(0, 100, 1000)[:, None]
+x = x + 3 * np.random.randn(*x.shape)
+
+# introduce some strong artifact on the first 100 samples
+x[:100, :] = 100
+
+# Detrend
+y, _, _ = detrend(x, 3, None)
+
+# Same process but this time downweight artifactual window
+w = np.ones(x.shape)
+w[:100, :] = 0
+yy, _, _ = detrend(x, 3, w)
+
+plt.figure(7)
+plt.plot(x, label='original')
+plt.plot(y, label='detrended - no weights')
+plt.plot(yy, label='detrended - weights')
 plt.legend()
 plt.show()

@@ -435,6 +435,8 @@ def fold(X, epoch_size):
 def unfold(X):
     """Unfold 3D X into 2D (concatenate trials)."""
     n_samples, n_chans, n_trials = theshapeof(X)
+    if X.size == 0:
+        return X
 
     if X.shape == (n_samples,):
         X = X[:, None]
