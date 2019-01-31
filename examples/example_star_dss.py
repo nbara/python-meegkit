@@ -1,4 +1,6 @@
-"""Example demonstrating STAR + DSS.
+"""
+Example demonstrating STAR + DSS
+================================
 
 This example shows how one can effectively combine STAR and DSS to recover
 signal components which would not have been discoverable with either these
@@ -12,21 +14,25 @@ References
    Neuroscience Methods, 262, 14-20, doi:10.1016/j.jneumeth.2016.01.005
 
 """
-import os
-import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
 
 from scipy.optimize import leastsq
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from meegkit import star, dss
+from meegkit.utils import demean, normcol, tscov
 
-from meegkit import star, dss  # noqa:E402
-from meegkit.utils import demean, normcol, tscov  # noqa:E402
+import config  # noqa
 
-# Create simulated data
 np.random.seed(9)
+
+###############################################################################
+# Create simulated data
+# -----------------------------------------------------------------------------
+# Simulated data consist of N channels, 1 sinusoidal target, N-3 noise sources,
+# with temporally local artifacts on each channel.
+
+# Source
 n_chans, n_samples = 10, 1000
 f = 2
 target = np.sin(np.arange(n_samples) / n_samples * 2 * np.pi * f)
@@ -44,8 +50,8 @@ for k in np.arange(n_chans):
 x = x0 + 10 * artifact
 
 
-# Basic function to fit a sinusoidal trend for DSS
 def _sine_fit(x):
+    """Fit a sinusoidal trend."""
     guess_mean = np.mean(x)
     guess_std = np.std(x)
     guess_phase = 0
@@ -62,10 +68,12 @@ def _sine_fit(x):
     return np.tile(data_fit, (x.shape[1], 1)).T
 
 
+###############################################################################
 # 1) Apply STAR
 # -----------------------------------------------------------------------------
 y, w, _ = star.star(x, 2)
 
+###############################################################################
 # 2) Apply DSS on raw data
 # -----------------------------------------------------------------------------
 c0, _ = tscov(x)
@@ -73,13 +81,16 @@ c1, _ = tscov(x - _sine_fit(x))
 [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
 z1 = normcol(np.dot(x, todss))
 
+###############################################################################
 # 3) Apply DSS on STAR-ed data
 # -----------------------------------------------------------------------------
+# Here the bias function is the original signal minus the sinusoidal trend.
 c0, _ = tscov(y)
 c1, _ = tscov(y - _sine_fit(y))
 [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
 z2 = normcol(np.dot(y, todss))
 
+###############################################################################
 # Plots
 # -----------------------------------------------------------------------------
 f, (ax0, ax1, ax2, ax3) = plt.subplots(4, 1, figsize=(7, 9))

@@ -42,6 +42,11 @@ build-doc:
 	cd doc; make clean
 	cd doc; make html
 
+build-examples:
+	cd examples;
+	find . -name "example_*.py" | xargs sphx_glr_python_to_jupyter.py
+	find . -name "example_*.ipynb" | xargs jupyter nbconvert --execute --to notebook --inplace
+
 # Style
 # =============================================================================
 codespell:  # running manually

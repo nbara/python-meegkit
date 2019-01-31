@@ -1,7 +1,7 @@
 """Robust detrending."""
 import numpy as np
 
-from scipy.linalg import pinv, lstsq, solve
+from scipy.linalg import lstsq, solve
 
 from .utils import demean, pca, unfold
 from .utils.matrix import _check_weights

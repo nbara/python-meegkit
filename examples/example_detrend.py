@@ -1,4 +1,6 @@
-"""Robust detrending examples.
+"""
+Robust detrending examples
+==========================
 
 Some toy examples to showcase usage for ``meegkit.detrend`` module.
 
@@ -17,11 +19,15 @@ from matplotlib.gridspec import GridSpec
 
 from meegkit.detrend import regress, detrend
 
+import config
+
 np.random.seed(9)
 
+###############################################################################
 # Regression
 # =============================================================================
 
+###############################################################################
 # Simple regression example, no weights
 # -----------------------------------------------------------------------------
 # fit random walk
@@ -35,7 +41,9 @@ plt.plot(y, label='data')
 plt.plot(z, label='fit')
 plt.title('No weights')
 plt.legend()
+plt.show()
 
+###############################################################################
 # Simple regression example, with weights
 # -----------------------------------------------------------------------------
 y = np.cumsum(np.random.randn(1000, 1), axis=0)
@@ -48,6 +56,7 @@ plt.plot(z, label='fit')
 plt.title('Weighted regression')
 plt.legend()
 
+###############################################################################
 # Downweight 1st half of the data
 # -----------------------------------------------------------------------------
 y = np.cumsum(np.random.randn(1000, 1), axis=0) + 1000
@@ -55,19 +64,20 @@ w = np.ones(y.shape[0])
 w[:500] = 0
 [b, z] = regress(y, x, w)
 
-f = plt.figure(3, constrained_layout=True)
-gs = GridSpec(3, 1, figure=f)
-ax1 = f.add_subplot(gs[:2, 0])
+f = plt.figure(3)
+gs = GridSpec(4, 1, figure=f)
+ax1 = f.add_subplot(gs[:3, 0])
 ax1.plot(y, label='data')
 ax1.plot(z, label='fit')
 ax1.set_xticklabels('')
 ax1.set_title('Split-wise regression')
 ax1.legend()
-ax2 = f.add_subplot(gs[2, 0])
+ax2 = f.add_subplot(gs[3, 0])
 l, = ax2.plot(np.arange(1000), np.zeros(1000))
 ax2.stackplot(np.arange(1000), w, labels=['weights'], color=l.get_color())
 ax2.legend(loc=2)
 
+###############################################################################
 # Multichannel regression
 # -----------------------------------------------------------------------------
 y = np.cumsum(np.random.randn(1000, 2), axis=0)
@@ -81,9 +91,11 @@ plt.title('Channel-wise regression')
 plt.legend()
 
 
+###############################################################################
 # Detrending
 # =============================================================================
 
+###############################################################################
 # Basic example with a linear trend
 # -----------------------------------------------------------------------------
 x = np.arange(100)[:, None]
@@ -95,6 +107,7 @@ plt.plot(x, label='original')
 plt.plot(y, label='detrended')
 plt.legend()
 
+###############################################################################
 # Detrend biased random walk
 # -----------------------------------------------------------------------------
 x = np.cumsum(np.random.randn(1000, 1) + 0.1)
@@ -105,6 +118,7 @@ plt.plot(x, label='original')
 plt.plot(y, label='detrended')
 plt.legend()
 
+###############################################################################
 # Detrend with weights
 # -----------------------------------------------------------------------------
 x = np.linspace(0, 100, 1000)[:, None]

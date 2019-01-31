@@ -17,5 +17,5 @@ dependencies:
   - codecov
   - codespell
   - pydocstyle
-  - sphinx_bootstrap_theme
+  - sphinx-gallery
   - tqdm

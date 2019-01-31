@@ -1,21 +1,24 @@
-"""Example demonstrating sparse time artifact removal on simulated data.
+"""
+Sparse time artifact removal on simulated data
+==============================================
 
 This example is similar to test_nt_star.m in Noisetools. Results are equivalent
 (within numerical precision) to the Matlab code.
 
-Simulated data consist of N channels, 1 sinusoidal target, N-3 noise sources,
-with temporally local artifacts on each channel.
 """
-import os
-import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+from meegkit import star
+from meegkit.utils import demean, normcol
 
-from meegkit import star  # noqa
-from meegkit.utils import demean, normcol  # noqa
+import config
+
+###############################################################################
+# Create simulated data
+# -----------------------------------------------------------------------------
+# Simulated data consist of N channels, 1 sinusoidal target, N-3 noise sources,
+# with temporally local artifacts on each channel.
 
 # Create simulated data
 nchans = 10
@@ -41,8 +44,14 @@ x = x0 + 10 * artifact
 # x = mat['x']
 # x0 = mat['x0']
 
+###############################################################################
+# Apply STAR
+# -----------------------------------------------------------------------------
 y, w, _ = star.star(x, 2)
 
+###############################################################################
+# Plot results
+# -----------------------------------------------------------------------------
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.plot(x, lw=.5)
 ax1.set_title('Signal + Artifacts (SNR = {})'.format(SNR))
