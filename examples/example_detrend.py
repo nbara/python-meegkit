@@ -4,13 +4,13 @@ Robust detrending examples
 
 Some toy examples to showcase usage for ``meegkit.detrend`` module.
 
-Robust referencing is adapted from [1]_.
+Robust referencing is adapted from [1].
 
 References
 ----------
-.. [1] de Cheveigné, A., & Arzounian, D. (2018). Robust detrending,
-   rereferencing, outlier detection, and inpainting for multichannel data.
-   NeuroImage, 172, 903-912.
+> [1] de Cheveigné, A., & Arzounian, D. (2018). Robust detrending,
+  rereferencing, outlier detection, and inpainting for multichannel data.
+  NeuroImage, 172, 903-912.
 
 """
 import matplotlib.pyplot as plt
@@ -19,7 +19,7 @@ from matplotlib.gridspec import GridSpec
 
 from meegkit.detrend import regress, detrend
 
-import config
+import config  # plotting utils
 
 np.random.seed(9)
 
@@ -30,45 +30,35 @@ np.random.seed(9)
 ###############################################################################
 # Simple regression example, no weights
 # -----------------------------------------------------------------------------
-# fit random walk
-y = np.cumsum(np.random.randn(1000, 1), axis=0)
-x = np.arange(1000)[:, None]
-x = np.hstack([x, x ** 2, x ** 3])
-[b, z] = regress(y, x)
+# We first try to fit a simple random walk process.
+x = np.cumsum(np.random.randn(1000, 1), axis=0)
+r = np.arange(1000)[:, None]
+r = np.hstack([r, r ** 2, r ** 3])
+b, y = regress(x, r)
 
 plt.figure(1)
-plt.plot(y, label='data')
-plt.plot(z, label='fit')
+plt.plot(x, label='data')
+plt.plot(y, label='fit')
 plt.title('No weights')
 plt.legend()
 plt.show()
 
 ###############################################################################
-# Simple regression example, with weights
-# -----------------------------------------------------------------------------
-y = np.cumsum(np.random.randn(1000, 1), axis=0)
-w = np.random.rand(*y.shape)
-[b, z] = regress(y, x, w)
-
-plt.figure(2)
-plt.plot(y, label='data')
-plt.plot(z, label='fit')
-plt.title('Weighted regression')
-plt.legend()
-
-###############################################################################
 # Downweight 1st half of the data
 # -----------------------------------------------------------------------------
-y = np.cumsum(np.random.randn(1000, 1), axis=0) + 1000
+# We can also use weights for each time sample. Here we explicitly restrict the
+# fit to the second half of the data by setting weights to zero for the first
+# 500 samples.
+x = np.cumsum(np.random.randn(1000, 1), axis=0) + 1000
 w = np.ones(y.shape[0])
 w[:500] = 0
-[b, z] = regress(y, x, w)
+b, y = regress(x, r, w)
 
 f = plt.figure(3)
 gs = GridSpec(4, 1, figure=f)
 ax1 = f.add_subplot(gs[:3, 0])
-ax1.plot(y, label='data')
-ax1.plot(z, label='fit')
+ax1.plot(x, label='data')
+ax1.plot(y, label='fit')
 ax1.set_xticklabels('')
 ax1.set_title('Split-wise regression')
 ax1.legend()
@@ -80,13 +70,13 @@ ax2.legend(loc=2)
 ###############################################################################
 # Multichannel regression
 # -----------------------------------------------------------------------------
-y = np.cumsum(np.random.randn(1000, 2), axis=0)
+x = np.cumsum(np.random.randn(1000, 2), axis=0)
 w = np.ones(y.shape[0])
-[b, z] = regress(y, x, w)
+b, y = regress(x, r, w)
 
 plt.figure(4)
-plt.plot(y, label='data', color='C0')
-plt.plot(z, ls=':', label='fit', color='C1')
+plt.plot(x, label='data', color='C0')
+plt.plot(y, ls=':', label='fit', color='C1')
 plt.title('Channel-wise regression')
 plt.legend()
 
@@ -108,7 +98,7 @@ plt.plot(y, label='detrended')
 plt.legend()
 
 ###############################################################################
-# Detrend biased random walk
+# Detrend biased random walk with a third-order polynomial
 # -----------------------------------------------------------------------------
 x = np.cumsum(np.random.randn(1000, 1) + 0.1)
 y, _, _ = detrend(x, 3)
@@ -121,6 +111,13 @@ plt.legend()
 ###############################################################################
 # Detrend with weights
 # -----------------------------------------------------------------------------
+# Finally, we show how the detrending process handles local artifacts, and how
+# we can advantageously use weights to improve detrending. The raw data
+# consists of gaussian noise with a linear trend, and a storng glitch covering
+# the first 100 timesamples (blue trace). Detrending without weights (orange
+# trace) causes an overestimation of the polynomial order because of the
+# glitch, leading to a mediocre fit. When downweightining this artifactual
+# period, the fit is much improved (green trace).
 x = np.linspace(0, 100, 1000)[:, None]
 x = x + 3 * np.random.randn(*x.shape)
 
@@ -128,16 +125,16 @@ x = x + 3 * np.random.randn(*x.shape)
 x[:100, :] = 100
 
 # Detrend
-y, _, _ = detrend(x, 3, None)
+y, _, _ = detrend(x, 3, None, threshold=np.inf)
 
 # Same process but this time downweight artifactual window
 w = np.ones(x.shape)
 w[:100, :] = 0
-yy, _, _ = detrend(x, 3, w)
+z, _, _ = detrend(x, 3, w)
 
 plt.figure(7)
 plt.plot(x, label='original')
 plt.plot(y, label='detrended - no weights')
-plt.plot(yy, label='detrended - weights')
+plt.plot(z, label='detrended - weights')
 plt.legend()
 plt.show()

@@ -9,16 +9,16 @@ def cov_lags(X, Y, shifts=None):
 
     Parameters
     ----------
-    X: array, shape = (n_times, n_chans_x[, n_trials])
+    X: array, shape=(n_times, n_chans_x[, n_trials])
         Time shifted data.
-    Y: array, shape = (n_times, n_chans_y[, n_trials])
+    Y: array, shape=(n_times, n_chans_y[, n_trials])
         Reference data.
-    shifts: array, shape = (n_shifts,)
+    shifts: array, shape=(n_shifts,)
         Positive lag means Y is delayed relative to X.
 
     Returns
     -------
-    C : array, shape = (n_chans_x + n_chans_y, n_chans_x + n_chans_y, n_shifts)
+    C : array, shape=(n_chans_x + n_chans_y, n_chans_x + n_chans_y, n_shifts)
         Covariance matrix (3D if n_shifts > 1).
     tw : float
         Total weight.
@@ -69,7 +69,7 @@ def tsxcov(X, Y, shifts=None, weights=None):
 
     Parameters
     ----------
-    X, Y : arrays, shape = (n_times, n_chans[, n_trials])
+    X, Y : arrays, shape=(n_times, n_chans[, n_trials])
         Data to cross correlate. X can be 1D, 2D or 3D.
     shifts : array
         Time shifts.
@@ -79,7 +79,7 @@ def tsxcov(X, Y, shifts=None, weights=None):
 
     Returns
     -------
-    C : array, shape = (n_chans_x, n_chans_y * n_shifts)
+    C : array, shape=(n_chans_x, n_chans_y * n_shifts)
         Cross-covariance matrix.
     tw : total weight
 
@@ -129,7 +129,7 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
 
     Parameters
     ----------
-    X : array, shape = (n_times, n_chans[, n_trials])
+    X : array, shape=(n_times, n_chans[, n_trials])
         Data, can be 1D, 2D or 3D.
     shifts : array
         Array of time shifts.
@@ -139,7 +139,7 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
 
     Returns
     -------
-    C : array, shape = (n_chans * n_shifts, n_chans * n_shifts)
+    C : array, shape=(n_chans * n_shifts, n_chans * n_shifts)
         Covariance matrix. This matrix is made up of a (n_times, n_times)
         matrix of submatrices of dimensions (n_shifts, n_shifts).
     tw : array

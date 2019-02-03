@@ -10,18 +10,18 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
 
     Parameters
     ----------
-    data: array, shape = (n_samples, n_chans, n_trials)
+    data: array, shape=(n_samples, n_chans, n_trials)
         Data to denoise.
     weights: array
         Weights.
     keep1: int
-        Number of PCs to retain in function:`dss0` (default: all).
+        Number of PCs to retain in function:`dss0` (default=all).
     keep2: float
-        Ignore PCs smaller than keep2 in function:`dss0` (default: 10^-12).
+        Ignore PCs smaller than keep2 in function:`dss0` (default=10^-12).
 
     Returns
     -------
-    todss: array, shape = (n_dss_components, n_chans)
+    todss: array, shape=(n_dss_components, n_chans)
         Ddenoising matrix to convert data to normalized DSS components.
     pwr0: array
         Power per component (raw).
@@ -59,18 +59,18 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
 
     Parameters
     ----------
-    c0: array, shape = (n_chans, n_chans)
+    c0: array, shape=(n_chans, n_chans)
         Baseline covariance.
-    c1: array, shape = (n_chans, n_chans)
+    c1: array, shape=(n_chans, n_chans)
         Biased covariance.
     keep1: int
-        Number of PCs to retain (default: all).
+        Number of PCs to retain (default=all).
     keep2: float
-        Ignore PCs smaller than keep2 (default: 10.^-9).
+        Ignore PCs smaller than keep2 (default=10.^-9).
 
     Returns
     -------
-    todss: array, shape = (n_dss_components, n_chans)
+    todss: array, shape=(n_dss_components, n_chans)
         Matrix to convert data to normalized DSS components.
     pwr0: array
         Power per component (baseline).

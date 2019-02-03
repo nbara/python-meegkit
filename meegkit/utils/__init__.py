@@ -1,4 +1,5 @@
 """Utility functions."""
+from .base import mldivide, mrdivide
 from .covariances import cov_lags, tscov, tsxcov
 from .denoise import (find_outlier_trials, find_outliers, mean_over_trials,
                       pca, regcov, wmean, wpwr)

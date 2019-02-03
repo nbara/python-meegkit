@@ -1,8 +1,6 @@
 """Test robust detrending."""
 import numpy as np
 
-from numpy.testing import assert_almost_equal
-
 from meegkit.detrend import regress, detrend
 
 

@@ -15,22 +15,22 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
 
     Parameters
     ----------
-    X : array, shape = (n_times, n_chans, n_trials)
+    X : array, shape=(n_times, n_chans, n_trials)
         EEG data.
     n_neighbors : int
         Number of neighbors (based on correlation) to include in the
         projection.
     skip: int
-        Number of closest neighbors to skip (default: 0).
+        Number of closest neighbors to skip (default=0).
     weights : array of floats
-        Weights (default: all ones).
+        Weights (default=all ones).
 
 
     Returns
     -------
-    y : array, shape = (n_times, n_chans, n_trials)
+    y : array, shape=(n_times, n_chans, n_trials)
         Denoised data.
-    r : array, shape = (n_chans, n_chans)
+    r : array, shape=(n_chans, n_chans)
         Denoising matrix.
 
     """
@@ -61,13 +61,13 @@ def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
 
     Parameters
     ----------
-    c: array, shape = (n_chans, n_chans)
+    c: array, shape=(n_chans, n_chans)
         Full covariance of data to denoise.
     n_neighbors : int
         Number of neighbors (based on correlation) to include in the
         projection.
     skip: int
-        Number of closest neighbors to skip (default: 0).
+        Number of closest neighbors to skip (default=0).
     wc: array
         Weighted covariance.
 

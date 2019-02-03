@@ -11,24 +11,24 @@ def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
 
     Parameters
     ----------
-    X : array, shape = (n_times, n_chans[, n_trials])
+    X : array, shape=(n_times, n_chans[, n_trials])
         Data array.
-    shifts: array, shape = (n_shifts,)
+    shifts: array, shape=(n_shifts,)
         Array of shifts to apply.
     keep: int
-        Number of components (shifted regressor PCs) to keep (default: all).
+        Number of components (shifted regressor PCs) to keep (default=all).
     threshold:
-        Discard PCs with eigenvalues below this (default: 1e-6).
+        Discard PCs with eigenvalues below this (default=1e-6).
     weights : array
         Ignore samples with absolute value above this.
     demean : bool
-        If True, Epochs are centered before comuting PCA (default: 0).
+        If True, Epochs are centered before comuting PCA (default=0).
 
     Returns
     -------
     comps : array
         Principal components array.
-    V : array, shape = (n_chans, n_comps)
+    V : array, shape=(n_chans, n_comps)
         PCA weights.
     idx : array
         `X[idx]` maps to principal comps.
@@ -79,20 +79,20 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
 
     Parameters
     ----------
-    X : array, shape = (n_samples, n_chans[, n_trials])
+    X : array, shape=(n_samples, n_chans[, n_trials])
         Data to denoise.
-    R : array, shape = (n_samples, n_chans[, n_trials])
+    R : array, shape=(n_samples, n_chans[, n_trials])
         Reference data.
-    shifts : array, shape = (n_shifts,)
-        Array of shifts to apply to R (default: [0]).
-    wX : array, shape = (n_samples, 1, n_trials)
+    shifts : array, shape=(n_shifts,)
+        Array of shifts to apply to R (default=[0]).
+    wX : array, shape=(n_samples, 1, n_trials)
         Weights to apply to `X`.
-    wR : array, shape = (n_samples, 1, n_trials)
+    wR : array, shape=(n_samples, 1, n_trials)
         Weights to apply to `R`.
     keep : int | None
-        Number of shifted-R PCs to retain (default: all).
+        Number of shifted-R PCs to retain (default=all).
     thresh : float
-        Ignore shifted-R PCs smaller than thresh (default: 1e-12).
+        Ignore shifted-R PCs smaller than thresh (default=1e-12).
 
     Returns
     -------

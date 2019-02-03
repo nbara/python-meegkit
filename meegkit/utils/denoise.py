@@ -13,7 +13,7 @@ def pca(cov, max_comps=None, thresh=0):
 
     Parameters
     ----------
-    cov:  array, shape = (n_chans, n_chans)
+    cov:  array, shape=(n_chans, n_chans)
         Covariance matrix.
     max_comps : int | None
         Maximum number of components to retain after decomposition. ``None``
@@ -23,9 +23,9 @@ def pca(cov, max_comps=None, thresh=0):
 
     Returns
     -------
-    V : array, shape = (max_comps, max_comps)
+    V : array, shape=(max_comps, max_comps)
         Eigenvectors (matrix of PCA components).
-    d : array, shape = (max_comps,)
+    d : array, shape=(max_comps,)
         PCA eigenvalues
 
     """
@@ -75,9 +75,9 @@ def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
     Cyy : array
         Covariance matrix of regressor.
     keep : array
-        Number of regressor PCs to keep (default: all).
+        Number of regressor PCs to keep (default=all).
     threshold : float
-        Eigenvalue threshold for discarding regressor PCs (default: 0).
+        Eigenvalue threshold for discarding regressor PCs (default=0).
 
     Returns
     -------
@@ -215,7 +215,7 @@ def find_outlier_trials(X, thresh=None, show=True):
 
     Parameters
     ----------
-    X : ndarray, shape = (n_times, n_chans[, n_trials])
+    X : ndarray, shape=(n_times, n_chans[, n_trials])
         Data array.
     thresh : float or array of floats
         Keep trials less than thresh from mean.

@@ -1,13 +1,12 @@
 """Robust detrending."""
 import numpy as np
 
-from scipy.linalg import lstsq, solve
-
-from .utils import demean, pca, unfold
+from .utils import demean, mrdivide, pca, unfold
 from .utils.matrix import _check_weights
 
 
-def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4):
+def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4,
+            show=False):
     """Robustly remove trend.
 
     The data are fit to the basis using weighted least squares. The weight is
@@ -21,11 +20,13 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4):
     Parameters
     ----------
     x : array, shape=(n_times, n_channels[, n_trials])
-        Raw data
+        Raw data matrix.
     order : int
         Order of polynomial or number of sin/cosine pairs
-    w: weights
-    basis: {'polynomials', 'sinusoids'} | ndarray
+    w : weights, shape=(n_times[, n_channels][, n_trials])
+        Sample weights for the regression. If a single channel is provided, the
+        same weights are applied to all channels.
+    basis : {'polynomials', 'sinusoids'} | ndarray
         Basis for regression.
     threshold : int
         Threshold for outliers, in number of standard deviations (default=3).
@@ -34,19 +35,22 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4):
 
     Returns
     -------
-    y: detrended data
-    w: updated weights
-    r: basis matrix used
+    y : array, shape=(n_times, n_channels[, n_trials])
+        Detrended data.
+    w : array, shape=(n_times[, n_channels][, n_trials])
+        Updated weights.
+    r : array, shape=(n_times * ntrials, order)
+        Basis matrix used.
 
     Examples
     --------
-    Fit linear trend, ignoring samples > 3*sd from it, and remove:
+    Fit a linear trend, ignoring samples > 3*sd from it, and remove it:
     >> y = detrend(x, 1)
 
-    Fit/remove polynomial order=5 with initial weighting w, threshold = 4*sd:
-    >> y = detrend(x, 5, w, [],4 )
+    Fit/remove polynomial (order=5) with initial weighting w, threshold = 4*sd:
+    >> y = detrend(x, 5, w, 'polynomial', 4)
 
-    Fit/remove linear then 3rd order polynomial:
+    Fit/remove linear then 3rd order polynomial trend:
     >> [y, w]= detrend(x, 1)
     >> [yy, ww] = detrend(y, 3)
 
@@ -81,7 +85,7 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4):
     # iteratively remove trends
     # the tricky bit is to ensure that weighted means are removed before
     # calculating the regression (see regress()).
-    for iIter in range(n_iter):
+    for i in range(n_iter):
         # weighted regression on basis
         _, y = regress(x, r, w)
 
@@ -103,36 +107,24 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4):
     y = np.reshape(y, dims)
     w = np.reshape(w, dims)
 
-    # if show: # don't return, just plot
-    #     figure(1)
-    #     subplot 411
-    #     plot(x)
-    #     title('raw')
-    #     subplot 412
-    #     plot(y)
-    #     title('detrended')
-    #     subplot 413
-    #     plot(x-y)
-    #     title('trend')
-    #     subplot 414
-    #     nt_imagescc(w')
-    #     title('weight')
+    if show:
+        _plot_detrend(x, y, w)
 
     return y, w, r
 
 
-def regress(y, x, w=None, threshold=1e-7, return_mean=False):
+def regress(x, r, w=None, threshold=1e-7, return_mean=False):
     """Weighted regression.
 
     Parameters
     ----------
-    y : array, shape=(n_times, n_chans)
-        Data.
     x : array, shape=(n_times, n_chans)
+        Data.
+    r : array, shape=(n_times, n_chans)
         Regressor.
     w : array, shape=(n_times, n_chans)
-        Weight to apply to `y`. `w` is either a matrix of same size as `y`, or
-        a column vector to be applied to each column of `y`.
+        Weight to apply to `x`. `w` is either a matrix of same size as `x`, or
+        a column vector to be applied to each column of `x`.
     threshold : float
         PCA threshold (default=1e-7).
     return_mean : bool
@@ -141,33 +133,35 @@ def regress(y, x, w=None, threshold=1e-7, return_mean=False):
     Returns
     -------
     b : array, shape=(n_chans, n_chans)
-        Regression matrix (apply to x to approximate y).
+        Regression matrix (apply to r to approximate x).
     z : array, shape=(n_times, n_chans)
-        Regression (x @ b).
+        Regression (r @ b).
 
     """
     # check/fix sizes
-    w = _check_weights(w, y)
-    n_times = y.shape[0]
-    n_chans = y.shape[1]
+    w = _check_weights(w, x)
+    n_times = x.shape[0]
+    n_chans = x.shape[1]
+    r = unfold(r)
     x = unfold(x)
-    y = unfold(y)
-    if x.shape[0] != y.shape[0]:
-        raise ValueError('x and y have incompatible shapes!')
+    if r.shape[0] != x.shape[0]:
+        raise ValueError('r and x have incompatible shapes!')
 
     # save weighted mean
-    mn = y - demean(y, w)
+    mn = x - demean(x, w)
 
     if not w.any():  # simple regression
-        xx = demean(x)
-        yy = demean(y)
+        rr = demean(r)
+        yy = demean(x)
 
         # PCA
-        V, _ = pca(xx.T.dot(xx), thresh=threshold)
-        xxx = xx.dot(V)
-        b = mrdivide(yy.T.dot(xxx), xxx.T.dot(xxx))
+        V, _ = pca(rr.T.dot(rr), thresh=threshold)
+        rrr = rr.dot(V)
+
+        # Regression (OLS)
+        b = mrdivide(yy.T.dot(rrr), rrr.T.dot(rrr))
         b = b.T
-        z = np.dot(demean(x, w).dot(V), b)
+        z = np.dot(demean(r, w).dot(V), b)
         z = z + mn
 
     else:  # weighted regression
@@ -179,35 +173,35 @@ def regress(y, x, w=None, threshold=1e-7, return_mean=False):
                 print('weights all zero')
                 b = 0
             else:
-                yy = demean(y, w) * w
-                xx = demean(x, w) * w
-                V, _ = pca(xx.T.dot(xx), thresh=threshold)
-                xxx = xx.dot(V)
-                b = mrdivide(yy.T.dot(xxx), xxx.T.dot(xxx))
+                yy = demean(x, w) * w
+                rr = demean(r, w) * w
+                V, _ = pca(rr.T.dot(rr), thresh=threshold)
+                rrr = rr.dot(V)
+                b = mrdivide(yy.T.dot(rrr), rrr.T.dot(rrr))
 
-            z = demean(x, w).dot(V).dot(b.T)
+            z = demean(r, w).dot(V).dot(b.T)
             z = z + mn
 
         else:  # each channel has own weight
-            if w.shape[1] != y.shape[1]:
+            if w.shape[1] != x.shape[1]:
                 raise ValueError('!')
-            z = np.zeros(y.shape)
+            z = np.zeros(x.shape)
             b = np.zeros((n_chans, n_chans))
             for i in range(n_chans):
                 if sum(w[:, i]) == 0:
                     print('weights all zero for channel {}'.format(i))
-                    c = np.zeros(y.shape[1], 1)
+                    c = np.zeros(x.shape[1], 1)
                 else:
                     wc = w[:, i][:, None]  # channel-specific weight
-                    yy = demean(y[:, i], wc) * wc
+                    yy = demean(x[:, i], wc) * wc
                     # remove channel-specific-weighted mean from regressor
-                    x = demean(x, wc)
-                    xx = x * wc
-                    V, _ = pca(xx.T.dot(xx), thresh=threshold)
-                    xx = xx.dot(V)
-                    c = mrdivide(yy.T.dot(xx), xx.T.dot(xx))
+                    r = demean(r, wc)
+                    rr = r * wc
+                    V, _ = pca(rr.T.dot(rr), thresh=threshold)
+                    rr = rr.dot(V)
+                    c = mrdivide(yy.T.dot(rr), rr.T.dot(rr))
 
-                z[:, i] = x.dot(V.dot(c.T)).flatten()
+                z[:, i] = r.dot(V.dot(c.T)).flatten()
                 z[:, i] += mn[:, i]
                 b[i] = c
             b = b[:, :V.shape[1]]
@@ -215,41 +209,28 @@ def regress(y, x, w=None, threshold=1e-7, return_mean=False):
     return b, z
 
 
-def mrdivide(A, B):
-    r"""Matrix right-division (A/B).
+def _plot_detrend(x, y, w):
+    """Plot detrending results."""
+    import matplotlib.pyplot as plt
+    from matplotlib.gridspec import GridSpec
 
-    Solves the linear system XB = A for X. We can write equivalently:
+    n_times = x.shape[0]
+    n_chans = x.shape[1]
 
-    1) XB = A
-    2) (XB).T = A.T
-    3) B.T X.T = A.T
+    f = plt.figure()
+    gs = GridSpec(4, 1, figure=f)
+    ax1 = f.add_subplot(gs[:3, 0])
+    plt.plot(x, label='original', color='C0')
+    plt.plot(y, label='detrended', color='C1')
+    ax1.set_xlim(0, n_times)
+    ax1.set_xticklabels('')
+    ax1.set_title('Robust detrending')
+    ax1.legend()
 
-    Therefore A/B amounts to solving B.T X.T = A.T for X.T:
-
-    >> mldivide(B.T, A.T).T
-
-    References
-    ----------
-    .. [1] https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
-
-    """
-    return mldivide(B.T, A.T).T
-
-
-def mldivide(A, B):
-    r"""Matrix left-division (A\B).
-
-    Solves the AX = B for X. In other words, X minimizes norm(A*X - B), the
-    length of the vector AX - B:
-    - linalg.solve(A, B) if A is square
-    - linalg.lstsq(A, B) otherwise
-
-    References
-    ----------
-    .. [1] https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
-
-    """
-    if A.shape[0] == A.shape[1]:
-        return solve(A, B)
-    else:
-        return lstsq(A, B)
+    ax2 = f.add_subplot(gs[3, 0])
+    ax2.imshow(w.T, aspect='auto', cmap='Greys')
+    ax2.set_yticks(np.arange(1, n_chans + 1, 1))
+    ax2.set_xlim(0, n_times)
+    ax2.set_ylabel('ch. weights')
+    ax2.set_xlabel('samples')
+    plt.show()

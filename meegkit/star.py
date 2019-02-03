@@ -1,8 +1,8 @@
 import numpy as np
-from scipy import linalg
 from scipy.signal import filtfilt
 
-from .utils import demean, fold, normcol, pca, theshapeof, tscov, unfold, wpwr
+from .utils import (demean, fold, mrdivide, normcol, pca, theshapeof, tscov,
+                    unfold, wpwr)
 
 
 def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
@@ -11,22 +11,22 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
     Parameters
     ----------
-    X : array, shape = (n_times, n_chans[, n_trials])
+    X : array, shape=(n_times, n_chans[, n_trials])
         Data to denoise.
     thresh : float
-        Threshold for eccentricity measure (default: 1).
-    closest : array, shape = (n_chans, n_neighbours)
-        Indices of channels that are closest to each channel (default: all).
+        Threshold for eccentricity measure (default=1).
+    closest : array, shape=(n_chans, n_neighbours)
+        Indices of channels that are closest to each channel (default=all).
     depth : int
-        Maximum number of channels to fix at each sample (default: 1).
+        Maximum number of channels to fix at each sample (default=1).
     pca_thresh : float
-        Threshold for discarding weak PCs (default: 1e-15)
+        Threshold for discarding weak PCs (default=1e-15)
     n_smooth : int
-        Samples, smoothing to apply to eccentricity (default: 10).
+        Samples, smoothing to apply to eccentricity (default=10).
     min_prop : float
-        Minimum proportion of artifact free at first iteration (default: 0.3).
+        Minimum proportion of artifact free at first iteration (default=0.3).
     n_iter : int
-        Iterations to refine c0 (default: 3).
+        Iterations to refine c0 (default=3).
     verbose : bool | 'debug'
         Verbosity. If 'debug', also draw some diagnostics plots.
 
@@ -34,9 +34,9 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     -------
     y : array
         Denoised data.
-    w : array, shape = (n_times, 1)
+    w : array, shape=(n_times, 1)
         0 for parts that needed fixing, 1 elsewhere.
-    ww : array, shape = (n_times, n_chans)
+    ww : array, shape=(n_times, n_chans)
         0 for parts that needed fixing, 1 elsewhere.
 
     See Also
@@ -230,10 +230,10 @@ def _project_channel(X, c0, ch, neighbours, pca_threshold=1e-15):
 
     # X = c0[ch, neighbours].dot(topcs) / (topcs.T.dot(c01).dot(topcs))
     # In Matlab X = A / B performs mrdivide(), and solves for XB=A
-    # In python, the closest equivalent is np.dot(A, linalg.pinv(B))
+    # In python, the best way to approximate this is with linalg.lstsq
     A = c0[ch, neighbours].dot(topcs)[None, :]
     B = topcs.T.dot(c01).dot(topcs)
-    proj = np.dot(A, linalg.pinv(B))
+    proj = mrdivide(A, B)
     y = X.dot(topcs.dot(proj.T))  # projection
 
     return y

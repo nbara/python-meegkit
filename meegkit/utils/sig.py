@@ -6,7 +6,7 @@ import scipy.signal as ss
 
 
 def modulation_index(phase, amp, n_bins=18):
-    r"""Compute the Modulation Index (MI) between two signals.
+    u"""Compute the Modulation Index (MI) between two signals.
 
     MI is a measure of the amount of phase-amplitude coupling. Phase angles are
     expected to be in radians [1]_. MI is derived from the Kullbach-Leibner
@@ -21,7 +21,7 @@ def modulation_index(phase, amp, n_bins=18):
     amp : array
         Amplitude vector.
     n_bins : int
-        Number of bins in which to discretize phase (default: 18 bins, giving
+        Number of bins in which to discretize phase (default=18 bins, giving
         a 20-degree resolution).
 
     Returns
@@ -124,7 +124,7 @@ def smooth(x, window_len, window='square', axis=0, align='left'):
         The type of window from 'flat', 'hanning', 'hamming', 'bartlett',
         'blackman' flat window will produce a moving average smoothing.
     axis : int
-        Axis along which smoothing will be applied (default: 0).
+        Axis along which smoothing will be applied (default=0).
     align : {'left' | 'center'}
         If `left` (default), the convolution if computed in a causal way by
         shifting the output of a normal convolution by the kernel size. If
@@ -341,11 +341,11 @@ class GammatoneFilterbank():
     cf : array_like
         Center frequencies of the filterbank.
     b : float
-        beta of the gammatone filters (default: 1.019).
+        beta of the gammatone filters (default=1.019).
     order : int
-        Order (default: 1).
+        Order (default=1).
     q : float
-        Q-value of the ERB (default: 9.26449).
+        Q-value of the ERB (default=9.26449).
     min_bw : float
         Minimum bandwidth of an ERB.
 
@@ -441,7 +441,7 @@ class GammatoneFilterbank():
 
         Parameters
         ----------
-        X : ndarray, shape = (n_chan, n_times)
+        X : ndarray, shape=(n_chans, n_times)
             Signal to filter.
 
         Returns

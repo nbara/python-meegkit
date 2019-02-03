@@ -38,20 +38,20 @@ def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
 
     Parameters
     ----------
-    X: array, shape = (n_times, n_chans[, n_epochs])
+    X: array, shape=(n_times, n_chans[, n_epochs])
         Test signal. First dimension should be time.
-    y: array, shape = (n_times[, n_epochs])
+    y: array, shape=(n_times[, n_epochs])
         Reference signal.
     window : int
         Number of timepoints for to include for each correlation calculation.
     fs: int
-        Sampling frequency (default: 1).
+        Sampling frequency (default=1).
     step : int
         If > 1, only compute correlations every `step` samples.
 
     Returns
     -------
-    corr: array, shape = (n_times - window, n_channels[, n_epochs])
+    corr: array, shape=(n_times - window, n_channels[, n_epochs])
         Rolling window correlation.
     t_corr : array
         Corresponding time vector.
@@ -99,14 +99,14 @@ def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=-1):
 
     Parameters
     ----------
-    X : array, shape = (n_times, n_chans[, n_trials])
+    X : array, shape=(n_times, n_chans[, n_trials])
         Input data.
     n_bootstrap : int
-        Number of bootstrap resamplings (default: 2000). For publication
+        Number of bootstrap resamplings (default=2000). For publication
         quality results, it is usually recommended to have more than 5000
         iterations.
     ci : length-2 tuple
-        Confidence interval (default: (5, 95)).
+        Confidence interval (default=(5, 95)).
     axis : int
         Axis to operate on.
 
@@ -283,7 +283,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
 
     Parameters
     ----------
-    data : ndarray , shape = ([n_trials, ]n_chans, n_samples)
+    data : ndarray , shape=([n_trials, ]n_chans, n_samples)
         Power spectrum.
     n_avg : int
         Number of neighbour bins to estimate noise over. Make sure that this
@@ -294,7 +294,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
 
     Returns
     -------
-        SNR : ndarray, shape = (Nconds, Nchans, Nsamples) or (Nchans, Nsamples)
+        SNR : ndarray, shape=(Nconds, Nchans, Nsamples) or (Nchans, Nsamples)
             Signal-to-Noise-corrected spectrum
 
     References

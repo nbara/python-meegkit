@@ -91,9 +91,9 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
 
     Parameters
     ----------
-    X : array, shape = (n_samples[, n_epochs][, n_trials])
+    X : array, shape=(n_samples[, n_epochs][, n_trials])
         Array to shift.
-    ref : array, shape = (n_samples[, n_epochs][, n_trials])
+    ref : array, shape=(n_samples[, n_epochs][, n_trials])
         Reference array against which `X` is shifted.
     shifts : array | int
         Array of shifts.
@@ -104,9 +104,9 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
 
     Returns
     -------
-    y : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
+    y : array, shape=(n_samples[, n_epochs][, n_trials], n_shifts)
         Shifted array.
-    y_ref : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
+    y_ref : array, shape=(n_samples[, n_epochs][, n_trials], n_shifts)
         Reference array, repeated to match `y.shape`. Padding matches that of
         `y`.
 
@@ -149,9 +149,9 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
 
     Parameters
     ----------
-    X : array, shape = (n_samples[, n_chans][, n_trials])
+    X : array, shape=(n_samples[, n_chans][, n_trials])
         Array to shift.
-    shifts : array, shape = (n_shifts,)
+    shifts : array, shape=(n_shifts,)
         Array of shifts.
     fill_value : float | np.nan
         Value to pad output axis by.
@@ -168,7 +168,7 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
 
     Returns
     -------
-    y : array, shape = (n_samples[, n_chans][, n_trials], n_shifts)
+    y : array, shape=(n_samples[, n_chans][, n_trials], n_shifts)
         Shifted array.
 
     See Also
@@ -211,18 +211,18 @@ def multismooth(X, smooths, axis=0, keep_dims=False):
 
     Parameters
     ----------
-    X : array, shape = (n_samples[, n_epochs][, n_trials])
+    X : array, shape=(n_samples[, n_epochs][, n_trials])
         Array to shift.
     smooths : array
         Array of smoothing values (in samples).
     axis : int, optional
-        The axis along which elements are shifted (default: 0).
+        The axis along which elements are shifted (default=0).
     keep_dims : bool
         If True, keep singleton dimensions in output.
 
     Returns
     -------
-    y : array, shape = (n_samples[, n_epochs][, n_trials], n_shifts)
+    y : array, shape=(n_samples[, n_epochs][, n_trials], n_shifts)
         Shifted array.
 
     See Also
@@ -253,7 +253,7 @@ def shift(X, shift, fill_value=0, axis=0):
 
     Parameters
     ----------
-    X : array, shape = (n_samples[, n_epochs][, n_trials])
+    X : array, shape=(n_samples[, n_epochs][, n_trials])
         Multidimensional input array.
     shift : int
         The number of places by which elements are shifted along axis.
@@ -479,7 +479,7 @@ def demean(X, weights=None, return_mean=False):
         demeaned_X = fold(demeaned_X, n_samples)
 
     if return_mean:
-        return demeaned_X, the_mean  # the_mean.shape = (1, the_mean.shape[0])
+        return demeaned_X, the_mean  # the_mean.shape=(1, the_mean.shape[0])
     else:
         return demeaned_X
 
@@ -627,6 +627,10 @@ def _check_weights(weights, X):
         if weights.ndim > 1:
             if weights.shape[1] > 1 and weights.shape[1] != X.shape[1]:
                 raise ValueError("Weights array should have a single column.")
+
+        if np.any(np.abs(weights) > 1.):
+            warnings.warn('weights should be between 0 and 1.')
+            weights[np.abs(weights) > 1.] = 1.
 
     return weights
 

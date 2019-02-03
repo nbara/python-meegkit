@@ -20,7 +20,7 @@ def mcca(C, n_channels, n_keep=[]):
 
     Parameters
     ----------
-    C : array, shape = (n_channels * n_datasets, n_channels * n_datasets)
+    C : array, shape=(n_channels * n_datasets, n_channels * n_datasets)
         Covariance matrix of aggregated data sets.
     n_channels : int
         Number of channels of each data set.
@@ -29,9 +29,9 @@ def mcca(C, n_channels, n_keep=[]):
 
     Returns
     -------
-    A : array, shape = (n_channels * n_datasets, n_channels * n_datasets)
+    A : array, shape=(n_channels * n_datasets, n_channels * n_datasets)
         Transform matrix.
-    scores : array, shape = (n_comps,)
+    scores : array, shape=(n_comps,)
         Commonality score (ranges from 1 to N^2).
     AA : list of arrays, shapes = (n_channels, n_channels * n_datasets)
         Subject-specific MCCA transform matrices.
@@ -84,14 +84,14 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
     Parameters
     ----------
     xx : list of arrays
-        If a list is provided, each element should have shape = (n_times,
-        n_chans). If array, it should be 3D of shape = (n_times, n_chans,
+        If a list is provided, each element should have shape=(n_times,
+        n_chans). If array, it should be 3D of shape=(n_times, n_chans,
         n_trials).
     yy : list of arrays
-        If a list is provided, each element should have shape = (n_times,
-        n_chans). If array, it should be 3D of shape = (n_times, n_chans,
+        If a list is provided, each element should have shape=(n_times,
+        n_chans). If array, it should be 3D of shape=(n_times, n_chans,
         n_trials).
-    shifts : array, shape = (n_shifts,)
+    shifts : array, shape=(n_shifts,)
         Array of shifts to apply to `y` relative to `x` (can be negative).
     surrogate : bool
         If True, estimate SD of correlation over non-matching pairs.
@@ -102,7 +102,7 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
     -------
     AA, BB : arrays
         Cell arrays of transform matrices.
-    RR : array, shape = (n_comps, n_shifts, n_trials)
+    RR : array, shape=(n_comps, n_shifts, n_trials)
         Correlations (2D).
     SD : array
         Standard deviation of correlation over non-matching pairs (2D).
@@ -216,12 +216,12 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
     Parameters
     ----------
-    X, Y : arrays, shape = (n_times, n_chans[, n_trials])
+    X, Y : arrays, shape=(n_times, n_chans[, n_trials])
         Data.
-    lags : array, shape = (n_lags,)
+    lags : array, shape=(n_lags,)
         Array of lags. A positive lag means Y delayed relative to X. If
         :attr:`sfreq` is > 1, lags are interpreted as times in seconds.
-    C : array, shape = (n_chans, n_chans[, n_lags])
+    C : array, shape=(n_chans, n_chans[, n_lags])
         Covariance matrix of [X, Y]. C can be 3D, which case CCA is derived
         independently from each page.
     m : int
@@ -233,13 +233,13 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
     Returns
     -------
-    A : array, shape = (n_chans_X, min(n_chans_X, n_chans_Y))
+    A : array, shape=(n_chans_X, min(n_chans_X, n_chans_Y))
         Transform matrix mapping `X` to canonical space, where `n_comps` is
         equal to `min(n_chans_X, n_chans_Y)`.
-    B : array,  shape = (n_chans_Y, n_comps)
+    B : array,  shape=(n_chans_Y, n_comps)
         Transform matrix mapping `Y` to canonical space, where `n_comps` is
         equal to `min(n_chans_X, n_chans_Y)`.
-    R : array, shape = (n_comps, n_lags)
+    R : array, shape=(n_comps, n_lags)
         Correlation scores.
 
     Notes
@@ -332,7 +332,7 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 def whiten(C, fudge=1e-18):
     """Whiten covariance matrix C of X.
 
-    If X has shape = (observations, components), X_white = np.dot(X, W).
+    If X has shape=(observations, components), X_white = np.dot(X, W).
 
     References
     ----------
