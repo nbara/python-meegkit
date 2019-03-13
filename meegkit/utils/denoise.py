@@ -278,7 +278,7 @@ def find_outlier_trials(X, thresh=None, show=True):
         ax2.set_xlim(0, len(idx) + 1)
         plt.show()
 
-    thresh.pop()
+    thresh.pop(0)
     if thresh:
         bads2, _ = find_outlier_trials(X[:, idx], thresh, show)
         idx2 = idx[bads2]
