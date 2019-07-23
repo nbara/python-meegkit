@@ -183,7 +183,7 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
     # Loop over shifts
     y = np.zeros(X.shape + (n_shifts,))
     for i, s in enumerate(shifts):
-            y[..., i] = shift(X, shift=s, fill_value=fill_value, axis=axis)
+        y[..., i] = shift(X, shift=s, fill_value=fill_value, axis=axis)
 
     if reshape is True:
         if X.ndim == 3:  # n_samples, n_chans, n_trials, n_shifts
@@ -238,7 +238,7 @@ def multismooth(X, smooths, axis=0, keep_dims=False):
     # Loop over shifts
     y = np.zeros(X.shape + (n_smooths,))
     for i, s in enumerate(smooths):
-            y[..., i] = smooth(X, window_len=s, axis=axis)
+        y[..., i] = smooth(X, window_len=s, axis=axis)
 
     if n_smooths == 1 and not keep_dims:
         y = np.squeeze(y, axis=-1)
@@ -457,29 +457,31 @@ def demean(X, weights=None, return_mean=False):
     X = unfold(X)
 
     if weights.any():
+        if weights.ndim != X.ndim and weights.shape[2] == 1:
+            weights = np.tile(weights, (1, 1, n_trials))
         weights = unfold(weights)
 
         if weights.shape[0] != X.shape[0]:
             raise ValueError('X and weights arrays should have same ' +
-                             'number of rows and pages.')
+                             'number of samples (rows).')
 
         if weights.shape[1] == 1 or weights.shape[1] == n_chans:
-            the_mean = (np.sum(X * weights, axis=0) /
-                        np.sum(weights, axis=0))[None, :]
+            mn = (np.sum(X * weights, axis=0) /
+                  np.sum(weights, axis=0))[None, :]
         else:
             raise ValueError('Weight array should have either the same ' +
                              'number of columns as X array, or 1 column.')
 
-        demeaned_X = X - the_mean
+        demeaned_X = X - mn
     else:
-        the_mean = np.mean(X, axis=0, keepdims=True)
-        demeaned_X = X - the_mean
+        mn = np.mean(X, axis=0, keepdims=True)
+        demeaned_X = X - mn
 
     if n_trials > 1:
         demeaned_X = fold(demeaned_X, n_samples)
 
     if return_mean:
-        return demeaned_X, the_mean  # the_mean.shape=(1, the_mean.shape[0])
+        return demeaned_X, mn  # the_mean.shape=(1, the_mean.shape[0])
     else:
         return demeaned_X
 

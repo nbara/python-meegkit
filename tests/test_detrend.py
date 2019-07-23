@@ -71,6 +71,6 @@ def test_detrend():
     # assert_almost_equal(yy[100:], data[100:], decimal=1)
 
 if __name__ == '__main__':
-    # import pytest
-    # pytest.main([__file__])
-    test_detrend()
+    import pytest
+    pytest.main([__file__])
+    # test_detrend()

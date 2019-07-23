@@ -1,8 +1,8 @@
 import numpy as np
-from numpy.testing import assert_equal
+from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
 
 from meegkit.utils import (multishift, multismooth, relshift, shift, shiftnd,
-                           widen_mask)
+                           widen_mask, demean, fold, unfold, rms)
 
 
 def test_multishift():
@@ -110,6 +110,61 @@ def test_multismooth():
 
     y = multismooth(x, np.arange(5) + 1)
     assert y.shape == x.shape + (5, )
+
+
+def test_demean(show=False):
+    """Test demean."""
+    n_trials = 100
+    n_chans = 8
+    n_times = 1000
+    x = np.random.randn(n_times, n_chans, n_trials)
+    x, s = _stim_data(n_times, n_chans, n_trials, 8, SNR=10)
+
+    # demean and check trial average is almost zero
+    x1 = demean(x)
+    assert_almost_equal(x1.mean(2).mean(0), np.zeros((n_chans,)))
+
+    # now use weights
+    times = np.arange(n_times)
+    weights = np.zeros_like(times)
+    weights[:100] = 1
+    x2 = demean(x, weights)
+
+    if show:
+        import matplotlib.pyplot as plt
+        plt.plot(x2.mean(2))
+        plt.gca().set_prop_cycle(None)
+        plt.plot(s.mean(2), 'k:')
+        plt.show()
+
+    # assert mean is ~= 0 during baseline
+    assert_almost_equal(x2[:100].mean(2).mean(0), np.zeros((n_chans,)))
+
+    # assert trial average is close to source signal
+    assert np.all(x2.mean(2) - s.mean(2) < 1)
+
+
+def _stim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
+    """Create synthetic data."""
+    # source
+    source = np.sin(2 * np.pi * np.linspace(0, .5, n_times - t0))[np.newaxis].T
+    s = source * np.random.randn(1, n_chans)
+    s = s[:, :, np.newaxis]
+    s = np.tile(s, (1, 1, n_trials))
+    signal = np.zeros((n_times, n_chans, n_trials))
+    signal[t0:, :, :] = s
+
+    # noise
+    noise = np.dot(
+        unfold(np.random.randn(n_times, noise_dim, n_trials)),
+        np.random.randn(noise_dim, n_chans))
+    noise = fold(noise, n_times)
+
+    # mix signal and noise
+    signal = SNR * signal / rms(signal.flatten())
+    noise = noise / rms(noise.flatten())
+    data = signal + noise
+    return data, signal
 
 
 if __name__ == '__main__':

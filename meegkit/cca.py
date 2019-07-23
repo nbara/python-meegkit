@@ -316,7 +316,7 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
     W[Wx.shape[0]:, Wx.shape[1]:] = Wy
     C = np.dot(np.dot(W.T, C), W)
 
-    # Number of CCA componenets
+    # Number of CCA components
     N = np.min((Wx.shape[1], Wy.shape[1]))
 
     # PCA
