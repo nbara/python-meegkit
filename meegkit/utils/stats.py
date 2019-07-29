@@ -112,13 +112,17 @@ def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=-1):
 
     Returns
     -------
-    ci_low, ci_up : confidence intervals
+    ci_low, ci_up : arrays, shape=(n_times, n_chans)
+        Confidence intervals.
 
     """
     n_samples, n_chans, n_trials = theshapeof(X)
     idx = np.arange(X.shape[axis], dtype=int)
 
-    bootstraps = np.nan * np.ones((n_bootstrap, X.shape[~axis]))
+    shape = list(X.shape)
+    shape.pop(axis)
+
+    bootstraps = np.nan * np.ones(((n_bootstrap,) + tuple(shape)))
     for i in range(n_bootstrap):
         temp_idx = np.random.choice(idx, replace=True, size=len(idx))
         bootstraps[i] = np.mean(np.take(X, temp_idx, axis=axis), axis=axis)

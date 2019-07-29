@@ -1,8 +1,8 @@
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal, assert_allclose
+from numpy.testing import assert_equal, assert_almost_equal
 
 from meegkit.utils import (multishift, multismooth, relshift, shift, shiftnd,
-                           widen_mask, demean, fold, unfold, rms)
+                           widen_mask, demean, fold, unfold, rms, bootstrap_ci)
 
 
 def test_multishift():
@@ -165,6 +165,26 @@ def _stim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
     noise = noise / rms(noise.flatten())
     data = signal + noise
     return data, signal
+
+
+def test_computeci():
+    """Compute CI."""
+    x = np.random.randn(1000, 8, 100)
+    ci_low, ci_high = bootstrap_ci(x)
+
+    assert ci_low.shape == (1000, 8)
+    assert ci_high.shape == (1000, 8)
+
+    # TODO axis as tuple
+    # ci_low, ci_high = bootstrap_ci(x, axis=(1, 2))
+    # assert ci_low.shape == (1000,)
+    # assert ci_high.shape == (1000,)
+
+    x = np.random.randn(1000, 100)
+    ci_low, ci_high = bootstrap_ci(x)
+
+    assert ci_low.shape == (1000,)
+    assert ci_high.shape == (1000,)
 
 
 if __name__ == '__main__':
