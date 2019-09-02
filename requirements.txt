@@ -1,0 +1,14 @@
+numpy
+scipy
+matplotlib
+scikit-learn
+sphinx
+joblib
+numpydoc
+flake8
+pytest
+pytest-cov
+codecov
+codespell
+pydocstyle
+tqdm

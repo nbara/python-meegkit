@@ -9,7 +9,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7]
+        python-version: [3.5, 3.6, 3.7]
 
     steps:
     - uses: actions/checkout@v1
@@ -23,9 +23,8 @@ jobs:
         pip install -r requirements.txt
     - name: Lint with flake8
       run: |
-        pip install flake8 pytest pytest-cov codecov codespell pydocstyle
         make pep
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest
+        pytest --cov=meegkit tests/
