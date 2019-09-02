@@ -31,9 +31,6 @@ jobs:
       run: |
         pytest --cov=meegkit --cov-report=xml tests/
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.2
       with:
         token: ${{secrets.CODECOV_TOKEN}}
-        # file: ./coverage.xml
-        # flags: unittests
-        # name: codecov-umbrella
+      run: bash <(curl -s https://codecov.io/bash)
