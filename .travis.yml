@@ -11,27 +11,9 @@ python:
   - "3.7"
 install:
   - sudo apt-get update
-  # We do this conditionally because it saves us some downloading if the
-  # version is the same.
-  - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-
-  - export DISPLAY=:99.0
-  - /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset
-  # Useful for debugging any issues with conda
-  - conda info -a
-  - conda env create -f environment.yml
-  - source activate meegkit
-  - python setup.py develop
+  - pip install -r requirements.txt
+  - pip install -e .
 script: make pep
-script: pytest --cov=meegkit tests/
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
+script: pytest tests/ --cov=meegkit --cov-report=xml
+# after_success:
+#   - bash <(curl -s https://codecov.io/bash)

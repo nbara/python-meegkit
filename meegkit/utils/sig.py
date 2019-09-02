@@ -1,3 +1,4 @@
+# coding: utf-8
 """Signal processing tools."""
 from __future__ import absolute_import, division, print_function
 
@@ -53,10 +54,13 @@ def modulation_index(phase, amp, n_bins=18):
     time series can be constructed by cutting the amplitude time series at a
     random time point and reversing the order of both parts [2]_. The observed
     coupling value is standardized to the distribution of the shuffled coupling
-    values according to the following formula: MI_z = (MI_observed −
-    µ_MI_shuffled) / σ_MI_shuffled, where μ denotes the mean and σ the standard
-    deviation. Only when the observed phase-locking value is larger than 95 %
-    of shuffled values, it is defined as significant. See [2]_ for details.
+    values according to the following formula:
+
+    MI_z = (MI_observed − µ_MI_shuffled) / σ_MI_shuffled
+
+    where μ denotes the mean and σ the standard deviation. Only when the
+    observed phase-locking value is larger than 95 % of shuffled values, it is
+    defined as significant. See [2]_ for details.
 
     References
     ----------
