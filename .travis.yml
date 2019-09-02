@@ -32,6 +32,6 @@ install:
   - source activate meegkit
   - python setup.py develop
 script: make pep
-script: pytest --cov=meegkit tests/
+script: pytest tests/ --cov=meegkit --cov-report=xml
 # after_success:
 #   - bash <(curl -s https://codecov.io/bash)
