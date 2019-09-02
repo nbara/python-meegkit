@@ -33,5 +33,5 @@ install:
   - python setup.py develop
 script: make pep
 script: pytest --cov=meegkit tests/
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
+# after_success:
+#   - bash <(curl -s https://codecov.io/bash)
