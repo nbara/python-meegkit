@@ -31,3 +31,10 @@ jobs:
       run: |
         pip install pytest
         pytest --cov=meegkit tests/
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action
+      with:
+        token: ${{secrets.CODECOV_TOKEN}}
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
