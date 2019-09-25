@@ -326,6 +326,106 @@ def spectral_envelope(x, sfreq, lowpass=32):
     return y[len(a):-len(b)]
 
 
+def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
+              show=False):
+    """Narrow-band filter via frequency-domain Gaussian.
+
+    Empirical frequency and FWHM depend on the sampling rate and the
+    number of time points, and may thus be slightly different from
+    the requested values.
+
+    Parameters
+    ----------
+    data : ndarray
+        EEG data, shape=(n_samples, n_channels[, ...])
+    srate : int
+        Sampling rate in Hz.
+    f : float
+        Break frequency of filter.
+    fhwm : float
+        Standard deviation of filter, defined as full-width at half-maximum
+        in Hz.
+    n_harm : int
+        Number of harmonics of the frequency to consider.
+    shift : int
+        Amount shift peak frequency by (only useful when considering harmonics,
+        otherwise leave to 0).
+    return_empvals : bool
+        Return empirical values (default: False).
+    show : bool
+        Set to True to show the frequency-domain filter shape.
+
+    Returns
+    -------
+    filtdat : ndarray
+        Filtered data.
+    empVals : float
+        The empirical frequency and FWHM.
+    """
+    # input check
+    assert (data.shape[1] <= data.shape[0]
+            ), 'n_channels must be less than n_samples'
+    assert ((f - fwhm) >= 0), 'increase frequency or decrease FWHM'
+    assert (fwhm >= 0), 'FWHM must be greater than 0'
+
+    # frequencies
+    hz = np.fft.fftfreq(data.shape[0], 1. / srate)
+    empVals = np.zeros((2,))
+
+    # compute empirical frequency and standard deviation
+    idx_p = np.searchsorted(hz[hz >= 0], f, 'left')
+
+    # create Gaussian
+    fx = np.zeros_like(hz)
+    for i_harm in range(1, n_harm + 1):  # make one gaussian per harmonic
+        s = fwhm * (2 * np.pi - 1) / (4 * np.pi)  # normalized width
+        x = hz.copy()
+        x -= (f * i_harm - shift)
+        gauss = np.exp(-.5 * (x / s)**2)  # gaussian
+        gauss = gauss / np.max(gauss)  # gain-normalized
+        fx = fx + gauss
+
+    # create Gaussian
+    for i_harm in range(1, n_harm + 1):  # make one gaussian per harmonic
+        s = fwhm * (2 * np.pi - 1) / (4 * np.pi)  # normalized width
+        x = hz.copy()
+        x += (f * i_harm - shift)
+        gauss = np.exp(-.5 * (x / s) ** 2)  # gaussian
+        gauss = gauss / np.max(gauss)  # gain-normalized
+        fx = fx + gauss
+
+    # filter
+    tmp = np.fft.fft(data)
+    tmp *= fx[:, None]
+    filtdat = 2 * np.real(np.fft.ifft(tmp))
+
+    if return_empvals or show:
+        empVals[0] = hz[idx_p]
+        # find values closest to .5 after MINUS before the peak
+        empVals[1] = hz[idx_p - 1 + np.searchsorted(fx[:idx_p], 0.5)] \
+            - hz[np.searchsorted(fx[:idx_p + 1], 0.5)]
+
+    if show:
+        # inspect the Gaussian (turned off by default)
+        import matplotlib.pyplot as plt
+        plt.figure(1)
+        plt.plot(hz, fx, 'o-')
+        plt.xlim([0, None])
+
+        title = 'Requested: {}, {} Hz\nEmpirical: {}, {} Hz'.format(
+            f, fwhm, empVals[0], empVals[1]
+        )
+        plt.title(title)
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Amplitude gain')
+        plt.show()
+
+    if return_empvals:
+        return filtdat, empVals
+    else:
+        return filtdat
+
+
 class GammatoneFilterbank():
     """Gammatone Filterbank.
 
@@ -494,20 +594,3 @@ class AuditoryFilterbank(GammatoneFilterbank):
 
         super(AuditoryFilterbank, self).__init__(
             sfreq=sfreq, cf=cf, b=b, order=order, q=q, min_bw=min_bw)
-
-
-if __name__ == "__main__":
-    # import matplotlib.pyplot as plt
-
-    # x = (np.random.randn(1000, 1) / 2 +
-    #      np.cos(2 * np.pi * 3 * np.linspace(0, 20, 1000))[:, None])
-
-    # plt.figure()
-    # plt.plot(x)
-    # plt.plot(smooth(x, 2))
-    # plt.show()
-
-    f0 = 63
-    erbs, _ = erbspace(f0, 8000, 25)
-    print(erbs)
-    print(len(erbs))
