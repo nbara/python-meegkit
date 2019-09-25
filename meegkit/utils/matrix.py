@@ -232,7 +232,7 @@ def multismooth(X, smooths, axis=0, keep_dims=False):
     """
     from .sig import smooth
 
-    smooths, n_smooths = _check_shifts(smooths)
+    smooths, n_smooths = _check_shifts(smooths, allow_floats=True)
     X = _check_data(X)
 
     # Loop over shifts
@@ -426,7 +426,7 @@ def fold(X, epoch_size):
         raise AttributeError('X must be 2D at most')
 
     n_chans = X.shape[0] // epoch_size
-    if X.shape[0] / epoch_size > 1:
+    if X.shape[0] / epoch_size >= 1:
         X = np.transpose(np.reshape(X, (epoch_size, n_chans, X.shape[1]),
                                     order="F").copy(), [0, 2, 1])
     return X
@@ -441,10 +441,10 @@ def unfold(X):
     if X.shape == (n_samples,):
         X = X[:, None]
 
-    if n_trials > 1:
+    if n_trials > 1 or X.ndim == 3:
         return np.reshape(
             np.transpose(X, (0, 2, 1)),
-            (n_samples * n_trials, n_chans), order="F").copy()
+            (n_samples * n_trials, n_chans), order="F")
     else:
         return X
 
@@ -452,7 +452,7 @@ def unfold(X):
 def demean(X, weights=None, return_mean=False):
     """Remove weighted mean over columns (samples)."""
     weights = _check_weights(weights, X)
-
+    ndims = X.ndim
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
 
@@ -477,7 +477,7 @@ def demean(X, weights=None, return_mean=False):
         mn = np.mean(X, axis=0, keepdims=True)
         demeaned_X = X - mn
 
-    if n_trials > 1:
+    if n_trials > 1 or ndims == 3:
         demeaned_X = fold(demeaned_X, n_samples)
 
     if return_mean:
@@ -512,12 +512,11 @@ def normcol(X, weights=None, return_norm=False):
         Norm.
 
     """
-    weights = _check_weights(weights, X)
 
     if X.ndim == 3:
         n_samples, n_chans, n_trials = theshapeof(X)
         X = unfold(X)
-
+        weights = _check_weights(weights, X)
         if not weights.any():  # no weights
             X_norm, N = normcol(X, return_norm=True)
             N = N ** 2
@@ -538,10 +537,11 @@ def normcol(X, weights=None, return_norm=False):
             X_norm, N = normcol(X, weights, return_norm=True)
             N = N ** 2
             X_norm = fold(X_norm, n_samples)
+            return X_norm
 
     else:
         n_samples, n_chans, n_trials = theshapeof(X)
-
+        weights = _check_weights(weights, X)
         if not weights.any():
             with np.errstate(divide='ignore'):
                 N = ((np.sum(X ** 2, axis=0) / n_samples) ** -0.5)[np.newaxis]
@@ -554,15 +554,10 @@ def normcol(X, weights=None, return_norm=False):
             if weights.shape[0] != X.shape[0]:
                 raise ValueError('Weight array should have same number of ' +
                                  'columns as X')
-
-            if weights.ndim == 2 and weights.shape[1] == 1:
-                weights = np.tile(weights, (1, n_chans))
-
-            if weights.shape != X.shape:
-                raise ValueError('Weight array should have be same shape as X')
-
             if weights.shape[1] == 1:
                 weights = np.tile(weights, (1, n_chans))
+            if weights.shape != X.shape:
+                raise ValueError('Weight array should have be same shape as X')
 
             N = (np.sum(X ** 2 * weights, axis=0) /
                  np.sum(weights, axis=0)) ** -0.5
@@ -576,11 +571,14 @@ def normcol(X, weights=None, return_norm=False):
         return X_norm
 
 
-def _check_shifts(shifts):
+def _check_shifts(shifts, allow_floats=False):
     """Check shifts."""
-    if not isinstance(shifts, (np.ndarray, list, int, np.int_, type(None))):
+    types = (int, np.int_)
+    if allow_floats:
+        types += (float, np.float_)
+    if not isinstance(shifts, (np.ndarray, list, type(None)) + types):
         raise AttributeError('shifts should be a list, an array or an int')
-    if isinstance(shifts, (list, int, np.int_)):
+    if isinstance(shifts, (list, ) + types):
         shifts = np.array(shifts).flatten()
     if shifts is None or len(shifts) == 0:
         shifts = np.array([0])

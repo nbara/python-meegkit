@@ -49,6 +49,7 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     if len(closest) > 0 and closest.shape[0] != X.shape[1]:
         raise ValueError('`closest` should have as many rows as n_chans')
 
+    ndims = X.ndim
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
 
@@ -172,9 +173,10 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     if verbose == 'debug':
         _diagnostics(X * norm + intercept, y, d, thresh)
 
-    y = fold(y, n_samples)
-    w = fold(w, n_samples)
-    ww = fold(ww, n_samples)
+    if ndims == 3:  # fold back into trials
+        y = fold(y, n_samples)
+        w = fold(w, n_samples)
+        ww = fold(ww, n_samples)
 
     return y, w, ww
 

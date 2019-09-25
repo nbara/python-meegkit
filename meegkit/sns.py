@@ -1,7 +1,8 @@
 import numpy as np
 
-from .utils import demean, fold, pca, theshapeof, tscov, unfold
 from .tspca import tsr
+from .utils import demean, fold, pca, theshapeof, tscov, unfold
+from .utils.matrix import _check_weights
 
 
 def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
@@ -36,8 +37,10 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
     """
     if not n_neighbors:
         n_neighbors = X.shape[1] - 1
-
+    ndims = X.ndim
+    weights = _check_weights(weights, X)
     n_samples, n_chans, n_trials = theshapeof(X)
+
     X = unfold(X)
     X = demean(X)
     c, nc = tscov(X)
@@ -51,7 +54,8 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
         r = sns0(c, n_neighbors, skip, c)
 
     y = np.dot(np.squeeze(X), r)
-    y = fold(y, n_samples)
+    if ndims > 2:
+        y = fold(y, n_samples)
 
     return y, r
 

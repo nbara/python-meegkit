@@ -31,7 +31,7 @@ def test_star1():
 
     # Test SNR=1
     x, x0 = sim_data(n_samples, n_chans, f, SNR=np.sqrt(1))
-    y, w, _ = star(x, 2)
+    y, w, _ = star(x, 2, verbose='debug')
     assert_allclose(demean(y), x0)  # check that denoised signal ~ x0
 
     # Test more unfavourable SNR
@@ -48,3 +48,4 @@ def test_star1():
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
+    # test_star1()
