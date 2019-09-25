@@ -1,9 +1,10 @@
 """Test DSS functions."""
+import matplotlib.pyplot as plt
 import numpy as np
-from numpy.testing import assert_allclose
-
 from meegkit import dss
-from meegkit.utils import fold, rms, tscov, unfold
+from meegkit.utils import demean, fold, rms, tscov, unfold
+from numpy.testing import assert_allclose
+from scipy import signal
 
 
 def test_dss0():
@@ -52,6 +53,34 @@ def test_dss0():
                     atol=1e-6)  # use abs as DSS component might be flipped
 
 
+def test_dss_line():
+    """Test line noise removal."""
+    sr = 200
+    nsamples = 10000
+    nchans = 10
+    x = np.random.randn(nsamples, nchans)
+    artifact = np.sin(np.arange(nsamples) / sr * 2 * np.pi * 20)[:, None]
+    artifact[artifact < 0] = 0
+    artifact = artifact ** 3
+    s = x + 10 * artifact
+
+    out, _ = dss.dss_line(s, 20, sr)
+    f, ax = plt.subplots(1, 2, sharey=True)
+    print(out.shape)
+    f, Pxx = signal.welch(out, sr, nperseg=1024, axis=0,
+                          return_onesided=True)
+    ax[1].semilogy(f, Pxx)
+    f, Pxx = signal.welch(s, sr, nperseg=1024, axis=0,
+                          return_onesided=True)
+    ax[0].semilogy(f, Pxx)
+    ax[0].set_xlabel('frequency [Hz]')
+    ax[1].set_xlabel('frequency [Hz]')
+    ax[0].set_ylabel('PSD [V**2/Hz]')
+    ax[0].set_title('before')
+    ax[1].set_title('after')
+    plt.show()
+
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
+    # test_dss_line()

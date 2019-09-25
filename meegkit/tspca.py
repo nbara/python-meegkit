@@ -1,7 +1,7 @@
 import numpy as np
 
 from .utils import (demean, fold, multishift, normcol, pca, regcov, tscov,
-                    tsxcov, unfold, theshapeof)
+                    tsxcov, unfold, theshapeof, unsqueeze)
 from .utils.matrix import _check_shifts, _check_weights
 
 
@@ -20,7 +20,7 @@ def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
     threshold:
         Discard PCs with eigenvalues below this (default=1e-6).
     weights : array
-        Ignore samples with absolute value above this.
+        Sample weights.
     demean : bool
         If True, Epochs are centered before comuting PCA (default=0).
 
@@ -81,7 +81,7 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     ----------
     X : array, shape=(n_samples, n_chans[, n_trials])
         Data to denoise.
-    R : array, shape=(n_samples, n_chans[, n_trials])
+    R : array, shape=(n_samples, n_comps[, n_trials])
         Reference data.
     shifts : array, shape=(n_shifts,)
         Array of shifts to apply to R (default=[0]).
@@ -106,6 +106,9 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
         Weights applied by TSR.
 
     """
+    ndims = X.ndim
+    X = unsqueeze(X)
+    R = unsqueeze(R)
     shifts, n_shifts = _check_shifts(shifts)
     wX = _check_weights(wX, X)
     wR = _check_weights(wR, R)
@@ -115,57 +118,58 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
 
     offset1 = np.max((0, -np.min(shifts)))
     idx = np.arange(offset1, X.shape[0])
-    X = X[idx, :, :]
-    # R = R[:R.shape[0] - offset1, :, :]
+    # X = X[idx, ...]
 
-    if wX:
-        wX = wX[idx, :, :]
-    if wR:
-        wR = wR[0:-offset1, :, :]
+    # if len(wX) > 0:
+    #     wX = wX[idx, ...]
+    # if len(wR) > 0:
+    #     wR = wR[:-offset1, ...]
 
     shifts = shifts + offset1  # shifts are now positive
 
     # adjust size of X
     offset2 = np.max((0, np.max(shifts)))
-
     idx = np.arange(X.shape[0]) - offset2
     idx = idx[idx >= 0]
-    X = X[idx, :, :]
+    # X = X[idx, ...]
 
-    if wX:
-        wX = wX[idx, :, :]
+    # if len(wX) > 0:
+    #     wX = wX[idx, ...]
 
-    n_samples_X, n_chans_X, n_trials_X = X.shape
-    n_samples_R,  n_chans_R,  n_trials_R = R.shape
+    n_samples_X, n_chans_X, n_trials_X = theshapeof(X)
+    n_samples_R, n_chans_R, n_trials_R = theshapeof(R)
 
     # consolidate weights into single weight matrix
     weights = np.zeros((n_samples_X, 1, n_trials_R))
-
-    if not wX and not wR:
-        weights[np.arange(n_samples_X), :, :] = 1
+    if len(wX) == 0 and len(wR) == 0:
+        weights[:] = 1
     elif not wR:
-        weights[:, :, :] = wX[:, :, :]
+        weights = wX
     elif not wX:
         for t in np.arange(n_trials_X):
-            wr = multishift(wR[:, :, t], shifts).min(1)
-            weights[:, :, t] = wr
+            wr = multishift(wR[..., t], shifts, reshape=True).min(axis=1)
+            weights[..., t] = wr
     else:
         for t in np.arange(n_trials_X):
-            wr = multishift(wR[:, :, t], shifts).min(1)
-            # wr = (wr, wx[0:wr.shape[0], :, t]).min() # TODO
-            weights[:, :, t] = wr
+            wr = multishift(wR[..., t], shifts, reshape=True).min(axis=1)
+            wr = np.amin((wr, wX[:wr.shape[0], :, t]), axis=0)
+            weights[..., t] = wr
 
     wX = weights
     wR = np.zeros((n_samples_R, 1, n_trials_R))
-    wR[idx, :, :] = weights
+    wR = weights
 
     # remove weighted means
     X, mean1 = demean(X, wX, return_mean=True)
     R = demean(R, wR)
 
     # equalize power of R channels, the equalize power of the R PCs
-    R = normcol(R, wR)
-    R = tspca(R)[0]
+    if R.shape[1] > 1:
+        R = normcol(R, wR)
+        C, _ = tscov(R, [])
+        V, _ = pca(C, thresh=1e-6)
+        R = R * V
+
     R = normcol(R, wR)
 
     # covariances and cross-covariance with time-shifted refs
@@ -178,13 +182,18 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     # TSPCA: clean x by removing regression on time-shifted refs
     y = np.zeros((n_samples_X, n_chans_X, n_trials_X))
     for trial in np.arange(n_trials_X):
-        z = np.dot(np.squeeze(multishift(R[:, :, trial], shifts)), regression)
-        y[:, :, trial] = X[np.arange(z.shape[0]), :, trial] - z
+        r = multishift(R[..., trial], shifts, reshape=True)
+        z = r @ regression
+        y[..., trial] = X[:z.shape[0], :, trial] - z
 
     y, mean2 = demean(y, wX, return_mean=True)
 
     idx = np.arange(offset1, initial_samples - offset2)
     mean_total = mean1 + mean2
     weights = wR
+
+    if ndims < 3:
+        y = y.squeeze(2)
+        weights = weights.squeeze(2)
 
     return y, idx, mean_total, weights

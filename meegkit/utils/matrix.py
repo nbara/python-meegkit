@@ -180,6 +180,9 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
     X = _check_data(X)
     n_samples, n_chans, n_trials = theshapeof(X)
 
+    if np.array_equal(shifts, [0]):
+        return X.copy()
+
     # Loop over shifts
     y = np.zeros(X.shape + (n_shifts,))
     for i, s in enumerate(shifts):
@@ -512,7 +515,6 @@ def normcol(X, weights=None, return_norm=False):
         Norm.
 
     """
-
     if X.ndim == 3:
         n_samples, n_chans, n_trials = theshapeof(X)
         X = unfold(X)

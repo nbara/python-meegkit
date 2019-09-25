@@ -3,6 +3,8 @@ import numpy as np
 from meegkit import dss, sns, tspca
 from meegkit.utils import demean, fold, unfold
 
+import matplotlib.pyplot as plt
+
 
 def test_tspca_sns_dss():  # TODO
     """Test TSPCA, SNS, DSS.
@@ -52,6 +54,52 @@ def test_tspca_sns_dss():  # TODO
     return y_tspca, y_tspca_sns, y_tspca_sns_dss
 
 
+def test_tsr(show=True):
+    """Test time-shift regression."""
+    sr = 200
+    nsamples = 10000
+    nchans = 10
+    x = np.random.randn(nsamples, nchans)
+
+    # artifact + harmonics
+    artifact = np.sin(np.arange(nsamples) / sr * 2 * np.pi * 10)[:, None]
+    artifact[artifact < 0] = 0
+    artifact = artifact ** 3
+    signal = x + 10 * artifact
+    # Without shifts
+    y, idx, mean_total, weights = tspca.tsr(
+        signal,
+        artifact,
+        shifts=[0])
+
+    if show:
+        f, ax = plt.subplots(2, 1)
+        ax[0].plot(y[:500, 0], 'grey', label='cleaned')
+        ax[0].plot(x[:500, 0], ':', label='signal')
+        ax[1].plot((y - x)[:500], label='cleaned - signal')
+        ax[0].legend()
+        ax[1].legend()
+        # plt.show()
+
+    # Test residual almost 0.0
+    np.testing.assert_almost_equal(y - x, np.zeros_like(y), decimal=1)
+
+    # With shifts
+    y, idx, mean_total, weights = tspca.tsr(
+        signal + artifact,
+        np.roll(artifact, 1, axis=0),
+        shifts=[-1, 0, 1])
+
+    if show:
+        f, ax = plt.subplots(2, 1)
+        ax[0].plot(y[:500, 0], 'grey', label='cleaned')
+        ax[0].plot(x[:500, 0], ':', label='signal')
+        ax[1].plot((y - x)[:500, 0], label='cleaned - signal')
+        ax[0].legend()
+        ax[1].legend()
+        plt.show()
+
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
+    # test_tsr()

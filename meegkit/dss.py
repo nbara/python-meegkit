@@ -1,6 +1,9 @@
 import numpy as np
 from scipy import linalg
-from .utils import demean, tscov, mean_over_trials, pca, theshapeof
+
+from .utils import (demean, mean_over_trials, smooth, pca, theshapeof,
+                    tscov, gaussfilt, wpwr)
+from .tspca import tsr
 
 
 def dss1(data, weights=None, keep1=None, keep2=1e-12):
@@ -118,3 +121,91 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     # dss_data = np.einsum('ij,hjk->hik', todss, data)
 
     return todss, fromdss, pwr0, pwr1
+
+
+def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
+    """Apply DSS to remove power line artifacts.
+
+    Returns
+    -------
+    y : denoised data
+    yy : artifact
+
+    Parameters
+    ----------
+    x : data
+        Input data.
+    fline : float
+        Line frequency (normalized to sfreq, if ``sfreq`` == 1).
+    sfreq : float
+        Sampling frequency (default=1, which assymes ``fline`` is normalised).
+    nremove : int
+        Number of line noise components to remove (default=1).
+    nfft : int
+        FFT size (default=1024).
+    nkeep : int
+        Number of components to keep in DSS (default=None).
+
+    Examples
+    --------
+    Apply to x, assuming line frequency=50Hz and sampling rate=1000Hz, plot
+    results:
+    >>> dss_line(x, 50/1000)
+
+    Removing 4 line-dominated components:
+    >>> dss_line(x, 50/1000, 4)
+
+    Truncating PCs beyond the 30th to avoid overfitting:
+    >>> dss_line(x, 50/1000, 4, nkeep=30);
+
+    Return cleaned data in y, noise in yy, do not plot:
+    >>> [y, yy] = dss_line(x, 60/1000)
+
+    """
+    if x.shape[0] < nfft:
+        print('reducing nfft to {}'.format(x.shape[0]))
+        nfft = x.shape[0]
+
+    x = demean(x)
+
+    # cancels line_frequency and harmonics, light lowpass
+    xx = smooth(x, sfreq / fline)
+
+    # residual (x=xx+xxx), contains line and some high frequency power
+    xxx = x - xx
+
+    # reduce dimensionality to avoid overfitting
+    if nkeep is not None:
+        xxx_cov = tscov(xxx)[0]
+        V, _ = pca(xxx_cov, nkeep)
+        xxxx = xxx * V
+    else:
+        xxxx = xxx.copy()
+
+    # DSS to isolate line components from residual:
+    n_harm = np.floor((sfreq / 2) / fline).astype(int)
+    c0, _ = tscov(xxxx)
+    c1, _ = tscov(gaussfilt(xxxx, sfreq, fline, 1, n_harm=n_harm))
+
+    todss, _, pwr0, pwr1 = dss0(c0, c1)
+
+    if show:
+        import matplotlib.pyplot as plt
+        plt.plot(pwr1 / pwr0, '.-')
+        plt.xlabel('component')
+        plt.ylabel('score')
+        plt.title('DSS to enhance line frequencies')
+        plt.show()
+
+    idx_remove = np.arange(nremove)
+    xxxx = xxxx @ todss[:, idx_remove]  # line-dominated components
+    xxx, _, _, _ = tsr(xxx, xxxx)  # project them out
+
+    # reconstruct clean signal
+    y = xx + xxx
+    yy = x - y
+
+    # Power of components
+    p = wpwr(x - y)[0] / wpwr(x)[0]
+    print('Power of components removed by DSS: {:.2f}'.format(p))
+    return y, yy

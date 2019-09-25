@@ -96,7 +96,10 @@ def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
     R = (R.T * 1 / d).T
 
     # projection matrix from regressors
-    R = np.dot(np.squeeze(V), np.squeeze(R))
+    R = V @ R  # np.dot(np.squeeze(V), np.squeeze(R))
+
+    # if R.ndim == 1:
+    #     R = R[:, None]
 
     return R
 
