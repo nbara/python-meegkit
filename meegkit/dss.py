@@ -126,14 +126,11 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
 def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
     """Apply DSS to remove power line artifacts.
 
-    Returns
-    -------
-    y : denoised data
-    yy : artifact
+    Implements the ZapLine algorithm described in [1]_.
 
     Parameters
     ----------
-    x : data
+    x : data, shape=(n_samples, n_chans, n_trials)
         Input data.
     fline : float
         Line frequency (normalized to sfreq, if ``sfreq`` == 1).
@@ -145,6 +142,13 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
         FFT size (default=1024).
     nkeep : int
         Number of components to keep in DSS (default=None).
+
+    Returns
+    -------
+    y : array, shape=(n_samples, n_chans, n_trials)
+        Denoised data.
+    artifact : array, shape=(n_samples, n_chans, n_trials)
+        Artifact
 
     Examples
     --------
@@ -159,7 +163,12 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
     >>> dss_line(x, 50/1000, 4, nkeep=30);
 
     Return cleaned data in y, noise in yy, do not plot:
-    >>> [y, yy] = dss_line(x, 60/1000)
+    >>> [y, artifact] = dss_line(x, 60/1000)
+
+    References
+    ----------
+    .. [1] de Cheveigné, A. (2019). ZapLine: A simple and effective method to
+       remove power line artifacts [Preprint]. https://doi.org/10.1101/782029
 
     """
     if x.shape[0] < nfft:
@@ -203,9 +212,9 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
 
     # reconstruct clean signal
     y = xx + xxx
-    yy = x - y
+    artifact = x - y
 
     # Power of components
     p = wpwr(x - y)[0] / wpwr(x)[0]
     print('Power of components removed by DSS: {:.2f}'.format(p))
-    return y, yy
+    return y, artifact

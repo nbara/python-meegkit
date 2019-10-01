@@ -54,6 +54,8 @@ If you use this code, you should cite the relevant methods from the original
 articles :
 
 ```text
+de Cheveigné, A. (2019). ZapLine: A simple and effective method to remove power line
+    artifacts [Preprint]. https://doi.org/10.1101/782029
 de Cheveigné, A., & Arzounian, D. (2018). Robust detrending, rereferencing, outlier detection,
     and inpainting for multichannel data. NeuroImage, 172, 903-912.
 de Cheveigne, A., Di Liberto, G. M., Arzounian, D., Wong, D., Hjortkjaer, J., Fuglsang, S. A.,
@@ -76,4 +78,5 @@ de Cheveigné, A. and Simon, J. Z. (2008). Sensor Noise Suppression. Journal of 
     Methods 168: 195-202.
 de Cheveigné, A. and Simon, J. Z. (2007). Denoising based on Time-Shift PCA. Journal of
     Neuroscience Methods 165: 297-305.
+
 ```
