@@ -59,7 +59,7 @@ def cov_lags(X, Y, shifts=None):
     return C, tw, n_chans
 
 
-def tsxcov(X, Y, shifts=None, weights=None):
+def tsxcov(X, Y, shifts=None, weights=None, assume_centered=True):
     """Calculate cross-covariance of X and time-shifted Y.
 
     This function calculates, for each pair of columns (Xi, Yj) of X and Y, the
@@ -76,6 +76,9 @@ def tsxcov(X, Y, shifts=None, weights=None):
     weights : array
         The weights that are applied to X. 1D (if X is 1D or 2D) or 2D (if X is
         3D).
+    assume_centered : bool
+        If False, remove the mean of X before computing the covariance
+        (default=True).
 
     Returns
     -------
@@ -92,18 +95,14 @@ def tsxcov(X, Y, shifts=None, weights=None):
     weights = _check_weights(weights, X)
     shifts, n_shifts = _check_shifts(shifts)
 
+    if not assume_centered:
+        X = X - X.mean(0, keepdims=1)
+        Y = Y - Y.mean(0, keepdims=1)
+
     # Apply weights if any
     if weights.any():
         X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult
         weights = weights[:n_times2, :, :]
-        tw = np.sum(weights[:])
-    else:  # infer weights
-        N = 0
-        if len(shifts[shifts < 0]):
-            N -= np.min(shifts)
-        if len(shifts[shifts >= 0]):
-            N += np.max(shifts)
-        tw = (n_chans * n_shifts - N) * n_trials
 
     # cross covariance
     # C = np.zeros((n_chans * n_shifts, n_chans2 * n_shifts))
@@ -117,6 +116,12 @@ def tsxcov(X, Y, shifts=None, weights=None):
         YY = multishift(Y[..., t], shifts=shifts)
         YY = YY.reshape(n_times2, n_chans2 * n_shifts)
         C += np.dot(X[..., t].T, YY)
+
+    if not weights.any():
+        tw = n_trials * n_chans2 * YY.shape[0]
+    else:
+        weights = weights[:YY.shape[0], ...]
+        tw = np.sum(weights.flat)
 
     return C, tw
 
@@ -136,6 +141,9 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
     weights : array
         Weights, 1D (if X is 1D or 2D) or 2D (if X is 3D). The weights are not
         shifted.
+    assume_centered : bool
+        If False, remove the mean of X before computing the covariance
+        (default=True).
 
     Returns
     -------
@@ -153,7 +161,7 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
     shifts, n_shifts = _check_shifts(shifts)
 
     if not assume_centered:
-        X = X - X.sum(0, keepdims=1) / n_chans
+        X = X - X.mean(0, keepdims=1)
 
     if weights.any():  # weights
         X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult

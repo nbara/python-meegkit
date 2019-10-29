@@ -1,7 +1,5 @@
 # coding: utf-8
 """Signal processing tools."""
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 import scipy.signal as ss
 
@@ -424,6 +422,46 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
         return filtdat, empVals
     else:
         return filtdat
+
+
+def teager_kaiser(x, m=1, M=1):
+    """Mean Teager-Kaiser energy operator.
+
+    The discrete version of the Teager-Kaiser operator is computed according
+    to:
+
+    y[n] = x[n] ** {2 / m} - (x[n - M] * x[n + M]) ** {1 / m}
+
+    with m the exponent parameter and M the lag parameter which both are
+    usually equal to 1 for a conventional operator. The Teaser-Kaiser operator
+    can be used to track amplitude modulations (AM) and/or frequency
+    modulations (FM).
+
+    Parameters
+    ----------
+    x : array, shape=(n_samples[, n_channels][, n_trials])
+        Input data.
+    m : int
+        Exponent parameter.
+    M : int
+        Lag parameter.
+
+    Return
+    ------
+    tk_energy : array, shape=(n_samples - 2 * M[, n_channels][, n_trials])
+        Instantaneous energy
+
+    References
+    ----------
+    Adapted from the TKEO function in R library `seewave`.
+
+    Examples
+    --------
+    >>> x = np.array([1,  3, 12, 25, 10])
+    >>> tk_energy = teager_kaiser(x)
+
+    """
+    return x[M:-M] ** (2 / m) - (x[2 * M:] * x[:-2 * M]) ** (1 / m)
 
 
 class GammatoneFilterbank():
