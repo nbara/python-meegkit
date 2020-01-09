@@ -237,13 +237,13 @@ def convmtx(V, n):
         assert V.shape[0] == 1 or V.shape[1] == 1
 
     [nr, nc] = V.shape
-    V = V.flatten(1)
+    V = V.flatten()
 
     c = np.hstack((V, np.zeros((n - 1))))
     r = np.zeros(n)
     m = len(c)
     x_left = r[n:0:-1]  # reverse order from n to 2 in original code
-    x_right = c.flatten(1)
+    x_right = c.flatten()
     x = np.hstack((x_left, x_right))
     cidx = np.arange(0., (m - 1.) + 1).conj().T
     ridx = np.arange(n, (1.) + (-1.), -1.)
