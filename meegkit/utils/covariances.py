@@ -1,7 +1,7 @@
 import numpy as np
 
-from .matrix import (multishift, theshapeof, unsqueeze, relshift,
-                     _check_shifts, _check_weights)
+from .matrix import (_check_shifts, _check_weights, multishift, relshift,
+                     theshapeof, unsqueeze)
 
 
 def cov_lags(X, Y, shifts=None):
@@ -181,3 +181,86 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
         C += np.dot(XX.T, XX)
 
     return C, tw
+
+
+def convmtx(V, n):
+    """Generate a convolution matrix.
+
+    CONVMTX(V,N) returns the convolution matrix for vector V. If V is a column
+    vector and X is a column vector of length N, then CONVMTX(V,N)*X is the
+    same as CONV(V,X). If R is a row vector and X is a row vector of length N,
+    then X*CONVMTX(R,N) is the same as CONV(R,X).
+
+    Given a vector V of length N, an N+n-1 by n convolution matrix is
+    generated of the following form:
+
+        |  V(0)  0      0     ...      0    |
+        |  V(1) V(0)    0     ...      0    |
+        |  V(2) V(1)   V(0)   ...      0    |
+    X = |   .    .      .              .    |
+        |   .    .      .              .    |
+        |   .    .      .              .    |
+        |  V(N) V(N-1) V(N-2) ...  V(N-n+1) |
+        |   0   V(N)   V(N-1) ...  V(N-n+2) |
+        |   .    .      .              .    |
+        |   .    .      .              .    |
+        |   0    0      0     ...    V(N)   |
+
+    That is, V is assumed to be causal, and zero-valued after N.
+
+    Parameters
+    ----------
+    V : array, shape=(N,) or(N, 1) or (1, N)
+    n : int
+
+    Returns
+    -------
+    t : array, shape=(N * n - 1, n)
+
+    Examples
+    --------
+    Generate a simple convolution matrix.
+    >>> h = [1 2 1];
+    >>> convmtx(h,7)
+    np.array(
+        [[1. 2. 1. 0. 0. 0.]
+         [0. 1. 2. 1. 0. 0.]
+         [0. 0. 1. 2. 1. 0.]
+         [0. 0. 0. 1. 2. 1.]]
+    )
+
+    """
+    V = np.asarray(V)
+    if V.ndim == 1:
+        V = V[:, None]
+    else:
+        assert V.shape[0] == 1 or V.shape[1] == 1
+
+    [nr, nc] = V.shape
+    V = V.flatten(1)
+
+    c = np.hstack((V, np.zeros((n - 1))))
+    r = np.zeros(n)
+    m = len(c)
+    x_left = r[n:0:-1]  # reverse order from n to 2 in original code
+    x_right = c.flatten(1)
+    x = np.hstack((x_left, x_right))
+    cidx = np.arange(0., (m - 1.) + 1).conj().T
+    ridx = np.arange(n, (1.) + (-1.), -1.)
+
+    t = np.zeros([len(cidx), len(ridx)])
+    counter_cidx = 0
+    for c_val in cidx:
+        counter_ridx = 0
+        for r_val in ridx:
+            t[counter_cidx, counter_ridx] = c_val + r_val
+            counter_ridx += 1
+        counter_cidx += 1
+
+    # Toeplitz subscripts
+    t[:] = x[t.astype(int) - 1]
+
+    if nr > nc:
+        t = t.T
+
+    return t

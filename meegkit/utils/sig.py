@@ -2,6 +2,10 @@
 """Signal processing tools."""
 import numpy as np
 import scipy.signal as ss
+from scipy.linalg import lstsq, solve, toeplitz
+from scipy.signal import lfilter
+
+from .covariances import convmtx
 
 
 def modulation_index(phase, amp, n_bins=18):
@@ -424,7 +428,7 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
         return filtdat
 
 
-def teager_kaiser(x, m=1, M=1):
+def teager_kaiser(x, m=1, M=1, axis=0):
     """Mean Teager-Kaiser energy operator.
 
     The discrete version of the Teager-Kaiser operator is computed according
@@ -445,11 +449,13 @@ def teager_kaiser(x, m=1, M=1):
         Exponent parameter.
     M : int
         Lag parameter.
+    axis : int
+        Axis to compute metric on.
 
     Return
     ------
     tk_energy : array, shape=(n_samples - 2 * M[, n_channels][, n_trials])
-        Instantaneous energy
+        Instantaneous energy.
 
     References
     ----------
@@ -461,7 +467,199 @@ def teager_kaiser(x, m=1, M=1):
     >>> tk_energy = teager_kaiser(x)
 
     """
-    return x[M:-M] ** (2 / m) - (x[2 * M:] * x[:-2 * M]) ** (1 / m)
+    def tg(x, M, m):
+        return x[M:-M] ** (2 / m) - (x[2 * M:] * x[:-2 * M]) ** (1 / m)
+
+    return np.apply_along_axis(tg, axis, x, M, m)
+
+
+def slope_sum(x, w: int, axis=0):
+    r"""Slope sum function.
+
+    The discrete version of the Teager-Kaiser operator is computed according
+    to:
+
+    y[n] = \\sum_{i=k-w}^k (y_i -y_{i-1})
+
+    Parameters
+    ----------
+    x : array, shape=(n_samples[, n_channels][, n_trials])
+        Input data.
+    w : int
+        Window.
+
+    References
+    ----------
+    https://ieeexplore.ieee.org/document/8527395
+
+    """
+    def ss(x, w):
+        out = np.diff(x, prepend=0)
+        out = out.cumsum()
+        out[w:] = out[w:] - out[:-w]
+        return out
+
+    return np.apply_along_axis(ss, axis, x, w)
+
+
+def stmcb(x, u_in=None, q=None, p=None, niter=5, a_in=None):
+    """Compute linear model via Steiglitz-McBride iteration.
+
+    Parameters
+    ----------
+    [B,A] = stmcb(H,NB,NA) finds the coefficients of the system B(z)/A(z) with
+    approximate impulse response H, NA poles and NB zeros.
+
+    [B,A] = stmcb(H,NB,NA,N) uses N iterations.  N defaults to 5.
+
+    [B,A] = stmcb(H,NB,NA,N,Ai) uses the vector Ai as the initial
+    guess at the denominator coefficients. If you don't specify Ai,
+    STMCB uses [B,Ai] = PRONY(H,0,NA) as the initial conditions.
+
+    [B,A] = STMCB(X,Y,NB,NA,N,Ai) finds the system coefficients B and
+    A of the system which, given X as input, has Y as output. N and Ai
+    are again optional with default values of N = 5, [B,Ai] = PRONY(Y,0,NA).
+    Y and X must be the same length.
+
+    Examples
+    --------
+    Approximate the impulse response of a Butterworth filter with a
+    system of lower order:
+
+    >>> [b,a] = butter(6,0.2);              # Butterworth filter design
+    >>> h = filter(b,a,[1 zeros(1,100)]);   # Filter data using above filter
+    >>> freqz(b,a,128)                      # Frequency response
+    >>> [bb, aa] = stmcb(h,4,4);
+    >>> plt.plot(freqz(bb, aa, 128))
+
+    References
+    ----------
+    Author(s): Jim McClellan, 2-89
+               T. Krauss, 4-22-93, new help and options
+    Copyright 1988-2004 The MathWorks, Inc.
+
+    """
+    if u_in is None:
+        if q is None:
+            q = 0
+        if a_in is None:
+            a_in, _ = prony(x, 0, p)
+
+        # make a unit impulse whose length is same as x
+        u_in = np.zeros(len(x))
+        u_in[0] = 1.
+    else:
+        if len(u_in) != len(x):
+            raise ValueError(
+                "stmcb: u_in and x must be of the same size: {} != {}".format(
+                    len(u_in), len(x)))
+        if a_in is None:
+            q = 0
+            _, a_in = prony(x, q, p)
+
+    a = a_in
+    N = len(x)
+    for i in range(niter):
+        u = lfilter([1], a, x)
+        v = lfilter([1], a, u_in)
+        C1 = convmtx(u, (p + 1)).T
+        C2 = convmtx(v, (q + 1)).T
+        T = np.hstack((-C1[0:N, :], C2[0:N, :]))
+
+        # move 1st column to RHS and do least-squares
+        # c = T(:,2:p+q+2)\( -T(:,1));
+        #
+        # If not squared matrix: numpy.linalg.lstsq
+        # If squared matrix: numpy.linalg.solve
+        T_left = T[:, 1:p + q + 2]
+        T_right = -T[:, 0]
+        if T.shape[0] != T.shape[1]:
+            c, residuals, rank, singular_values = lstsq(
+                T_left, T_right)  # lstsq in python returns more stuff
+        else:
+            c = solve(T_left, T_right)
+
+        # denominator coefficients
+        a_left = np.array([1])
+        a_right = c[:p]
+        a = np.hstack((a_left, a_right))
+
+        # numerator coefficients
+        b = c[p:p + q + 1]
+
+    a = a.T
+    b = b.T
+    return b, a
+
+
+def prony(h, nb, na):
+    """Prony's method for time-domain IIR filter design.
+
+    [B,A] = PRONY(H, NB, NA) finds a filter with numerator order NB,
+    denominator order NA, and having the impulse response in vector H. The IIR
+    filter coefficients are returned in length NB+1 and NA+1 row vectors B and
+    A, ordered in descending powers of Z.  H may be real or complex.
+
+    If the largest order specified is greater than the length of H, H is padded
+    with zeros.
+
+    Examples
+    --------
+    Fit an IIR model to an impulse response of a lowpass filter.
+
+    >>> [b,a] = butter(4,0.2);
+    >>> impulseResp = impz(b,a);                % obtain impulse response
+    >>> denOrder=4; numOrder=4;                 % system function of order 4
+    >>> [Num,Den]=prony(impulseResp,numOrder,denOrder);
+    >>> subplot(211);                           % impulse response and input
+    >>> stem(impz(Num,Den,length(impulseResp)));
+    >>> title('Impulse Response with Prony Design');
+    >>> subplot(212);
+    >>> stem(impulseResp); title('Input Impulse Response');
+
+    References
+    ----------
+    .. [1] T.W. Parks and C.S. Burrus, Digital Filter Design, John Wiley and
+       Sons, 1987, p226.
+
+    Notes
+    -----
+    Copyright 1988-2012 The MathWorks, Inc.
+
+    """
+    K = len(h) - 1
+    M = nb
+    N = na
+    if K <= max(M, N):
+        # zero-pad input if necessary
+        K = max(M, N) + 1
+        h[K + 1] = 0
+
+    c = h[0]
+    if c == 0:
+        c = 1  # avoid division by zero
+
+    H = toeplitz(h / c, np.array(np.hstack((1, np.zeros(K)))))
+
+    # K+1 by N+1
+    if K > N:
+        # Here we are just getting rid of all the columns after N+1
+        H = H[:, :N + 1]
+
+    # Partition H matrix
+    H1 = H[:M + 1, :]
+
+    # M+1 by N+1
+    h1 = H[M + 1:K + 1, 0]
+
+    # K-M by 1
+    H2 = H[M + 1:K + 1, 1:N + 1]
+
+    # K-M by N
+    a_right = np.linalg.lstsq(-H2, h1, rcond=None)[0]
+    a = np.r_[(np.array([1]), a_right)][None, :]
+    b = np.dot(np.dot(c, a), H1.T)
+    return b, a
 
 
 class GammatoneFilterbank():

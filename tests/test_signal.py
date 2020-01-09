@@ -1,6 +1,7 @@
 """Test signal utils."""
 import numpy as np
-from meegkit.utils.sig import teager_kaiser
+from scipy.signal import lfilter, butter, freqz
+from meegkit.utils.sig import teager_kaiser, stmcb
 
 
 def test_teager_kaiser(show=False):
@@ -23,3 +24,30 @@ def test_teager_kaiser(show=False):
         plt.plot(y[..., 0], label='Y')
         plt.legend()
         plt.show()
+
+
+def test_stcmb(show=True):
+    """Test stcmb."""
+    x = np.arange(100) < 1
+    [b, a] = butter(6, 0.2)     # Butterworth filter design
+    y = lfilter(b, a, x)        # Filter data using above filter
+
+    w, h = freqz(b, a, 128)     # Frequency response
+    [bb, aa] = stmcb(y, u_in=None, q=4, p=4, niter=5)
+    ww, hh = freqz(bb, aa, 128)
+
+    if show:
+        import matplotlib.pyplot as plt
+        f, ax = plt.subplots(2, 1)
+        ax[0].plot(x, label='step')
+        ax[0].plot(y, label='filt')
+        ax[1].plot(w, np.abs(h), label='real')
+        ax[1].plot(ww, np.abs(hh), label='stcmb')
+        ax[0].legend()
+        ax[1].legend()
+        plt.show()
+
+    np.testing.assert_allclose(h, hh, rtol=2)  # equal to 2%
+
+if __name__ == "__main__":
+    test_stcmb()

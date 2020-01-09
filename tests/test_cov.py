@@ -1,7 +1,7 @@
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from meegkit.utils import tscov, tsxcov
+from meegkit.utils import tscov, tsxcov, convmtx
 
 
 def test_tscov():
@@ -48,6 +48,46 @@ def test_tscov():
     #      0     0     0     0     0     0
     #      0     0     0     0     0     0
 
+
+def test_convmtx():
+    """Convmtx comparison with matlab."""
+    h = [1, 2, 3, 2, 1]
+    X = convmtx(h, 7)
+    print(X)
+
+    np.testing.assert_array_equal(
+        X,
+        np.array([[1.,  2.,  3.,  2.,  1.,  0.,  0.,  0.,  0.,  0.,  0.],
+                  [0.,  1.,  2.,  3.,  2.,  1.,  0.,  0.,  0.,  0.,  0.],
+                  [0.,  0.,  1.,  2.,  3.,  2.,  1.,  0.,  0.,  0.,  0.],
+                  [0.,  0.,  0.,  1.,  2.,  3.,  2.,  1.,  0.,  0.,  0.],
+                  [0.,  0.,  0.,  0.,  1.,  2.,  3.,  2.,  1.,  0.,  0.],
+                  [0.,  0.,  0.,  0.,  0.,  1.,  2.,  3.,  2.,  1.,  0.],
+                  [0.,  0.,  0.,  0.,  0.,  0.,  1.,  2.,  3.,  2.,  1.],
+                  ])
+    )
+
+    print()
+    X = convmtx(np.array(h)[None, :], 7)
+    print(X)
+
+    np.testing.assert_equal(
+        X,
+        np.array([[1.,  0.,  0.,  0.,  0.,  0.,  0.],
+                  [2.,  1.,  0.,  0.,  0.,  0.,  0.],
+                  [3.,  2.,  1.,  0.,  0.,  0.,  0.],
+                  [2.,  3.,  2.,  1.,  0.,  0.,  0.],
+                  [1.,  2.,  3.,  2.,  1.,  0.,  0.],
+                  [0.,  1.,  2.,  3.,  2.,  1.,  0.],
+                  [0.,  0.,  1.,  2.,  3.,  2.,  1.],
+                  [0.,  0.,  0.,  1.,  2.,  3.,  2.],
+                  [0.,  0.,  0.,  0.,  1.,  2.,  3.],
+                  [0.,  0.,  0.,  0.,  0.,  1.,  2.],
+                  [0.,  0.,  0.,  0.,  0.,  0.,  1.],
+                  ])
+    )
+
 if __name__ == '__main__':
-    import pytest
-    pytest.main([__file__])
+    # import pytest
+    # pytest.main([__file__])
+    test_convmtx()
