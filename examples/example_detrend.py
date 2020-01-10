@@ -19,7 +19,7 @@ from matplotlib.gridspec import GridSpec
 
 from meegkit.detrend import regress, detrend
 
-import config  # plotting utils
+# import config  # plotting utils
 
 np.random.seed(9)
 

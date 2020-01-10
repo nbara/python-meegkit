@@ -1,6 +1,9 @@
 name: unit-tests
 
-on: [push]
+on:
+  push:
+    branches-ignore:
+      - 'gh-pages'
 
 jobs:
   build:

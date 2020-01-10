@@ -12,7 +12,7 @@ import numpy as np
 
 from meegkit import cca
 
-import config
+# import config
 
 ###############################################################################
 # First example

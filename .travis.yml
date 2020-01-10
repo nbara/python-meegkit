@@ -1,3 +1,6 @@
+branches:
+  only:
+    - master
 notifications:
   email: false
 language: python
@@ -5,14 +8,27 @@ sudo: required
 dist: xenial
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
-  - "3.5"
-  - "3.6"
   - "3.7"
 install:
   - sudo apt-get update
   - pip install -r requirements.txt
   - pip install -e .
-script: make pep
-script: pytest tests/ --cov=meegkit --cov-report=xml
-# after_success:
-#   - bash <(curl -s https://codecov.io/bash)
+  - pip install sphinx-gallery
+  - pip install numpydoc
+  - pip install sphinx_bootstrap_theme
+script:
+  - mkdir docs
+  - cd doc
+  - sphinx-autogen *.rst
+  - make html
+  - touch _build/html/.nojekyll
+deploy:
+  provider: pages:git
+  token: $GITHUB_TOKEN
+  edge: true # opt in to dpl v2
+  skip_cleanup: true
+  keep_history: false
+  local_dir: _build/html
+  target_branch: gh-pages
+  on:
+      branch: master

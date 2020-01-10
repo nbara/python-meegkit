@@ -266,7 +266,7 @@ def reduce_ringing(X, samples, order=10, n_samples=100, extra=50, threshold=3,
     if show:
         w = np.zeros((X.shape[0], X.shape[1]))
         for s in samples:
-            w[s:s+n_samples, :] = 1
+            w[s:s + n_samples, :] = 1
         _plot_detrend(X, y, w)
 
     return y

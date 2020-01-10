@@ -18,6 +18,8 @@ except ImportError:
 def mcca(C, n_channels, n_keep=[]):
     """Multiway canonical correlation analysis.
 
+    As described in [1]_.
+
     Parameters
     ----------
     C : array, shape=(n_channels * n_datasets, n_channels * n_datasets)

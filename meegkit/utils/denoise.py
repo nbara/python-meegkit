@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
-from scipy import linalg, signal
+from scipy import linalg
 
 from .matrix import demean, fold, theshapeof, unfold
 

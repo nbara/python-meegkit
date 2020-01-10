@@ -22,7 +22,7 @@ from scipy.optimize import leastsq
 from meegkit import star, dss
 from meegkit.utils import demean, normcol, tscov
 
-import config  # noqa
+# import config  # noqa
 
 np.random.seed(9)
 

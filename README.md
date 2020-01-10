@@ -9,7 +9,11 @@ Denoising tools for M/EEG processing in Python 3.5+.
 
 > **Disclaimer:** The project mostly consists of development code, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the future. Comments and suggestions are welcome.
 
-This code can be tested directly from your browser using [Binder](https://mybinder.org), by clicking on the binder badge above.
+## Documentation
+
+Automatic documentation is [available online](https://nbara.github.io/python-meegkit/).
+
+This code can also be tested directly from your browser using [Binder](https://mybinder.org), by clicking on the binder badge above.
 
 ## Installation
 

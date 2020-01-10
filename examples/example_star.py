@@ -12,7 +12,7 @@ import numpy as np
 from meegkit import star
 from meegkit.utils import demean, normcol
 
-import config
+# import config
 
 ###############################################################################
 # Create simulated data

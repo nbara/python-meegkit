@@ -13,7 +13,7 @@ import numpy as np
 from meegkit import dss
 from meegkit.utils import unfold, rms, fold, tscov
 
-import config
+# import config
 
 ###############################################################################
 # Create simulated data
