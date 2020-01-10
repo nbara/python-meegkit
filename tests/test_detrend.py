@@ -1,7 +1,9 @@
 """Test robust detrending."""
 import numpy as np
 
-from meegkit.detrend import regress, detrend
+from meegkit.detrend import regress, detrend, reduce_ringing
+
+from scipy.signal import butter, lfilter
 
 
 def test_regress():
@@ -40,7 +42,7 @@ def test_regress():
     assert b.shape == (2, 1)
 
 
-def test_detrend():
+def test_detrend(show=False):
     """Test detrending."""
     # basic
     x = np.arange(100)[:, None]
@@ -62,15 +64,27 @@ def test_detrend():
     x[:100, :] = 100
     w = np.ones(x.shape)
     w[:100, :] = 0
-    y, _, _ = detrend(x, 3, None)
-    yy, _, _ = detrend(x, 3, w)
+    y, _, _ = detrend(x, 3, None, show=show)
+    yy, _, _ = detrend(x, 3, w, show=show)
 
     assert y.shape == x.shape
     assert yy.shape == x.shape
 
     # assert_almost_equal(yy[100:], data[100:], decimal=1)
 
+def test_ringing():
+    """Test reduce_ringing function."""
+    x = np.arange(1000) < 1
+    [b, a] = butter(6, 0.2)     # Butterworth filter design
+    x = lfilter(b, a, x) * 50    # Filter data using above filter
+    x = np.roll(x, 500)
+    signal = np.random.randn(1000, 2)
+    x = x[:, None] + signal
+    y = reduce_ringing(x, samples=np.array([500]))
+
+    # np.testing.assert_array_almost_equal(y, signal, 2)
+
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
-    # test_detrend()
+    # test_detrend(True)

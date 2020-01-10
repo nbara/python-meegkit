@@ -1,3 +1,4 @@
+"""Sensor noise suppression."""
 import numpy as np
 
 from .tspca import tsr

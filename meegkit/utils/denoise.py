@@ -1,9 +1,7 @@
-from __future__ import division, print_function
-
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import gridspec
-from scipy import linalg
+from scipy import linalg, signal
 
 from .matrix import demean, fold, theshapeof, unfold
 

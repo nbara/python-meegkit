@@ -1,3 +1,4 @@
+"""Sparse time-artefact removal."""
 import numpy as np
 from scipy.signal import filtfilt
 

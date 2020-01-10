@@ -1,3 +1,4 @@
+"""Denoising source separation."""
 import numpy as np
 from scipy import linalg
 

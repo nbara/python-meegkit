@@ -1,3 +1,4 @@
+"""Time-shift PCA."""
 import numpy as np
 
 from .utils import (demean, fold, multishift, normcol, pca, regcov, tscov,

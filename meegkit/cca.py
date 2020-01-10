@@ -263,10 +263,6 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
     .. warning:: A, B are scaled so that (X * A)^2 and (Y * B)^2 are identity
                  matrices (differs from sklearn).
 
-    See Also
-    --------
-    nt_cov_lags, nt_relshift, nt_cov, nt_pca in NoiseTools.
-
     """
     if (X is None and Y is not None) or (Y is None and X is not None):
         raise AttributeError('Either *both* X and Y should be defined, or C!')

@@ -603,19 +603,14 @@ def prony(h, nb, na):
     If the largest order specified is greater than the length of H, H is padded
     with zeros.
 
-    Examples
-    --------
-    Fit an IIR model to an impulse response of a lowpass filter.
-
-    >>> [b,a] = butter(4,0.2);
-    >>> impulseResp = impz(b,a);                % obtain impulse response
-    >>> denOrder=4; numOrder=4;                 % system function of order 4
-    >>> [Num,Den]=prony(impulseResp,numOrder,denOrder);
-    >>> subplot(211);                           % impulse response and input
-    >>> stem(impz(Num,Den,length(impulseResp)));
-    >>> title('Impulse Response with Prony Design');
-    >>> subplot(212);
-    >>> stem(impulseResp); title('Input Impulse Response');
+    Parameters
+    ----------
+    h : array
+        Impulse response.
+    nb : int
+        Numerator order.
+    na : int
+        Denominator order.
 
     References
     ----------

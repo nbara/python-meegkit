@@ -1,8 +1,11 @@
 """Robust detrending."""
 import numpy as np
 
+from scipy.signal import lfilter
+
 from .utils import demean, mrdivide, pca, unfold
 from .utils.matrix import _check_weights
+from .utils.sig import stmcb
 
 
 def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4,
@@ -209,6 +212,66 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
     return b, z
 
 
+def reduce_ringing(X, samples, order=10, n_samples=100, extra=50, threshold=3,
+                   show=False):
+    """Subtract filter impulse response from signal at given samples.
+
+    Parameters
+    ----------
+    X: ndarray, shape=(n_times, n_chans[, n_trials])
+        Data containing ringing artifacts.
+    samples : list of ints
+        Sample indices where to find ringing artifacts.
+    order : int
+        Order of polynomial trend (default=10).
+    n_samples = 100
+        Number of samples over which to estimate impulse response
+        (default=100).
+    extra : int
+        Samples before stimulus to anchor trend (default=50).
+    threshold: float
+        Threshold for robust detrending (default=3).
+
+    Returns
+    -------
+    y : ndarray, shape=(n_times, n_chans[, n_trials])
+        Clean data.
+
+    """
+    NNUM = 8
+    NDEN = 8  # number of filter coeffs
+
+    # remove samples too close to beginning or end
+    samples = samples[samples > extra]
+    samples = samples[samples < X.shape[0] - n_samples]
+
+    y = X.copy()
+    for i, s in enumerate(samples):
+        for c in range(X.shape[1]):
+            # select portion to fit filter response, remove polynomial trend
+            response = X[s - extra:s + n_samples, c]
+            # response = detrend(response, order, threshold)
+            response = response[extra:]
+
+            # estimate filter parameters - helps ensure stable filter
+            response = np.r_[(response, np.zeros(response.shape))]
+            [B, A] = stmcb(response, q=NNUM, p=NDEN, niter=20)
+
+            # estimate filter response to event
+            pulse = np.arange(n_samples) < 1
+            model = lfilter(B, A, pulse)
+            idx = s + np.arange(model.shape[0])
+            y[idx, c] = X[idx, c] - model
+
+    if show:
+        w = np.zeros((X.shape[0], X.shape[1]))
+        for s in samples:
+            w[s:s+n_samples, :] = 1
+        _plot_detrend(X, y, w)
+
+    return y
+
+
 def _plot_detrend(x, y, w):
     """Plot detrending results."""
     import matplotlib.pyplot as plt
@@ -228,8 +291,9 @@ def _plot_detrend(x, y, w):
     ax1.legend()
 
     ax2 = f.add_subplot(gs[3, 0])
-    ax2.imshow(w.T, aspect='auto', cmap='Greys')
-    ax2.set_yticks(np.arange(1, n_chans + 1, 1))
+    ax2.pcolormesh(w.T, cmap='Greys')
+    ax2.set_yticks(np.arange(0, n_chans) + 0.5)
+    ax2.set_yticklabels(['ch{}'.format(i) for i in np.arange(n_chans)])
     ax2.set_xlim(0, n_times)
     ax2.set_ylabel('ch. weights')
     ax2.set_xlabel('samples')
