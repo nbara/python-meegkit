@@ -10,4 +10,3 @@ from .sig import (AuditoryFilterbank, GammatoneFilterbank, erb2hz, erbspace,
                   slope_sum, spectral_envelope, teager_kaiser)
 from .stats import (bootstrap_ci, bootstrap_snr, cronbach, rms, robust_mean,
                     rolling_corr, snr_spectrum)
-from .viz import plot_montage
