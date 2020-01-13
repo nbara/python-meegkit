@@ -102,25 +102,8 @@ def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
     return R
 
 
-def wmean(X, weights=[], axis=0):
-    """Weighted mean."""
-    if not weights:
-        y = np.mean(X, axis)
-    else:
-        if X.shape[0] != weights.shape[0]:
-            raise Exception("data and weight must have same nrows")
-        if weights.shape[1] == 1:
-            weights = np.tile(weights, (1, X.shape(1)))
-        if weights.shape[1] != X.shape[1]:
-            raise Exception("weight must have same ncols as data, or 1")
-
-        y = np.sum(X * weights, axis) / np.sum(weights, axis)
-
-    return y
-
-
 def mean_over_trials(X, weights=None):
-    """Compute mean over trials."""
+    """Compute weighted mean over trials."""
     if weights is None:
         weights = np.array([])
 
@@ -174,33 +157,31 @@ def wpwr(X, weights=None):
     return y, tweight
 
 
-def find_outliers(X, toobig1, toobig2=[]):
+def find_outlier_samples(X, toobig1, toobig2=[]):
     """Find outlier trials using an absolute threshold."""
     n_samples, n_chans, n_trials = theshapeof(X)
-
-    # remove mean
     X = unfold(X)
-    X = demean(X)[0]
 
     # apply absolute threshold
-    weights = np.ones(X.shape)
-    if toobig1:
+    weights = np.ones((n_trials * n_samples, n_chans))
+
+    if toobig1 is not None:
         weights[np.where(abs(X) > toobig1)] = 0
-        X = demean(X, weights)[0]
+        X = demean(X, weights)
 
         weights[np.where(abs(X) > toobig1)] = 0
-        X = demean(X, weights)[0]
+        X = demean(X, weights)
 
         weights[np.where(abs(X) > toobig1)] = 0
-        X = demean(X, weights)[0]
+        X = demean(X, weights)
     else:
         weights = np.ones(X.shape)
 
     # apply relative threshold
     if toobig2:
-        X = wmean(X ** 2, weights)
-        X = np.tile(X, (X.shape[0], 1))
-        idx = np.where(X**2 > (X * toobig2))
+        _, mn = demean(X ** 2, weights, return_mean=True)
+        X = np.tile(mn, (X.shape[0], 1))
+        idx = np.where(X ** 2 > (X * toobig2))[0]
         weights[idx] = 0
 
     weights = fold(weights, n_samples)

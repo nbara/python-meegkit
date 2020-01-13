@@ -1,8 +1,8 @@
 """Utility functions."""
 from .base import mldivide, mrdivide
 from .covariances import cov_lags, tscov, tsxcov, convmtx
-from .denoise import (find_outlier_trials, find_outliers, mean_over_trials,
-                      pca, regcov, wmean, wpwr)
+from .denoise import (find_outlier_trials, find_outlier_samples, mean_over_trials,
+                      pca, regcov, wpwr)
 from .matrix import (demean, fold, multishift, multismooth, normcol, relshift,
                      shift, shiftnd, theshapeof, unfold, unsqueeze, widen_mask)
 from .sig import (AuditoryFilterbank, GammatoneFilterbank, erb2hz, erbspace,

@@ -2,7 +2,8 @@ import numpy as np
 from numpy.testing import assert_equal, assert_almost_equal
 
 from meegkit.utils import (multishift, multismooth, relshift, shift, shiftnd,
-                           widen_mask, demean, fold, unfold, rms, bootstrap_ci)
+                           widen_mask, demean, fold, unfold, rms, bootstrap_ci,
+                           find_outlier_samples, find_outlier_trials)
 
 
 def test_multishift():
@@ -120,11 +121,11 @@ def test_demean(show=False):
     x = np.random.randn(n_times, n_chans, n_trials)
     x, s = _stim_data(n_times, n_chans, n_trials, 8, SNR=10)
 
-    # demean and check trial average is almost zero
+    # 1. demean and check trial average is almost zero
     x1 = demean(x)
     assert_almost_equal(x1.mean(2).mean(0), np.zeros((n_chans,)))
 
-    # now use weights
+    # 2. now use weights : baseline = first 100 samples
     times = np.arange(n_times)
     weights = np.zeros_like(times)
     weights[:100] = 1
@@ -132,9 +133,16 @@ def test_demean(show=False):
 
     if show:
         import matplotlib.pyplot as plt
-        plt.plot(x2.mean(2))
+        f, ax = plt.subplots(3, 1)
+        ax[0].plot(times, x[:, 0].mean(-1), label='noisy_data')
+        ax[0].plot(times, s[:, 0].mean(-1), label='signal')
+        ax[0].legend()
+        ax[1].plot(times, x1[:, 0].mean(-1), label='mean over entire epoch')
+        ax[1].legend()
+        ax[2].plot(x2[:, 0].mean(-1), label='weighted mean')
         plt.gca().set_prop_cycle(None)
-        plt.plot(s.mean(2), 'k:')
+        ax[2].plot(s[:, 0].mean(-1), 'k:')
+        ax[2].legend()
         plt.show()
 
     # assert mean is ~= 0 during baseline
@@ -142,6 +150,22 @@ def test_demean(show=False):
 
     # assert trial average is close to source signal
     assert np.all(x2.mean(2) - s.mean(2) < 1)
+
+    # 3. try different shape weights (these should all be equivalent)
+    weights = np.zeros((len(times), 1, 1))
+    weights[:100] = 1
+    x1 = demean(x, weights)
+
+    weights = np.zeros((len(times), n_chans, 1))
+    weights[:100] = 1
+    x2 = demean(x, weights)
+
+    weights = np.zeros((len(times), n_chans, n_trials))
+    weights[:100] = 1
+    x3 = demean(x, weights)
+
+    np.testing.assert_array_equal(x1, x2)
+    np.testing.assert_array_equal(x1, x3)
 
 
 def _stim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
@@ -163,8 +187,8 @@ def _stim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
     # mix signal and noise
     signal = SNR * signal / rms(signal.flatten())
     noise = noise / rms(noise.flatten())
-    data = signal + noise
-    return data, signal
+    noisy_data = signal + noise
+    return noisy_data, signal
 
 
 def test_computeci():
@@ -187,10 +211,30 @@ def test_computeci():
     assert ci_high.shape == (1000,)
 
 
+def test_outliers(show=False):
+    """Test outlier detection."""
+    x = np.random.randn(250, 8, 50)  # 50 trials, 8, channels
+    x[..., :5] *= 10 # 5 first trials are outliers
+
+    # Pass standard threshold
+    idx, _ = find_outlier_trials(x, 2, show=show)
+    np.testing.assert_array_equal(idx, np.arange(5))
+
+    idx, _ = find_outlier_trials(x, [2, 2], show=show)
+    np.testing.assert_array_equal(idx, np.arange(5))
+
+    idx = find_outlier_samples(x, 5)
+    assert idx.shape == x.shape
+
+    idx = find_outlier_samples(x, 5, 10)
+    assert idx.shape == x.shape
+
+
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
 
+    # test_outliers()
     # import matplotlib.pyplot as plt
     # x = np.random.randn(1000,)
     # y = multismooth(x, np.arange(1, 200, 4))

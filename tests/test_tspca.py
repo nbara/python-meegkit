@@ -100,6 +100,6 @@ def test_tsr(show=True):
         plt.show()
 
 if __name__ == '__main__':
-    import pytest
-    pytest.main([__file__])
-    # test_tsr()
+    # import pytest
+    # pytest.main([__file__])
+    test_tsr()

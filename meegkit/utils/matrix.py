@@ -453,15 +453,28 @@ def unfold(X):
 
 
 def demean(X, weights=None, return_mean=False):
-    """Remove weighted mean over columns (samples)."""
+    """Remove weighted mean over rows (samples).
+
+    Parameters
+    ----------
+    X : array, shape=(n_samples, n_channels[, n_trials])
+        Data.
+    weights : array, shape=(n_samples)
+
+    Returns
+    -------
+    demeaned_X : array, shape=(n_samples, n_channels[, n_trials])
+        Centered data.
+    mn : array
+        Mean value.
+
+    """
     weights = _check_weights(weights, X)
     ndims = X.ndim
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
 
     if weights.any():
-        if weights.ndim != X.ndim and weights.shape[2] == 1:
-            weights = np.tile(weights, (1, 1, n_trials))
         weights = unfold(weights)
 
         if weights.shape[0] != X.shape[0]:
@@ -621,10 +634,14 @@ def _check_weights(weights, X):
 
         if X.ndim == 2 and weights.ndim == 1:
             weights = weights[:, np.newaxis]
-        if X.ndim == 3 and weights.ndim == 2:
-            weights = weights[:, np.newaxis, :]
-        if X.ndim == 3 and weights.ndim == 1:
-            weights = weights[:, np.newaxis, np.newaxis]
+        if X.ndim == 3:
+            if weights.ndim == 2:
+                weights = weights[:, np.newaxis, :]
+            elif weights.ndim == 1:
+                weights = weights[:, np.newaxis, np.newaxis]
+
+            if weights.shape[-1] != X.shape[-1]:
+                weights = np.tile(weights, (1, 1, X.shape[-1]))
 
         if weights.ndim > 1:
             if weights.shape[1] > 1 and weights.shape[1] != X.shape[1]:
