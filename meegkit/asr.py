@@ -191,6 +191,8 @@ class ASR():
         self.state_ = dict(M=M, T=T, R=None)
         self._fitted = True
 
+        return clean, sample_mask
+
     def transform(self, X, y=None, **kwargs):
         """Apply Artifact Subspace Reconstruction.
 

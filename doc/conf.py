@@ -55,7 +55,7 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'config.py']
 
 # generate autosummary even if no references
-# autosummary_generate = True
+autosummary_generate = True
 autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'inherited-members']
 numpydoc_show_class_members = True
 

@@ -19,6 +19,7 @@ Contents
 .. autosummary::
    :toctree: modules/
 
+   ~meegkit.asr
    ~meegkit.cca
    ~meegkit.dss
    ~meegkit.detrend

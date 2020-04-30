@@ -16,6 +16,7 @@ install:
   - pip install sphinx-gallery
   - pip install numpydoc
   - pip install sphinx_bootstrap_theme
+  - pip install git+https://github.com/pymanopt/pymanopt
 script:
   - mkdir docs
   - cd doc
