@@ -2,9 +2,8 @@
 import numpy as np
 from scipy import linalg
 
-from .utils.covariances import cov_lags
+from .utils import cov_lags, pca
 from .utils.matrix import _check_shifts, normcol, relshift, _times_to_delays
-from .utils.denoise import pca
 
 try:
     from tqdm import tqdm

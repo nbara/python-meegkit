@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/nbara/python-meegkit/branch/master/graph/badge.svg)](https://codecov.io/gh/nbara/python-meegkit)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
 
-Denoising tools for M/EEG processing in Python 3.5+.
+Denoising tools for M/EEG processing in Python 3.6+.
 
 > **Disclaimer:** The project mostly consists of development code, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the future. Comments and suggestions are welcome.
 
@@ -62,5 +62,23 @@ If you use this code, you should cite the relevant methods from the original art
     Journal of Neuroscience Methods, 168(1), 195–202. https://doi.org/10.1016/j.jneumeth.2007.09.012
 [10] de Cheveigné, A., & Simon, J. Z. (2007). Denoising based on time-shift PCA.
      Journal of Neuroscience Methods, 165(2), 297–305. https://doi.org/10.1016/j.jneumeth.2007.06.003
+
+```
+
+## Python implementation of Artifact subspace reconstruction (ASR)
+
+The base code is inspired from the original [EEGLAB inplementation](https://github.com/sccn/clean_rawdata) [1], while the riemannian variant [2] was adapted from the [rASR toolbox](https://github.com/s4rify/rASRMatlab) by Sarah Blum.
+
+### References
+
+If you use this code, you should cite the relevant methods from the original articles:
+
+```sql
+[1] Mullen, T. R., Kothe, C. A. E., Chi, Y. M., Ojeda, A., Kerth, T., Makeig, S., et al. (2015). Real-time
+    neuroimaging and cognitive monitoring using wearable dry EEG. IEEE Trans. Bio-Med. Eng. 62, 2553–2567.
+    https://doi.org/10.1109/TBME.2015.2481482
+[2] Blum, S., Jacobsen, N., Bleichner, M. G., & Debener, S. (2019). A Riemannian modification of
+    artifact subspace reconstruction for EEG artifact handling. Frontiers in human neuroscience,
+    13, 141.
 
 ```

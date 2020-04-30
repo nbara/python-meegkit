@@ -3,6 +3,7 @@ scipy
 matplotlib
 scikit-learn
 sphinx
+pillow
 sphinx-gallery
 joblib
 numpydoc
@@ -13,3 +14,5 @@ codecov
 codespell
 pydocstyle
 tqdm
+statsmodels
+pyriemann

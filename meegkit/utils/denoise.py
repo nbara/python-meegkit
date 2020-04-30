@@ -1,105 +1,59 @@
 import matplotlib.pyplot as plt
 import numpy as np
+
 from matplotlib import gridspec
-from scipy import linalg
 
-from .matrix import demean, fold, theshapeof, unfold
+from .matrix import fold, theshapeof, unfold, _check_weights
 
 
-def pca(cov, max_comps=None, thresh=0):
-    """PCA from covariance.
+def demean(X, weights=None, return_mean=False):
+    """Remove weighted mean over rows (samples).
 
     Parameters
     ----------
-    cov:  array, shape=(n_chans, n_chans)
-        Covariance matrix.
-    max_comps : int | None
-        Maximum number of components to retain after decomposition. ``None``
-        (the default) keeps all suprathreshold components (see ``thresh``).
-    thresh : float
-        Discard components below this threshold.
+    X : array, shape=(n_samples, n_channels[, n_trials])
+        Data.
+    weights : array, shape=(n_samples)
 
     Returns
     -------
-    V : array, shape=(max_comps, max_comps)
-        Eigenvectors (matrix of PCA components).
-    d : array, shape=(max_comps,)
-        PCA eigenvalues
+    demeaned_X : array, shape=(n_samples, n_channels[, n_trials])
+        Centered data.
+    mn : array
+        Mean value.
 
     """
-    if thresh is not None and (thresh > 1 or thresh < 0):
-        raise ValueError('Threshold must be between 0 and 1 (or None).')
+    weights = _check_weights(weights, X)
+    ndims = X.ndim
+    n_samples, n_chans, n_trials = theshapeof(X)
+    X = unfold(X)
 
-    d, V = linalg.eigh(cov)
-    d = d.real
-    V = V.real
+    if weights.any():
+        weights = unfold(weights)
 
-    p0 = d.sum()  # total power
+        if weights.shape[0] != X.shape[0]:
+            raise ValueError('X and weights arrays should have same ' +
+                             'number of samples (rows).')
 
-    idx = np.argsort(d)[::-1]  # reverse sort ev order
-    d = d[idx]
-    V = V[:, idx]
+        if weights.shape[1] == 1 or weights.shape[1] == n_chans:
+            mn = (np.sum(X * weights, axis=0) /
+                  np.sum(weights, axis=0))[None, :]
+        else:
+            raise ValueError('Weight array should have either the same ' +
+                             'number of columns as X array, or 1 column.')
 
-    # Truncate weak components
-    if thresh is not None:
-        idx = np.where(d / d.max() > thresh)[0]
-        d = d[idx]
-        V = V[:, idx]
-
-    # Keep a fixed number of components
-    if max_comps is None:
-        max_comps = V.shape[1]
+        demeaned_X = X - mn
     else:
-        max_comps = np.min((max_comps, V.shape[1]))
+        mn = np.mean(X, axis=0, keepdims=True)
+        demeaned_X = X - mn
 
-    V = V[:, np.arange(max_comps)]
-    d = d[np.arange(max_comps)]
+    if n_trials > 1 or ndims == 3:
+        demeaned_X = fold(demeaned_X, n_samples)
 
-    var = 100 * d.sum() / p0
-    if var < 99:
-        print('[PCA] Explained variance of selected components : {:.2f}%'.
-              format(var))
-
-    return V, d
-
-
-def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
-    """Compute regression matrix from cross covariance.
-
-    Parameters
-    ----------
-    Cxy : array
-        Cross-covariance matrix between data and regressor.
-    Cyy : array
-        Covariance matrix of regressor.
-    keep : array
-        Number of regressor PCs to keep (default=all).
-    threshold : float
-        Eigenvalue threshold for discarding regressor PCs (default=0).
-
-    Returns
-    -------
-    R : array
-        Matrix to apply to regressor to best model data.
-
-    """
-    # PCA of regressor
-    [V, d] = pca(Cyy, max_comps=keep, thresh=threshold)
-
-    # cross-covariance between data and regressor PCs
-    Cxy = Cxy.T
-    R = np.dot(V.T, Cxy)
-
-    # projection matrix from regressor PCs
-    R = (R.T * 1 / d).T
-
-    # projection matrix from regressors
-    R = V @ R  # np.dot(np.squeeze(V), np.squeeze(R))
-
-    # if R.ndim == 1:
-    #     R = R[:, None]
-
-    return R
+    if return_mean:
+        return demeaned_X, mn  # the_mean.shape=(1, the_mean.shape[0])
+    else:
+        return demeaned_X
 
 
 def mean_over_trials(X, weights=None):

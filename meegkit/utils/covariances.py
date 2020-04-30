@@ -1,7 +1,47 @@
 import numpy as np
+import pymanopt
+# from numpy import linalg
+from pymanopt import Problem
+from pymanopt.manifolds import Grassmann
+from pymanopt.solvers import TrustRegions
+from scipy import linalg
 
+from .base import mldivide
 from .matrix import (_check_shifts, _check_weights, multishift, relshift,
                      theshapeof, unsqueeze)
+
+
+def block_covariance(data, window=128, overlap=0.5, padding=True,
+                     estimator='cov'):
+    """Compute blockwise covariance.
+
+    Parameters
+    ----------
+    data : array, shape=(n_channels, n_samples)
+        Input data (must be 2D)
+    window : int
+        Window size.
+    overlap : float
+        Overlap between successive windows.
+
+    """
+    from pyriemann.utils.covariance import _check_est
+
+    assert 0 <= overlap < 1, "overlap must be < 1"
+    est = _check_est(estimator)
+    X = []
+    n_chans, n_samples = data.shape
+    if padding:  # pad data with zeros
+        pad = np.zeros((n_chans, int(window / 2)))
+        data = np.concatenate((pad, data, pad), axis=1)
+
+    jump = int(window * overlap)
+    ix = 0
+    while (ix + window < n_samples):
+        X.append(est(data[:, ix:ix + window]))
+        ix = ix + jump
+
+    return np.array(X)
 
 
 def cov_lags(X, Y, shifts=None):
@@ -264,3 +304,184 @@ def convmtx(V, n):
         t = t.T
 
     return t
+
+
+def pca(cov, max_comps=None, thresh=0):
+    """PCA from covariance.
+
+    Parameters
+    ----------
+    cov:  array, shape=(n_chans, n_chans)
+        Covariance matrix.
+    max_comps : int | None
+        Maximum number of components to retain after decomposition. ``None``
+        (the default) keeps all suprathreshold components (see ``thresh``).
+    thresh : float
+        Discard components below this threshold.
+
+    Returns
+    -------
+    V : array, shape=(max_comps, max_comps)
+        Eigenvectors (matrix of PCA components).
+    d : array, shape=(max_comps,)
+        PCA eigenvalues
+
+    """
+    if thresh is not None and (thresh > 1 or thresh < 0):
+        raise ValueError('Threshold must be between 0 and 1 (or None).')
+
+    d, V = linalg.eigh(cov)
+    d = d.real
+    V = V.real
+
+    p0 = d.sum()  # total power
+
+    idx = np.argsort(d)[::-1]  # reverse sort ev order
+    d = d[idx]
+    V = V[:, idx]
+
+    # Truncate weak components
+    if thresh is not None:
+        idx = np.where(d / d.max() > thresh)[0]
+        d = d[idx]
+        V = V[:, idx]
+
+    # Keep a fixed number of components
+    if max_comps is None:
+        max_comps = V.shape[1]
+    else:
+        max_comps = np.min((max_comps, V.shape[1]))
+
+    V = V[:, np.arange(max_comps)]
+    d = d[np.arange(max_comps)]
+
+    var = 100 * d.sum() / p0
+    if var < 99:
+        print('[PCA] Explained variance of selected components : {:.2f}%'.
+              format(var))
+
+    return V, d
+
+
+def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
+    """Compute regression matrix from cross covariance.
+
+    Parameters
+    ----------
+    Cxy : array
+        Cross-covariance matrix between data and regressor.
+    Cyy : array
+        Covariance matrix of regressor.
+    keep : array
+        Number of regressor PCs to keep (default=all).
+    threshold : float
+        Eigenvalue threshold for discarding regressor PCs (default=0).
+
+    Returns
+    -------
+    R : array
+        Matrix to apply to regressor to best model data.
+
+    """
+    # PCA of regressor
+    [V, d] = pca(Cyy, max_comps=keep, thresh=threshold)
+
+    # cross-covariance between data and regressor PCs
+    Cxy = Cxy.T
+    R = np.dot(V.T, Cxy)
+
+    # projection matrix from regressor PCs
+    R = (R.T * 1 / d).T
+
+    # projection matrix from regressors
+    R = V @ R  # np.dot(np.squeeze(V), np.squeeze(R))
+
+    # if R.ndim == 1:
+    #     R = R[:, None]
+
+    return R
+
+
+def nonlinear_eigenspace(L, k, alpha=1):
+    """Nonlinear eigenvalue problem: total energy minimization.
+
+    This example is motivated in [1]_ and was adapted from the manopt toolbox
+    in Matlab.
+
+    TODO : check this
+
+    Parameters
+    ----------
+    L : array, shape=(n_channels, n_channels)
+        Discrete Laplacian operator: the covariance matrix.
+    alpha : float
+        Given constant for optimization problem.
+    k : int
+        Determines how many eigenvalues are returned.
+
+    Returns
+    -------
+    Xsol : array, shape=(n_channels, n_channels)
+        Eigenvectors.
+    S0 : array
+        Eigenvalues.
+
+    References
+    ----------
+    .. [1] "A Riemannian Newton Algorithm for Nonlinear Eigenvalue Problems",
+       Zhi Zhao, Zheng-Jian Bai, and Xiao-Qing Jin, SIAM Journal on Matrix
+       Analysis and Applications, 36(2), 752-774, 2015.
+
+    """
+    n = L.shape[0]
+    assert L.shape[1] == n, 'L must be square.'
+
+    # Grassmann manifold description
+    manifold = Grassmann(n, k)
+    manifold._dimension = 1  # hack
+
+    # A solver that involves the hessian (check if correct TODO)
+    solver = TrustRegions()
+
+    # Cost function evaluation
+    @pymanopt.function.Callable
+    def cost(X):
+        rhoX = np.sum(X ** 2, 1, keepdims=True)  # diag(X*X')
+        val = 0.5 * np.trace(X.T @ (L * X)) + \
+            (alpha / 4) * (rhoX.T @ mldivide(L, rhoX))
+        return val
+
+    # Euclidean gradient evaluation
+    @pymanopt.function.Callable
+    def egrad(X):
+        rhoX = np.sum(X ** 2, 1, keepdims=True)  # diag(X*X')
+        g = L @ X + alpha * np.diagflat(mldivide(L, rhoX)) @ X
+        return g
+
+    # Euclidean Hessian evaluation
+    # Note: Manopt automatically converts it to the Riemannian counterpart.
+    @pymanopt.function.Callable
+    def ehess(X, U):
+        rhoX = np.sum(X ** 2, 1, keepdims=True)  # np.diag(X * X')
+        rhoXdot = 2 * np.sum(X.dot(U), 1)
+        h = L @ U + alpha * np.diagflat(mldivide(L, rhoXdot)) @ X + \
+            alpha * np.diagflat(mldivide(L, rhoX)) @ U
+        return h
+
+    # Initialization as suggested in above referenced paper.
+    # randomly generate starting point for svd
+    x = np.random.randn(n, k)
+    [U, S, V] = linalg.svd(x, full_matrices=False)
+    x = U.dot(V.T)
+    S0, U0 = linalg.eig(
+        L + alpha * np.diagflat(mldivide(L, np.sum(x**2, 1)))
+    )
+
+    # Call manoptsolve to automatically call an appropriate solver.
+    # Note: it calls the trust regions solver as we have all the required
+    # ingredients, namely, gradient and Hessian, information.
+    problem = Problem(manifold=manifold, cost=cost, egrad=egrad, ehess=ehess,
+                      verbosity=0)
+    Xsol = solver.solve(problem, U0)
+
+    return S0, Xsol

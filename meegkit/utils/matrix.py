@@ -2,6 +2,72 @@
 import warnings
 
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
+
+
+def sliding_window(data, window, step=1, padded=False, axis=-1, copy=True):
+    """Calculate a sliding window over a signal.
+
+    Parameters
+    ----------
+    data : array
+        The array to be slided over.
+    window : int
+        The sliding window size.
+    step : int
+        The sliding window stepsize (default=1).
+    axis : int
+        The axis to slide over (defaults=-1).
+    copy : bool
+        Return strided array as copy to avoid sideffects when manipulating the
+        output array.
+
+    Returns
+    -------
+    data :  array, shape=(..., n_windows, window_size)
+        A matrix whose last dimension corresponds to the window size, and the
+        second-to-last dimension corresponds to the number of slices.
+
+    Notes
+    -----
+    - Be wary of setting `copy` to `False` as undesired sideffects with the
+      output values may occur.
+
+    Examples
+    --------
+    >>> a = numpy.array([1, 2, 3, 4, 5])
+    >>> sliding_window(a, size=3)
+    array([[1, 2, 3],
+           [2, 3, 4],
+           [3, 4, 5]])
+
+    >>> sliding_window(a, size=3, stepsize=2)
+    array([[1, 2, 3],
+           [3, 4, 5]])
+
+    """
+    if axis >= data.ndim:
+        raise ValueError("Axis value out of range")
+    if step < 1:
+        raise ValueError("Stepsize may not be zero or negative")
+    if window > data.shape[axis]:
+        print("Sliding window size exceeds size of selected axis")
+        return data[..., None]
+
+    shape = list(data.shape)
+    shape[axis] = np.floor(
+        data.shape[axis] / step - window / step + 1).astype(int)
+    shape.append(window)
+
+    strides = list(data.strides)
+    strides[axis] *= step
+    strides.append(data.strides[axis])
+    strided = as_strided(data, shape=shape, strides=strides)
+
+    if copy:
+        return strided.copy()
+    else:
+        return strided
 
 
 def widen_mask(mask, widen=4, axis=0):
@@ -457,56 +523,6 @@ def unfold(X):
             (n_samples * n_trials, n_chans), order="F")
     else:
         return X
-
-
-def demean(X, weights=None, return_mean=False):
-    """Remove weighted mean over rows (samples).
-
-    Parameters
-    ----------
-    X : array, shape=(n_samples, n_channels[, n_trials])
-        Data.
-    weights : array, shape=(n_samples)
-
-    Returns
-    -------
-    demeaned_X : array, shape=(n_samples, n_channels[, n_trials])
-        Centered data.
-    mn : array
-        Mean value.
-
-    """
-    weights = _check_weights(weights, X)
-    ndims = X.ndim
-    n_samples, n_chans, n_trials = theshapeof(X)
-    X = unfold(X)
-
-    if weights.any():
-        weights = unfold(weights)
-
-        if weights.shape[0] != X.shape[0]:
-            raise ValueError('X and weights arrays should have same ' +
-                             'number of samples (rows).')
-
-        if weights.shape[1] == 1 or weights.shape[1] == n_chans:
-            mn = (np.sum(X * weights, axis=0) /
-                  np.sum(weights, axis=0))[None, :]
-        else:
-            raise ValueError('Weight array should have either the same ' +
-                             'number of columns as X array, or 1 column.')
-
-        demeaned_X = X - mn
-    else:
-        mn = np.mean(X, axis=0, keepdims=True)
-        demeaned_X = X - mn
-
-    if n_trials > 1 or ndims == 3:
-        demeaned_X = fold(demeaned_X, n_samples)
-
-    if return_mean:
-        return demeaned_X, mn  # the_mean.shape=(1, the_mean.shape[0])
-    else:
-        return demeaned_X
 
 
 def normcol(X, weights=None, return_norm=False):
