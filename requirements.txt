@@ -3,6 +3,7 @@ scipy
 matplotlib
 scikit-learn
 sphinx
+sphinx-gallery
 joblib
 numpydoc
 flake8

@@ -87,7 +87,7 @@ def widen_mask(mask, widen=4, axis=0):
 def relshift(X, ref, shifts, fill_value=0, axis=0):
     """Create shifted versions of X relative to ref with padding.
 
-    `ref` is replicated to have the same shape as `y` and padded accordingly.
+    `ref` is replicated to have the same shape as `X` and padded accordingly.
 
     Parameters
     ----------
@@ -96,7 +96,9 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
     ref : array, shape=(n_samples[, n_epochs][, n_trials])
         Reference array against which `X` is shifted.
     shifts : array | int
-        Array of shifts.
+        Array of shifts. Positive shifts mean that X is 'delayed' in time (i.e.
+        `y[shift] = X[0]`). Conversely, a negative shift means that X is
+        'advanced' (i.e. y[0] =
     fill_value : float
         Value to pad output axis by.
     axis : int
@@ -152,7 +154,9 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
     X : array, shape=(n_samples[, n_chans][, n_trials])
         Array to shift.
     shifts : array, shape=(n_shifts,)
-        Array of shifts.
+        Array of shifts. Positive shifts mean that X is 'delayed' in time (i.e.
+        `y[shift] = X[0]`). Conversely, a negative shift means that X is
+        'advanced' (i.e. y[0] =
     fill_value : float | np.nan
         Value to pad output axis by.
     axis : int, optional
@@ -259,7 +263,10 @@ def shift(X, shift, fill_value=0, axis=0):
     X : array, shape=(n_samples[, n_epochs][, n_trials])
         Multidimensional input array.
     shift : int
-        The number of places by which elements are shifted along axis.
+        The number of places by which elements are shifted along axis. Positive
+        shifts mean that X is 'delayed' in time (i.e. `y[shift] = X[0]`).
+        Conversely, a negative shift means that X is 'advanced' (i.e. y[0] =
+        X[shift]).
     fill_value : float
         Value to pad output axis by.
     axis : int, optional

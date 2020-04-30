@@ -14,7 +14,7 @@ def cov_lags(X, Y, shifts=None):
     Y: array, shape=(n_times, n_chans_y[, n_trials])
         Reference data.
     shifts: array, shape=(n_shifts,)
-        Positive lag means Y is delayed relative to X.
+        Positive lag means X is delayed relative to Y.
 
     Returns
     -------

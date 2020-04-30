@@ -282,13 +282,15 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
     return np.max([alpha.mean(), 0]), (ci_lb, ci_ub)
 
 
-def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
+def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
     """Compute Signal-to-Noise-corrected spectrum.
 
     Parameters
     ----------
-    data : ndarray , shape=([n_trials, ]n_chans, n_samples)
+    data : ndarray , shape=([n_trials, ]n_chans, n_freqs)
         Power spectrum.
+    freqs : array, shape=(n_freqs,)
+        Frequency bins.
     n_avg : int
         Number of neighbour bins to estimate noise over. Make sure that this
         value doesn't overlap with neighbouring target frequencies
@@ -316,20 +318,20 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
     if data.ndim == 3:
         n_trials = data.shape[0]
         n_chans = data.shape[1]
-        n_samples = data.shape[-1]
+        n_freqs = data.shape[-1]
     elif data.ndim == 2:
         n_trials = 1
         n_chans = data.shape[0]
-        n_samples = data.shape[-1]
+        n_freqs = data.shape[-1]
     else:
-        raise ValueError('Data must have shape (n_trials, n_chans, n_times)'
-                         ' or (n_chans, n_times)')
+        raise ValueError('Data must have shape (n_trials, n_chans, n_freqs)'
+                         ' or (n_chans, n_freqs)')
 
     # Number of points to get desired resolution
-    data = np.reshape(data, (n_trials * n_chans, n_samples))
+    data = np.reshape(data, (n_trials * n_chans, n_freqs))
     SNR = np.zeros_like(data)
 
-    for i_bin in range(n_samples):
+    for i_bin in range(n_freqs):
 
         # Indices of bins to average over
         # ----------------------------------------------------------------------
@@ -339,11 +341,12 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
         for h in range(n_harm):  # loop over harmonics
 
             # make sure freq <= fmax
-            if f[i_bin] > 0 and f[i_bin] * (h + 1) <= f[-1]:
+            if freqs[i_bin] > 0 and freqs[i_bin] * (h + 1) <= freqs[-1]:
 
                 # Get indices of harmonics
-                bin_peaks.append(int(np.argmin(np.abs(f[i_bin] * (h + 1) -
-                                                      f))))
+                bin_peaks.append(
+                    int(np.argmin(np.abs(freqs[i_bin] * (h + 1) - freqs)))
+                )
 
                 # Now get indices of noise (i.e., neighbouring FFT bins)
                 # eg if currentbin=54, navg=3, skipbins=1 :
@@ -356,7 +359,7 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
                 tmp = tmp.flatten().astype(int)
 
                 # Remove impossible bin values (eg <1 or >n_samp)
-                tmp = [t for t in tmp if t >= 0 and t < n_samples]
+                tmp = [t for t in tmp if t >= 0 and t < n_freqs]
                 bin_noise.append(tmp)
                 del tmp
 
@@ -393,6 +396,6 @@ def snr_spectrum(data, f, n_avg=1, n_harm=1, skipbins=1):
 
     # Reshape matrix if necessary
     if np.min((n_trials, n_chans)) > 1:
-        SNR = np.reshape(SNR, (n_trials, n_chans, n_samples))
+        SNR = np.reshape(SNR, (n_trials, n_chans, n_freqs))
 
     return SNR
