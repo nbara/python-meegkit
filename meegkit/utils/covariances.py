@@ -1,3 +1,4 @@
+"""Covariance calculation."""
 import numpy as np
 import pymanopt
 # from numpy import linalg
@@ -234,23 +235,26 @@ def convmtx(V, n):
     Given a vector V of length N, an N+n-1 by n convolution matrix is
     generated of the following form:
 
-        |  V(0)  0      0     ...      0    |
-        |  V(1) V(0)    0     ...      0    |
-        |  V(2) V(1)   V(0)   ...      0    |
-    X = |   .    .      .              .    |
-        |   .    .      .              .    |
-        |   .    .      .              .    |
-        |  V(N) V(N-1) V(N-2) ...  V(N-n+1) |
-        |   0   V(N)   V(N-1) ...  V(N-n+2) |
-        |   .    .      .              .    |
-        |   .    .      .              .    |
-        |   0    0      0     ...    V(N)   |
+    ::
+
+            |  V(0)  0      0     ...      0    |
+            |  V(1) V(0)    0     ...      0    |
+            |  V(2) V(1)   V(0)   ...      0    |
+        X = |   .    .      .              .    |
+            |   .    .      .              .    |
+            |   .    .      .              .    |
+            |  V(N) V(N-1) V(N-2) ...  V(N-n+1) |
+            |   0   V(N)   V(N-1) ...  V(N-n+2) |
+            |   .    .      .              .    |
+            |   .    .      .              .    |
+            |   0    0      0     ...    V(N)   |
 
     That is, V is assumed to be causal, and zero-valued after N.
 
     Parameters
     ----------
     V : array, shape=(N,) or(N, 1) or (1, N)
+        Input vector.
     n : int
 
     Returns
@@ -259,8 +263,9 @@ def convmtx(V, n):
 
     Examples
     --------
-    Generate a simple convolution matrix.
-    >>> h = [1 2 1];
+    Generate a simple convolution matrix:
+
+    >>> h = [1, 2, 1]
     >>> convmtx(h,7)
     np.array(
         [[1. 2. 1. 0. 0. 0.]

@@ -20,7 +20,7 @@ install:
 script:
   - mkdir docs
   - cd doc
-  - sphinx-autogen *.rst
+  # - sphinx-autogen *.rst
   - make html
   - touch _build/html/.nojekyll
 deploy:

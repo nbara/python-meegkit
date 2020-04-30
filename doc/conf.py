@@ -12,9 +12,9 @@
 #
 import os
 import sys
-from numpydoc import docscrape
+from numpydoc import docscrape  # noqa
 import sphinx_gallery  # noqa
-import sphinx_bootstrap_theme
+import sphinx_bootstrap_theme  # noqa
 
 import matplotlib
 matplotlib.use('agg')
@@ -31,7 +31,7 @@ sys.path.append(os.path.abspath(os.path.join(curdir, '..', 'meegkit')))
 project = 'MEEGkit'
 copyright = '2020, Nicolas Barascud'
 author = 'Nicolas Barascud'
-
+version = '0.1'
 
 # -- General configuration ---------------------------------------------------
 
@@ -44,7 +44,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'numpydoc',
     'sphinx_gallery.gen_gallery',
-    ]
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -55,8 +55,14 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'config.py']
 
 # generate autosummary even if no references
-autosummary_generate = True
-autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance', 'inherited-members']
+# autosummary_generate = True
+autodoc_default_options = {
+    'members': True,
+    'special-members': '__init__',
+    'undoc-members': True,
+    'show-inheritance': True,
+    'exclude-members': '__weakref__'
+}
 numpydoc_show_class_members = True
 
 # The suffix(es) of source filenames.
@@ -80,12 +86,19 @@ html_theme = 'bootstrap'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+
 html_theme_options = {
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "MEEGkit documentation",
 
     # Render the next and previous page links in navbar. (Default: true)
     'navbar_sidebarrel': False,
+
+    # Links in the navbar
+    'navbar_links': [
+        ("Examples", "auto_examples/index"),
+        ("GitHub", "https://github.com/nbara/python-meegkit", True)
+    ],
 
     # Render the current pages TOC in the navbar. (Default: true)
     'navbar_pagenav': True,
@@ -126,7 +139,7 @@ html_theme_options = {
     # Currently, the supported themes are:
     # - Bootstrap 2: https://bootswatch.com/2
     # - Bootstrap 3: https://bootswatch.com/3
-    'bootswatch_theme': "simplex",
+    'bootswatch_theme': "united",
 
     # Choose Bootstrap version.
     # Values: "3" (default) or "2" (in quotes)

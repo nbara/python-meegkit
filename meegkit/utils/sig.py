@@ -1,5 +1,4 @@
-# coding: utf-8
-"""Signal processing tools."""
+"""Audio and signal processing tools."""
 import numpy as np
 import scipy.signal as ss
 from scipy.linalg import lstsq, solve, toeplitz
@@ -213,6 +212,7 @@ def erb_bandwidth(fc):
     -------
     ndarray or float
         Equivalent rectangular bandwidth of the filter(s).
+
     """
     # In Hz, according to Glasberg and Moore (1990)
     return 24.7 + fc / 9.265
@@ -231,6 +231,7 @@ def hz2erb(f):
     -----
     There is a round-off error in the Glasberg & Moore paper, as 1000 / (24.7 *
     4.37) * log(10) = 21.332 and not 21.4 as is stated.
+
     """
     # erb = 21.332 * np.sign(f) * np.log10(1 + np.abs(f) * 0.00437)
     erb = 9.2645 * np.sign(f) * np.log(1 + np.abs(f) * 0.00437)
@@ -452,9 +453,9 @@ def teager_kaiser(x, m=1, M=1, axis=0):
     axis : int
         Axis to compute metric on.
 
-    Return
-    ------
-    tk_energy : array, shape=(n_samples - 2 * M[, n_channels][, n_trials])
+    Returns
+    -------
+    array, shape=(n_samples - 2 * M[, n_channels][, n_trials])
         Instantaneous energy.
 
     References
@@ -505,8 +506,6 @@ def slope_sum(x, w: int, axis=0):
 def stmcb(x, u_in=None, q=None, p=None, niter=5, a_in=None):
     """Compute linear model via Steiglitz-McBride iteration.
 
-    Parameters
-    ----------
     [B,A] = stmcb(H,NB,NA) finds the coefficients of the system B(z)/A(z) with
     approximate impulse response H, NA poles and NB zeros.
 
@@ -521,21 +520,36 @@ def stmcb(x, u_in=None, q=None, p=None, niter=5, a_in=None):
     are again optional with default values of N = 5, [B,Ai] = PRONY(Y,0,NA).
     Y and X must be the same length.
 
+    Parameters
+    ----------
+    x : array
+    u_in : array
+    q : int
+    p : int
+    n_iter : int
+    a_in : array
+
+    Returns
+    -------
+    b : array
+        Filter coefficients (denominator).
+    a : array
+        Filter coefficients (numerator).
+
     Examples
     --------
     Approximate the impulse response of a Butterworth filter with a
     system of lower order:
 
-    >>> [b,a] = butter(6,0.2);              # Butterworth filter design
-    >>> h = filter(b,a,[1 zeros(1,100)]);   # Filter data using above filter
-    >>> freqz(b,a,128)                      # Frequency response
-    >>> [bb, aa] = stmcb(h,4,4);
+    >>> [b, a] = butter(6, 0.2)                # Butterworth filter design
+    >>> h = filter(b, a, [1, zeros(1,100)])    # Filter data using above filter
+    >>> freqz(b, a, 128)                       # Frequency response
+    >>> [bb, aa] = stmcb(h, 4, 4)
     >>> plt.plot(freqz(bb, aa, 128))
 
     References
     ----------
-    Author(s): Jim McClellan, 2-89
-               T. Krauss, 4-22-93, new help and options
+    Authors: Jim McClellan, 2-89 T. Krauss, 4-22-93, new help and options
     Copyright 1988-2004 The MathWorks, Inc.
 
     """
@@ -664,11 +678,6 @@ class GammatoneFilterbank():
     filters. These filters were defined by Patterson and Holdworth for
     simulating the cochlea, and originally implemented in [1]_.
 
-    The python was adapted from Alexandre Chabot-Leclerc's pambox, and Jason
-    Heeris' gammatone toolbox:
-    https://github.com/achabotl/pambox
-    https://github.com/detly/gammatone
-
     Parameters
     ----------
     sfreq : float
@@ -683,6 +692,13 @@ class GammatoneFilterbank():
         Q-value of the ERB (default=9.26449).
     min_bw : float
         Minimum bandwidth of an ERB.
+
+    Notes
+    -----
+    The python was adapted from Alexandre Chabot-Leclerc's pambox, and Jason
+    Heeris' gammatone toolbox:
+    https://github.com/achabotl/pambox
+    https://github.com/detly/gammatone
 
     References
     ----------

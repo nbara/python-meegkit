@@ -15,6 +15,8 @@ try:
 except ImportError:
     pyriemann = None
 
+__all__ = ['ASR', 'clean_windows', 'asr_calibrate', 'asr_process']
+
 
 class ASR():
     """Artifact Subspace Reconstruction.
