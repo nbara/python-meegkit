@@ -74,7 +74,7 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
     # Phase 1
     # -------------------------------------------------------------------------
-    # Find time intervals where at least one channel is excentric -> w == 0
+    # Find time intervals where at least one channel is eccentric -> w == 0
     # Compute covariance on artifact-free data.
 
     iter = n_iter
@@ -87,7 +87,7 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
             # Compute channel data estimated from its neighbours
             z = _project_channel(X[:, neighbours], c0, ch, neighbours)
 
-            # Compute excentricity over time
+            # Compute eccentricity over time
             d[:, ch] = _eccentricity(X[:, ch][:, None], z, w, n_smooth).T
             d[:, ch] = d[:, ch] / thresh
 
@@ -122,7 +122,7 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     d = _eccentricity(X, None, w, n_smooth)
 
     rank = np.argsort(d, axis=1)[:, ::-1].astype(float)
-    rank[np.where(w)[0], :] = np.nan  # exclude parts that are not excentric
+    rank[np.where(w)[0], :] = np.nan  # exclude parts that are not eccentric
 
     depth = np.min((depth, n_chans - 1))
     ww = np.ones(X.shape)
@@ -134,7 +134,7 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
         for ch in np.arange(n_chans):
             neighbours = _closest_neighbours(closest, ch, n_chans)
 
-            # find samples where channel `ch` is the most excentric
+            # find samples where channel `ch` is the most eccentric
             bad_samples = np.where(ch == rank[:, i_depth])[0]
             if i_depth != 0:  # exclude if not very bad
                 bad_samples = np.delete(
