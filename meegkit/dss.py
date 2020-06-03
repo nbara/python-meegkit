@@ -101,7 +101,7 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     W = np.sqrt(1. / eigval0)  # diagonal of whitening matrix
 
     # c1 is projected into whitened PCA space of data channels
-    c2 = (W * eigvec0.squeeze()).T.dot(c1).dot(eigvec0.squeeze()) * W
+    c2 = (W * eigvec0).T.dot(c1).dot(eigvec0) * W
 
     # proj. matrix from whitened data space to a space maximizing bias
     eigvec2, eigval2 = pca(c2, max_comps=keep1, thresh=keep2)

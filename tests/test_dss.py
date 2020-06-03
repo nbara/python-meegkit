@@ -1,19 +1,25 @@
 """Test DSS functions."""
 import matplotlib.pyplot as plt
 import numpy as np
-from meegkit import dss
-from meegkit.utils import demean, fold, rms, tscov, unfold
+import pytest
 from numpy.testing import assert_allclose
 from scipy import signal
 
+from meegkit import dss
+from meegkit.utils import demean, fold, rms, tscov, unfold
 
-def test_dss0():
+
+@pytest.mark.parametrize('n_bad_chans', [0, -1])
+def test_dss0(n_bad_chans):
     """Test dss0.
 
     Find the linear combinations of multichannel data that
     maximize repeatability over trials. Data are time * channel * trials.
 
     Uses dss0().
+
+    `n_bad_chans` set the values of the first corresponding number of channels
+    to zero.
     """
     # create synthetic data
     n_samples = 100 * 3
@@ -29,6 +35,9 @@ def test_dss0():
     s = source * np.random.randn(1, n_chans)  # 300 * 30
     s = s[:, :, np.newaxis]
     s = np.tile(s, (1, 1, 100))
+
+    # set first `n_bad_chans` to zero
+    s[:, :n_bad_chans] = 0.
 
     # noise
     noise = np.dot(
@@ -81,6 +90,5 @@ def test_dss_line():
     plt.show()
 
 if __name__ == '__main__':
-    import pytest
     pytest.main([__file__])
     # test_dss_line()
