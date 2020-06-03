@@ -4,8 +4,6 @@ on:
   push:
     branches: 
       - master
-    branches-ignore:
-      - 'gh-pages'
   pull_request:
     branches:
       - master
