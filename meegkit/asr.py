@@ -611,7 +611,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
     if state['R'] is not None:
         # apply the reconstruction to intermediate samples (using raised-cosine
         # blending)
-        blend = (1 - np.cos(np.pi * np.arange(ns)) / ns) / 2
+        blend = (1 - np.cos(np.pi * np.arange(ns) / ns)) / 2
         clean = blend * R.dot(X) + (1 - blend) * state['R'].dot(X)
     else:
         clean = R.dot(X)
