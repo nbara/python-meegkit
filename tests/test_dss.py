@@ -73,22 +73,38 @@ def test_dss_line():
     artifact = artifact ** 3
     s = x + 10 * artifact
 
+    def _plot(x):
+        f, ax = plt.subplots(1, 2, sharey=True)
+        f, Pxx = signal.welch(x, sr, nperseg=1024, axis=0,
+                              return_onesided=True)
+        ax[1].semilogy(f, Pxx)
+        f, Pxx = signal.welch(s, sr, nperseg=1024, axis=0,
+                              return_onesided=True)
+        ax[0].semilogy(f, Pxx)
+        ax[0].set_xlabel('frequency [Hz]')
+        ax[1].set_xlabel('frequency [Hz]')
+        ax[0].set_ylabel('PSD [V**2/Hz]')
+        ax[0].set_title('before')
+        ax[1].set_title('after')
+        plt.show()
+
+    # 2D case, n_outputs == 1
     out, _ = dss.dss_line(s, 20, sr)
-    f, ax = plt.subplots(1, 2, sharey=True)
-    print(out.shape)
-    f, Pxx = signal.welch(out, sr, nperseg=1024, axis=0,
-                          return_onesided=True)
-    ax[1].semilogy(f, Pxx)
-    f, Pxx = signal.welch(s, sr, nperseg=1024, axis=0,
-                          return_onesided=True)
-    ax[0].semilogy(f, Pxx)
-    ax[0].set_xlabel('frequency [Hz]')
-    ax[1].set_xlabel('frequency [Hz]')
-    ax[0].set_ylabel('PSD [V**2/Hz]')
-    ax[0].set_title('before')
-    ax[1].set_title('after')
-    plt.show()
+    _plot(out)
+
+    # Test n_outputs > 1
+    out, _ = dss.dss_line(s, 20, sr, nremove=2)
+    # _plot(out)
+
+    # Test n_trials > 1
+    x = np.random.randn(nsamples, nchans, 4)
+    artifact = np.sin(np.arange(nsamples) / sr * 2 * np.pi * 20)[:, None, None]
+    artifact[artifact < 0] = 0
+    artifact = artifact ** 3
+    s = x + 10 * artifact
+    out, _ = dss.dss_line(s, 20, sr, nremove=1)
+
 
 if __name__ == '__main__':
-    pytest.main([__file__])
-    # test_dss_line()
+    # pytest.main([__file__])
+    test_dss_line()

@@ -399,7 +399,11 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
 
     # filter
     tmp = np.fft.fft(data, axis=0)
-    tmp *= fx[:, None]
+    if data.ndim == 2:
+        tmp *= fx[:, None]
+    elif data.ndim == 3:
+        tmp *= fx[:, None, None]
+
     filtdat = 2 * np.real(np.fft.ifft(tmp, axis=0))
 
     if return_empvals or show:
