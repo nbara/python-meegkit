@@ -553,8 +553,8 @@ def normcol(X, weights=None, return_norm=False):
     """
     if X.ndim == 3:
         n_samples, n_chans, n_trials = theshapeof(X)
-        X = unfold(X)
         weights = _check_weights(weights, X)
+        X = unfold(X)
         if not weights.any():  # no weights
             X_norm, N = normcol(X, return_norm=True)
             N = N ** 2
@@ -567,9 +567,6 @@ def normcol(X, weights=None, return_norm=False):
 
             if weights.ndim == 2 and weights.shape[1] == 1:
                 weights = np.tile(weights, (1, n_samples, n_trials))
-
-            if weights.shape != weights.shape:
-                raise ValueError("Weight array should have be same shape as X")
 
             weights = unfold(weights)
             X_norm, N = normcol(X, weights, return_norm=True)

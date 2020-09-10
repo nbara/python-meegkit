@@ -2,9 +2,9 @@
 import numpy as np
 from scipy import linalg
 
-from .utils import (demean, mean_over_trials, smooth, pca, theshapeof,
-                    tscov, gaussfilt, wpwr)
 from .tspca import tsr
+from .utils import (demean, gaussfilt, mean_over_trials, pca, smooth,
+                    theshapeof, tscov, wpwr)
 
 
 def dss1(data, weights=None, keep1=None, keep2=1e-12):
@@ -175,7 +175,7 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
     if x.shape[0] < nfft:
         print('reducing nfft to {}'.format(x.shape[0]))
         nfft = x.shape[0]
-
+    n_samples, n_chans, n_trials = theshapeof(x)
     x = demean(x)
 
     # cancels line_frequency and harmonics, light lowpass
@@ -208,7 +208,12 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
         plt.show()
 
     idx_remove = np.arange(nremove)
-    xxxx = xxxx @ todss[:, idx_remove]  # line-dominated components
+    if x.ndim == 3:
+        for t in range(n_trials):  # line-dominated components
+            xxxx[..., t] = xxxx[..., t] @ todss[:, idx_remove]
+    elif x.ndim == 2:
+        xxxx = xxxx @ todss[:, idx_remove]
+
     xxx, _, _, _ = tsr(xxx, xxxx)  # project them out
 
     # reconstruct clean signal

@@ -64,8 +64,12 @@ def test_tsr(show=True):
     # artifact + harmonics
     artifact = np.sin(np.arange(nsamples) / sr * 2 * np.pi * 10)[:, None]
     artifact[artifact < 0] = 0
-    artifact = artifact ** 3
-    signal = x + 10 * artifact
+    artifact = 5 * artifact ** 3
+    signal = x + artifact
+
+    signal -= np.mean(signal, keepdims=True)
+    artifact -= np.mean(artifact, keepdims=True)
+
     # Without shifts
     y, idx, mean_total, weights = tspca.tsr(
         signal,
@@ -73,10 +77,10 @@ def test_tsr(show=True):
         shifts=[0])
 
     if show:
-        f, ax = plt.subplots(2, 1)
-        ax[0].plot(y[:500, 0], 'grey', label='cleaned')
-        ax[0].plot(x[:500, 0], ':', label='signal')
-        ax[1].plot((y - x)[:500], label='cleaned - signal')
+        f, ax = plt.subplots(2, 1, num='without shifts')
+        ax[0].plot(y[:500, 0], 'grey', label='recovered signal')
+        ax[0].plot(x[:500, 0], ':', label='real signal')
+        ax[1].plot((y - x)[:500], label='residual')
         ax[0].legend()
         ax[1].legend()
         # plt.show()
@@ -84,19 +88,22 @@ def test_tsr(show=True):
     # Test residual almost 0.0
     np.testing.assert_almost_equal(y - x, np.zeros_like(y), decimal=1)
 
-    # With shifts
+    # With shifts. We slide the input array by one sample, and check that the
+    # artifact is successfully regressed.
     y, idx, mean_total, weights = tspca.tsr(
-        signal + artifact,
+        signal,
         np.roll(artifact, 1, axis=0),
         shifts=[-1, 0, 1])
 
     if show:
-        f, ax = plt.subplots(2, 1)
-        ax[0].plot(y[:500, 0], 'grey', label='cleaned')
-        ax[0].plot(x[:500, 0], ':', label='signal')
-        ax[1].plot((y - x)[:500, 0], label='cleaned - signal')
+        f, ax = plt.subplots(3, 1, num='with shifts')
+        ax[0].plot(signal[:500], label='signal + noise')
+        ax[1].plot(x[:500, 0], 'grey', label='real signal')
+        ax[1].plot(y[:500, 0], ':', label='recovered signal')
+        ax[2].plot((signal - y)[:500, 0], label='before - after')
         ax[0].legend()
         ax[1].legend()
+        ax[2].legend()
         plt.show()
 
 if __name__ == '__main__':

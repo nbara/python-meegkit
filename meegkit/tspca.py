@@ -120,7 +120,6 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     offset1 = np.max((0, -np.min(shifts)))
     idx = np.arange(offset1, X.shape[0])
     # X = X[idx, ...]
-
     # if len(wX) > 0:
     #     wX = wX[idx, ...]
     # if len(wR) > 0:
@@ -130,10 +129,9 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
 
     # adjust size of X
     offset2 = np.max((0, np.max(shifts)))
-    idx = np.arange(X.shape[0]) - offset2
-    idx = idx[idx >= 0]
+    # idx = np.arange(X.shape[0]) - offset2
+    # idx = idx[idx >= 0]
     # X = X[idx, ...]
-
     # if len(wX) > 0:
     #     wX = wX[idx, ...]
 
@@ -157,7 +155,6 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
             weights[..., t] = wr
 
     wX = weights
-    wR = np.zeros((n_samples_R, 1, n_trials_R))
     wR = weights
 
     # remove weighted means
@@ -165,13 +162,14 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     R = demean(R, wR)
 
     # equalize power of R channels, the equalize power of the R PCs
-    if R.shape[1] > 1:
-        R = normcol(R, wR)
-        C, _ = tscov(R, [])
-        V, _ = pca(C, thresh=1e-6)
-        R = R * V
-
+    # if R.shape[1] > 1:
     R = normcol(R, wR)
+    C, _ = tscov(R)
+    V, _ = pca(C, thresh=1e-6)
+    z = np.zeros((n_samples_X, V.shape[1], n_trials_R))
+    for t in range(n_trials_R):
+        z[..., t] = R[..., t] @ V
+    R = normcol(z, wR)
 
     # covariances and cross-covariance with time-shifted refs
     Cr, twcr = tscov(R, shifts, wR)
@@ -182,10 +180,10 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
 
     # TSPCA: clean x by removing regression on time-shifted refs
     y = np.zeros((n_samples_X, n_chans_X, n_trials_X))
-    for trial in np.arange(n_trials_X):
-        r = multishift(R[..., trial], shifts, reshape=True)
+    for t in np.arange(n_trials_X):
+        r = multishift(R[..., t], shifts, reshape=True)
         z = r @ regression
-        y[..., trial] = X[:z.shape[0], :, trial] - z
+        y[..., t] = X[:z.shape[0], :, t] - z
 
     y, mean2 = demean(y, wX, return_mean=True)
 
