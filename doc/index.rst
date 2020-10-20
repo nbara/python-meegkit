@@ -23,6 +23,7 @@ Contents
    ~meegkit.cca
    ~meegkit.dss
    ~meegkit.detrend
+   ~meegkit.ress
    ~meegkit.sns
    ~meegkit.star
    ~meegkit.tspca

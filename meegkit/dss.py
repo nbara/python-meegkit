@@ -7,14 +7,14 @@ from .utils import (demean, gaussfilt, mean_over_trials, pca, smooth,
                     theshapeof, tscov, wpwr)
 
 
-def dss1(data, weights=None, keep1=None, keep2=1e-12):
+def dss1(X, weights=None, keep1=None, keep2=1e-12):
     """DSS to maximise repeatability across trials.
 
     Evoked-biased DSS denoising.
 
     Parameters
     ----------
-    data: array, shape=(n_samples, n_chans, n_trials)
+    X: array, shape=(n_samples, n_chans, n_trials)
         Data to denoise.
     weights: array
         Weights.
@@ -26,7 +26,7 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
     Returns
     -------
     todss: array, shape=(n_dss_components, n_chans)
-        Denoising matrix to convert data to normalized DSS components.
+        Denoising matrix to convert X to normalized DSS components.
     from: array, shape=(n_dss_components, n_chans)
         Matrix to convert DSS components back to sensor space.
     pwr0: array
@@ -35,17 +35,17 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
         Power per component (averaged).
 
     """
-    n_samples, n_chans, n_trials = theshapeof(data)
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     # if demean: # remove weighted mean
-    #   data = demean(data, weights)
+    #   X = demean(X, weights)
 
     # weighted mean over trials (--> bias function for DSS)
-    xx, ww = mean_over_trials(data, weights)
+    xx, ww = mean_over_trials(X, weights)
     ww /= n_trials
 
-    # covariance of raw and biased data
-    c0, nc0 = tscov(data, None, weights)
+    # covariance of raw and biased X
+    c0, nc0 = tscov(X, None, weights)
     c1, nc1 = tscov(xx, None, ww)
     c0 /= nc0
     c1 /= nc1
@@ -75,7 +75,7 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     Returns
     -------
     todss: array, shape=(n_dss_components, n_chans)
-        Matrix to convert data to normalized DSS components.
+        Matrix to convert X to normalized DSS components.
     fromdss : array, shape=()
         Matrix to transform back to original space.
     pwr0: array
@@ -130,14 +130,14 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     return todss, fromdss, pwr0, pwr1
 
 
-def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
+def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
     """Apply DSS to remove power line artifacts.
 
     Implements the ZapLine algorithm described in [1]_.
 
     Parameters
     ----------
-    x : data, shape=(n_samples, n_chans, n_trials)
+    X : data, shape=(n_samples, n_chans, n_trials)
         Input data.
     fline : float
         Line frequency (normalized to sfreq, if ``sfreq`` == 1).
@@ -159,18 +159,18 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
 
     Examples
     --------
-    Apply to x, assuming line frequency=50Hz and sampling rate=1000Hz, plot
+    Apply to X, assuming line frequency=50Hz and sampling rate=1000Hz, plot
     results:
-    >>> dss_line(x, 50/1000)
+    >>> dss_line(X, 50/1000)
 
     Removing 4 line-dominated components:
-    >>> dss_line(x, 50/1000, 4)
+    >>> dss_line(X, 50/1000, 4)
 
     Truncating PCs beyond the 30th to avoid overfitting:
-    >>> dss_line(x, 50/1000, 4, nkeep=30);
+    >>> dss_line(X, 50/1000, 4, nkeep=30);
 
     Return cleaned data in y, noise in yy, do not plot:
-    >>> [y, artifact] = dss_line(x, 60/1000)
+    >>> [y, artifact] = dss_line(X, 60/1000)
 
     References
     ----------
@@ -178,17 +178,17 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
        remove power line artifacts [Preprint]. https://doi.org/10.1101/782029
 
     """
-    if x.shape[0] < nfft:
-        print('reducing nfft to {}'.format(x.shape[0]))
-        nfft = x.shape[0]
-    n_samples, n_chans, n_trials = theshapeof(x)
-    x = demean(x)
+    if X.shape[0] < nfft:
+        print('reducing nfft to {}'.format(X.shape[0]))
+        nfft = X.shape[0]
+    n_samples, n_chans, n_trials = theshapeof(X)
+    X = demean(X)
 
     # cancels line_frequency and harmonics, light lowpass
-    xx = smooth(x, sfreq / fline)
+    xx = smooth(X, sfreq / fline)
 
-    # residual (x=xx+xxx), contains line and some high frequency power
-    xxx = x - xx
+    # residual (X=xx+xxx), contains line and some high frequency power
+    xxx = X - xx
 
     # reduce dimensionality to avoid overfitting
     if nkeep is not None:
@@ -214,19 +214,19 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
         plt.show()
 
     idx_remove = np.arange(nremove)
-    if x.ndim == 3:
+    if X.ndim == 3:
         for t in range(n_trials):  # line-dominated components
             xxxx[..., t] = xxxx[..., t] @ todss[:, idx_remove]
-    elif x.ndim == 2:
+    elif X.ndim == 2:
         xxxx = xxxx @ todss[:, idx_remove]
 
     xxx, _, _, _ = tsr(xxx, xxxx)  # project them out
 
     # reconstruct clean signal
     y = xx + xxx
-    artifact = x - y
+    artifact = X - y
 
     # Power of components
-    p = wpwr(x - y)[0] / wpwr(x)[0]
+    p = wpwr(X - y)[0] / wpwr(X)[0]
     print('Power of components removed by DSS: {:.2f}'.format(p))
     return y, artifact
