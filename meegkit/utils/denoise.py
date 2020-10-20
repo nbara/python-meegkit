@@ -58,10 +58,11 @@ def demean(X, weights=None, return_mean=False):
 
 
 def mean_over_trials(X, weights=None):
-    """Compute weighted mean over trials."""
+    """Compute weighted mean over trials (last dimension)."""
     if weights is None:
         weights = np.array([])
-
+    else:
+        weights = _check_weights(weights, X)
     n_samples, n_chans, n_trials = theshapeof(X)
 
     if not weights.any():
@@ -70,26 +71,22 @@ def mean_over_trials(X, weights=None):
     else:
         m, n, o = theshapeof(weights)
         if m != n_samples:
-            raise "!"
+            raise RuntimeError("weights matrix has incorrect n_samples")
         if o != n_trials:
-            raise "!"
+            raise RuntimeError("weights matrix has incorrect n_trials")
 
+        # Unfold to (n_times*n_trials, n_chans), multiply by weights and refold
         X = unfold(X)
         weights = unfold(weights)
+        X = X * weights
+        X = fold(X, n_samples)
+        weights = fold(weights, n_samples)
 
-        if n == n_chans:
-            X = X * weights
-            X = fold(X, n_samples)
-            weights = fold(weights, n_samples)
-            y = np.sum(X, 3) / np.sum(weights, 3)
-        elif n == 1:
-            X = X * weights
-            X = fold(X, n_samples)
-            weights = fold(weights, n_samples)
-            y = np.sum(X, 3) * 1 / np.sum(weights, 3)
-
-        tw = np.sum(weights, 3)
-
+        # Take weighted average
+        with np.errstate(divide='ignore', invalid='ignore'):
+            y = np.sum(X, -1) / np.sum(weights, -1)
+        tw = np.mean(weights, -1)
+        y = np.nan_to_num(y)
     return y, tw
 
 

@@ -1,9 +1,9 @@
 import numpy as np
-from numpy.testing import assert_equal, assert_almost_equal
-
-from meegkit.utils import (multishift, multismooth, relshift, shift, shiftnd,
-                           widen_mask, demean, fold, unfold, rms, bootstrap_ci,
-                           find_outlier_samples, find_outlier_trials)
+from meegkit.utils import (bootstrap_ci, demean, find_outlier_samples,
+                           find_outlier_trials, fold, mean_over_trials,
+                           multishift, multismooth, relshift, rms, shift,
+                           shiftnd, unfold, widen_mask)
+from numpy.testing import assert_almost_equal, assert_equal
 
 
 def test_multishift():
@@ -124,6 +124,7 @@ def test_demean(show=False):
     # 1. demean and check trial average is almost zero
     x1 = demean(x)
     assert_almost_equal(x1.mean(2).mean(0), np.zeros((n_chans,)))
+    assert_almost_equal(x1.mean(2), mean_over_trials(x1)[0])
 
     # 2. now use weights : baseline = first 100 samples
     times = np.arange(n_times)
@@ -214,7 +215,7 @@ def test_computeci():
 def test_outliers(show=False):
     """Test outlier detection."""
     x = np.random.randn(250, 8, 50)  # 50 trials, 8, channels
-    x[..., :5] *= 10 # 5 first trials are outliers
+    x[..., :5] *= 10  # 5 first trials are outliers
 
     # Pass standard threshold
     idx, _ = find_outlier_trials(x, 2, show=show)

@@ -177,9 +177,11 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
     ----------
     X : array, shape=(n_times, n_chans[, n_trials])
         Data, can be 1D, 2D or 3D.
-    shifts : array
+    shifts : array, shape=(n_shifts,) | None
         Array of time shifts.
-    weights : array
+    weights : array, shape=(n_times,) or
+              shape=(n_times, 1, n_trials), or
+              shape=(n_times, n_chans, n_trials),
         Weights, 1D (if X is 1D or 2D) or 2D (if X is 3D). The weights are not
         shifted.
     assume_centered : bool

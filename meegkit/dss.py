@@ -26,33 +26,33 @@ def dss1(data, weights=None, keep1=None, keep2=1e-12):
     Returns
     -------
     todss: array, shape=(n_dss_components, n_chans)
-        Ddenoising matrix to convert data to normalized DSS components.
+        Denoising matrix to convert data to normalized DSS components.
+    from: array, shape=(n_dss_components, n_chans)
+        Matrix to convert DSS components back to sensor space.
     pwr0: array
         Power per component (raw).
     pwr1: array
         Power per component (averaged).
 
-    Notes
-    -----
-    The data mean is NOT removed prior to processing.
-
     """
     n_samples, n_chans, n_trials = theshapeof(data)
-    data = demean(data, weights)  # remove weighted mean
+
+    # if demean: # remove weighted mean
+    #   data = demean(data, weights)
 
     # weighted mean over trials (--> bias function for DSS)
     xx, ww = mean_over_trials(data, weights)
-
-    ww = ww.min(1)
+    ww /= n_trials
 
     # covariance of raw and biased data
     c0, nc0 = tscov(data, None, weights)
     c1, nc1 = tscov(xx, None, ww)
-    c1 = c1 / n_trials
+    c0 /= nc0
+    c1 /= nc1
 
-    todss, fromdss, ratio, pwr = dss0(c0, c1, keep1, keep2)
+    todss, fromdss, pwr0, pwr1 = dss0(c0, c1, keep1, keep2)
 
-    return todss, fromdss, ratio, pwr
+    return todss, fromdss, pwr0, pwr1
 
 
 def dss0(c0, c1, keep1=None, keep2=1e-9):
@@ -67,19 +67,25 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
         Baseline covariance.
     c1: array, shape=(n_chans, n_chans)
         Biased covariance.
-    keep1: int
-        Number of PCs to retain (default=all).
+    keep1: int | None
+        Number of PCs to retain (default=None, which keeps all).
     keep2: float
-        Ignore PCs smaller than keep2 (default=10.^-9).
+        Ignore PCs smaller than keep2 (default=1e-9).
 
     Returns
     -------
     todss: array, shape=(n_dss_components, n_chans)
         Matrix to convert data to normalized DSS components.
+    fromdss : array, shape=()
+        Matrix to transform back to original space.
     pwr0: array
         Power per component (baseline).
     pwr1: array
         Power per component (biased).
+
+    Notes
+    -----
+    The data mean is NOT removed prior to processing.
 
     """
     if c0 is None or c1 is None:

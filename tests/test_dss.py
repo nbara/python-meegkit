@@ -6,27 +6,31 @@ from numpy.testing import assert_allclose
 from scipy import signal
 
 from meegkit import dss
-from meegkit.utils import demean, fold, rms, tscov, unfold
+from meegkit.utils import fold, rms, tscov, unfold
 
 
-@pytest.mark.parametrize('n_bad_chans', [0, -1])
-def test_dss0(n_bad_chans):
-    """Test dss0.
+def create_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
+                n_bad_chans=1, SNR=.1, show=False):
+    """Create synthetic data.
 
-    Find the linear combinations of multichannel data that
-    maximize repeatability over trials. Data are time * channel * trials.
+    Parameters
+    ----------
+    n_samples : int
+        [description], by default 100*3
+    n_chans : int
+        [description], by default 30
+    n_trials : int
+        [description], by default 100
+    noise_dim : int
+        Dimensionality of noise, by default 20
+    n_bad_chans : int
+        [description], by default 1
 
-    Uses dss0().
-
-    `n_bad_chans` set the values of the first corresponding number of channels
-    to zero.
+    Returns
+    -------
+    data : ndarray, shape=(n_samples, n_chans, n_trials)
+    source : ndarray, shape=(n_samples,)
     """
-    # create synthetic data
-    n_samples = 100 * 3
-    n_chans = 30
-    n_trials = 100
-    noise_dim = 20  # dimensionality of noise
-
     # source
     source = np.hstack((
         np.zeros((n_samples // 3,)),
@@ -46,8 +50,35 @@ def test_dss0(n_bad_chans):
     noise = fold(noise, n_samples)
 
     # mix signal and noise
-    SNR = 0.1
     data = noise / rms(noise.flatten()) + SNR * s / rms(s.flatten())
+
+    if show:
+        f, ax = plt.subplots(3)
+        ax[0].plot(source[:, 0], label='source')
+        ax[1].plot(noise[:, 1, 0], label='noise')
+        ax[2].plot(data[:, 1, 0], label='mixture')
+        ax[0].legend()
+        ax[1].legend()
+        ax[2].legend()
+        plt.show()
+
+    return data, source
+
+
+@pytest.mark.parametrize('n_bad_chans', [0, -1])
+def test_dss0(n_bad_chans):
+    """Test dss0.
+
+    Find the linear combinations of multichannel data that
+    maximize repeatability over trials. Data are time * channel * trials.
+
+    Uses dss0().
+
+    `n_bad_chans` set the values of the first corresponding number of channels
+    to zero.
+    """
+    n_samples = 300
+    data, source = create_data(n_samples=n_samples, n_bad_chans=n_bad_chans)
 
     # apply DSS to clean them
     c0, _ = tscov(data)
@@ -57,6 +88,41 @@ def test_dss0(n_bad_chans):
 
     best_comp = np.mean(z[:, 0, :], -1)
     scale = np.ptp(best_comp) / np.ptp(source)
+
+    assert_allclose(np.abs(best_comp), np.abs(np.squeeze(source)) * scale,
+                    atol=1e-6)  # use abs as DSS component might be flipped
+
+
+def test_dss1(show=False):
+    """Test DSS1 (evoked)."""
+    n_samples = 300
+    data, source = create_data(n_samples=n_samples)
+
+    todss, _, pwr0, pwr1 = dss.dss1(data, weights=None, )
+    z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
+
+    best_comp = np.mean(z[:, 0, :], -1)
+    scale = np.ptp(best_comp) / np.ptp(source)
+
+    assert_allclose(np.abs(best_comp), np.abs(np.squeeze(source)) * scale,
+                    atol=1e-6)  # use abs as DSS component might be flipped
+
+    # With weights
+    weights = np.zeros(n_samples)
+    weights[100:200] = 1  # we placed the signal is in the middle of the trial
+    todss, _, pwr0, pwr1 = dss.dss1(data, weights=weights)
+    z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
+
+    best_comp = np.mean(z[:, 0, :], -1)
+    scale = np.ptp(best_comp) / np.ptp(source)
+
+    if show:
+        f, (ax1, ax2, ax3) = plt.subplots(3, 1)
+        ax1.plot(source, label='source')
+        ax2.plot(np.mean(data, 2), label='data')
+        ax3.plot(best_comp, label='recovered')
+        plt.legend()
+        plt.show()
 
     assert_allclose(np.abs(best_comp), np.abs(np.squeeze(source)) * scale,
                     atol=1e-6)  # use abs as DSS component might be flipped
@@ -106,5 +172,7 @@ def test_dss_line():
 
 
 if __name__ == '__main__':
-    # pytest.main([__file__])
-    test_dss_line()
+    pytest.main([__file__])
+    # create_data(SNR=5, show=True)
+    # test_dss1(True)
+    # test_dss_line()
