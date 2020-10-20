@@ -27,7 +27,7 @@ deploy:
   provider: pages
   token: $GITHUB_TOKEN
   edge: true # opt in to dpl v2
-  cleanup: true
+  cleanup: false
   keep_history: false
   local_dir: _build/html
   target_branch: gh-pages
