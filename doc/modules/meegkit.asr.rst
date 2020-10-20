@@ -1,9 +1,7 @@
-meegkit.asr
+﻿meegkit.asr
 ===========
 
 .. automodule:: meegkit.asr
-
-
 
    .. rubric:: Functions
 
@@ -13,15 +11,10 @@ meegkit.asr
       asr_process
       clean_windows
 
-
-
    .. rubric:: Classes
 
    .. autosummary::
 
       ASR
-
-
-
 
 

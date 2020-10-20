@@ -1,7 +1,11 @@
-meegkit.star
+﻿meegkit.star
 ============
 
 .. automodule:: meegkit.star
+
+   
+   
+   
 
    
    
@@ -20,3 +24,6 @@ meegkit.star
    
    
    
+
+
+

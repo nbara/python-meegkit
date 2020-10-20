@@ -5,11 +5,23 @@ meegkit.utils
 
    .. autosummary::
 
+    auditory
     covariances
     denoise
     matrix
     sig
     stats
+
+|
+
+----
+
+Auditory
+--------
+.. automodule:: meegkit.utils.auditory
+
+   .. autosummary::
+
 
 |
 
