@@ -194,7 +194,7 @@ def dss_line(x, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
     if nkeep is not None:
         xxx_cov = tscov(xxx)[0]
         V, _ = pca(xxx_cov, nkeep)
-        xxxx = xxx * V
+        xxxx = xxx @ V
     else:
         xxxx = xxx.copy()
 
