@@ -16,7 +16,7 @@ import scipy.signal as ss
 from meegkit import ress
 from meegkit.utils import unfold, rms, fold
 
-import config
+# import config
 
 np.random.seed(1)
 
