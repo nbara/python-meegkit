@@ -14,7 +14,7 @@ import numpy as np
 import scipy.signal as ss
 
 from meegkit import ress
-from meegkit.utils import unfold, rms, fold
+from meegkit.utils import unfold, rms, fold, snr_spectrum
 
 # import config
 
@@ -73,21 +73,13 @@ nfft = 250
 df = sfreq / nfft  # frequency resolution
 bins, psd = ss.welch(out, sfreq, window="hamming", nperseg=nfft,
                         noverlap=125, axis=0)
-psd = psd.mean(axis=1)  # average over trials
-
-# Loop over frequencies and compute SNR
-skipbins = 1            # skip bins directly next to frequency of interest
-n_bins = int(3 / df)    # number of bins to average over
-snr = np.zeros(len(bins))
-for ibin in range(n_bins + 1, len(bins) - n_bins - 1):
-    numer = psd[ibin]
-    irange = np.r_[np.arange(ibin - n_bins, ibin - skipbins),
-                    np.arange(ibin + skipbins + 1, ibin + n_bins)]
-    denom = np.mean(psd[irange])
-    snr[ibin] = numer / denom  # divide amplitude at peak by neighbours
+psd = psd.mean(axis=1, keepdims=True)  # average over trials
+snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
 
 f, ax = plt.subplots(1)
-ax.plot(bins, snr, 'o')
+ax.plot(bins, snr, 'o', label='SNR')
+ax.plot(bins[bins == target], snr[bins == target], 'ro', label='Target SNR')
+ax.axhline(1, ls=':', c='grey', zorder=0)
 ax.axvline(target, ls=':', c='grey', zorder=0)
 ax.set_ylabel('SNR (a.u.)')
 ax.set_xlabel('Frequency (Hz)')

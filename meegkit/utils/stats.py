@@ -287,7 +287,7 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
 
     Parameters
     ----------
-    data : ndarray , shape=([n_trials, ]n_chans, n_freqs)
+    data : ndarray , shape=(n_freqs, n_chans, [n_trials, ])
         Power spectrum.
     freqs : array, shape=(n_freqs,)
         Frequency bins.
@@ -316,19 +316,19 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
 
     """
     if data.ndim == 3:
-        n_trials = data.shape[0]
+        n_freqs = data.shape[0]
         n_chans = data.shape[1]
-        n_freqs = data.shape[-1]
+        n_trials = data.shape[-1]
     elif data.ndim == 2:
         n_trials = 1
-        n_chans = data.shape[0]
-        n_freqs = data.shape[-1]
+        n_freqs = data.shape[0]
+        n_chans = data.shape[1]
     else:
-        raise ValueError('Data must have shape (n_trials, n_chans, n_freqs)'
-                         ' or (n_chans, n_freqs)')
+        raise ValueError('Data must have shape (n_freqs, n_chans, [n_trials,])'
+                         f', got {data.shape}')
 
     # Number of points to get desired resolution
-    data = np.reshape(data, (n_trials * n_chans, n_freqs))
+    data = np.reshape(data, (n_freqs, n_chans * n_trials))
     SNR = np.zeros_like(data)
 
     for i_bin in range(n_freqs):
@@ -351,12 +351,12 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
                 # Now get indices of noise (i.e., neighbouring FFT bins)
                 # eg if currentbin=54, navg=3, skipbins=1 :
                 # bin_noise = 51, 52, 56, 57
-                tmp = np.stack((np.arange(bin_peaks[h] - skipbins - n_avg,
-                                          bin_peaks[h] - skipbins),
-                                np.arange(bin_peaks[h] + skipbins + 1,
-                                          bin_peaks[h] + skipbins + 1 + n_avg)
-                                ))
-                tmp = tmp.flatten().astype(int)
+                tmp = np.r_[
+                    (np.arange(bin_peaks[h] - skipbins - n_avg,
+                               bin_peaks[h] - skipbins),
+                     np.arange(bin_peaks[h] + skipbins + 1,
+                               bin_peaks[h] + skipbins + 1 + n_avg))]
+                tmp = tmp.astype(int)
 
                 # Remove impossible bin values (eg <1 or >n_samp)
                 tmp = [t for t in tmp if t >= 0 and t < n_freqs]
@@ -369,24 +369,16 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
         for i_trial in range(n_trials * n_chans):
 
             # RMS of signal over fundamental+harmonics
-            A = data[i_trial, bin_peaks]
+            A = data[bin_peaks, i_trial]
 
             # Noise around fundamental+harmonics
             B = np.zeros(len(bin_noise))
             for h in range(len(B)):
-
-                if n_trials > 1:
-                    # Mean over samples and median over trials
-                    B[h] = np.median(np.mean(data[i_trial::n_chans,
-                                                  bin_noise[h]],
-                                             1))
-                else:
-                    # Mean over samples
-                    B[h] = np.mean(data[i_trial, bin_noise[h]])
+                B[h] = np.mean(data[bin_noise[h], i_trial::n_trials].flatten())
 
             # Ratio
             with np.errstate(divide='ignore', invalid='ignore'):
-                SNR[i_trial, i_bin] = np.sqrt(np.sum(A)) / np.sqrt(np.sum(B))
+                SNR[i_bin, i_trial] = np.sqrt(np.sum(A)) / np.sqrt(np.sum(B))
                 SNR[np.abs(SNR) == np.inf] = 1
                 SNR[SNR == 0] = 1
                 SNR[np.isnan(SNR)] = 1
@@ -396,6 +388,6 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
 
     # Reshape matrix if necessary
     if np.min((n_trials, n_chans)) > 1:
-        SNR = np.reshape(SNR, (n_trials, n_chans, n_freqs))
+        SNR = np.reshape(SNR, (n_freqs, n_chans, n_trials))
 
     return SNR
