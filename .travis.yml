@@ -4,7 +4,7 @@ branches:
 notifications:
   email: false
 language: python
-sudo: required
+os: linux
 dist: xenial
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
@@ -24,10 +24,10 @@ script:
   - make html
   - touch _build/html/.nojekyll
 deploy:
-  provider: pages:git
+  provider: pages
   token: $GITHUB_TOKEN
   edge: true # opt in to dpl v2
-  skip_cleanup: true
+  cleanup: false
   keep_history: false
   local_dir: _build/html
   target_branch: gh-pages

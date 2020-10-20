@@ -31,13 +31,13 @@ pip install .
 
 *Note* : Use developer mode with the `-e` flag (`pip install -e .`) to be able to modify the sources even after install.
 
-## Python implementation of CCA, STAR, SNS, DSS, and robust detrending
+## References
+
+### 1. CCA, STAR, SNS, DSS, ZapLine, and robust detrending
 
 This is mostly a translation of Matlab code from the [NoiseTools toolbox](http://audition.ens.fr/adc/NoiseTools/) by Alain de Cheveigné. It builds on an initial python implementation by [Pedro Alcocer](https://github.com/pealco).
 
-Only CCA, SNS, DSS, STAR and robust detrending have been properly tested so far. ZapLine and TSCPA may give inaccurate results due to insufficient testing (contributions welcome!)
-
-### References
+Only CCA, SNS, DSS, STAR, ZapLine and robust detrending have been properly tested so far. TSCPA may give inaccurate results due to insufficient testing (contributions welcome!)
 
 If you use this code, you should cite the relevant methods from the original articles:
 
@@ -50,8 +50,8 @@ If you use this code, you should cite the relevant methods from the original art
     NeuroImage, 172, 206–216. https://doi.org/10.1016/j.neuroimage.2018.01.033
 [4] de Cheveigné, A. (2016). Sparse time artifact removal.
     Journal of Neuroscience Methods, 262, 14–20. https://doi.org/10.1016/j.jneumeth.2016.01.005
-[5] de Cheveigné, A., & Parra, L. C. (2014). Joint decorrelation, a versatile tool for multichannel data
-    analysis. NeuroImage, 98, 487–505. https://doi.org/10.1016/j.neuroimage.2014.05.068
+[5] de Cheveigné, A., & Parra, L. C. (2014). Joint decorrelation, a versatile tool for multichannel
+    data analysis. NeuroImage, 98, 487–505. https://doi.org/10.1016/j.neuroimage.2014.05.068
 [6] de Cheveigné, A. (2012). Quadratic component analysis.
     NeuroImage, 59(4), 3838–3844. https://doi.org/10.1016/j.neuroimage.2011.10.084
 [7] de Cheveigné, A. (2010). Time-shift denoising source separation.
@@ -65,20 +65,28 @@ If you use this code, you should cite the relevant methods from the original art
 
 ```
 
-## Python implementation of Artifact subspace reconstruction (ASR)
+### 2. Artifact subspace reconstruction (ASR)
 
 The base code is inspired from the original [EEGLAB inplementation](https://github.com/sccn/clean_rawdata) [1], while the riemannian variant [2] was adapted from the [rASR toolbox](https://github.com/s4rify/rASRMatlab) by Sarah Blum.
-
-### References
 
 If you use this code, you should cite the relevant methods from the original articles:
 
 ```sql
-[1] Mullen, T. R., Kothe, C. A. E., Chi, Y. M., Ojeda, A., Kerth, T., Makeig, S., et al. (2015). Real-time
-    neuroimaging and cognitive monitoring using wearable dry EEG. IEEE Trans. Bio-Med. Eng. 62, 2553–2567.
-    https://doi.org/10.1109/TBME.2015.2481482
+[1] Mullen, T. R., Kothe, C. A. E., Chi, Y. M., Ojeda, A., Kerth, T., Makeig, S., et al. (2015).
+    Real-time neuroimaging and cognitive monitoring using wearable dry EEG. IEEE Trans. Bio-Med.
+    Eng. 62, 2553–2567. https://doi.org/10.1109/TBME.2015.2481482
 [2] Blum, S., Jacobsen, N., Bleichner, M. G., & Debener, S. (2019). A Riemannian modification of
     artifact subspace reconstruction for EEG artifact handling. Frontiers in human neuroscience,
     13, 141.
+```
 
+### 3. Rhythmic entrainment source separation (RESS)
+
+The code is based on [Matlab code from Mike X. Cohen](https://mikexcohen.com/data/) [1]
+
+If you use this, you should cite the following article:
+
+```sql
+[1] Cohen, M. X., & Gulbinaite, R. (2017). Rhythmic entrainment source separation: Optimizing analyses
+    of neural responses to rhythmic sensory stimulation. Neuroimage, 147, 43-56.
 ```

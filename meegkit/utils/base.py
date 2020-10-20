@@ -17,7 +17,7 @@ def mrdivide(A, B):
 
     References
     ----------
-    .. [1] https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
+    https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
 
     """
     return mldivide(B.T, A.T).T
@@ -33,7 +33,7 @@ def mldivide(A, B):
 
     References
     ----------
-    .. [1] https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
+    https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
 
     """
     if A.shape[0] == A.shape[1]:

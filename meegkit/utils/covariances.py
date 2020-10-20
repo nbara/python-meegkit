@@ -1,7 +1,6 @@
 """Covariance calculation."""
 import numpy as np
 import pymanopt
-# from numpy import linalg
 from pymanopt import Problem
 from pymanopt.manifolds import Grassmann
 from pymanopt.solvers import TrustRegions
@@ -180,8 +179,9 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
     shifts : array, shape=(n_shifts,) | None
         Array of time shifts.
     weights : array, shape=(n_times,) or
-              shape=(n_times, 1, n_trials), or
-              shape=(n_times, n_chans, n_trials),
+            shape=(n_times, 1, n_trials), or
+            shape=(n_times, n_chans, n_trials)
+
         Weights, 1D (if X is 1D or 2D) or 2D (if X is 3D). The weights are not
         shifted.
     assume_centered : bool

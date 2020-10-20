@@ -1,7 +1,11 @@
-meegkit.detrend
+﻿meegkit.detrend
 ===============
 
 .. automodule:: meegkit.detrend
+
+   
+   
+   
 
    
    
@@ -22,3 +26,6 @@ meegkit.detrend
    
    
    
+
+
+
