@@ -288,7 +288,9 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
     Parameters
     ----------
     data : ndarray , shape=(n_freqs, n_chans,[ n_trials,])
-        Power spectrum.
+        One-sided power spectral density estimate, specified as a real-valued,
+        nonnegative array. The power spectral density must be expressed in
+        linear units, not decibels.
     freqs : array, shape=(n_freqs,)
         Frequency bins.
     n_avg : int
@@ -362,6 +364,9 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
                 tmp = [t for t in tmp if t >= 0 and t < n_freqs]
                 bin_noise.append(tmp)
                 del tmp
+            else:
+                bin_peaks.append(0)
+                bin_noise.append(0)
 
         # SNR at central bin is ratio between (power at central
         # bin) to (average of N surrounding bins)
@@ -369,22 +374,23 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
         for i_trial in range(n_chans * n_trials):
 
             # Mean of signal over fundamental+harmonics
-            A = np.mean(data[bin_peaks, i_trial])
+            A = np.mean(data[bin_peaks, i_trial] ** 2)
 
             # Noise around fundamental+harmonics
             B = np.zeros(len(bin_noise))
             for h in range(len(B)):
-                B[h] = np.mean(data[bin_noise[h], i_trial].flatten())
+                B[h] = np.mean(data[bin_noise[h], i_trial].flatten() ** 2)
 
             # Ratio
             with np.errstate(divide='ignore', invalid='ignore'):
-                SNR[i_bin, i_trial] = A / B
-                SNR[np.abs(SNR) == np.inf] = np.nan
-                SNR[SNR == 0] = np.nan
-                SNR[np.isnan(SNR)] = np.nan
+                SNR[i_bin, i_trial] = np.sqrt(A) / np.sqrt(B)
 
             del A
             del B
+
+    # SNR[np.abs(SNR) == np.inf] = 1
+    # SNR[SNR == 0] = 1
+    # SNR[np.isnan(SNR)] = 1
 
     # Reshape matrix if necessary
     if np.min((n_trials, n_chans)) > 1:
