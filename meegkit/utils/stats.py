@@ -287,21 +287,21 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
 
     Parameters
     ----------
-    data : ndarray , shape=(n_freqs, n_chans, [n_trials, ])
+    data : ndarray , shape=(n_freqs, n_chans,[ n_trials,])
         Power spectrum.
     freqs : array, shape=(n_freqs,)
         Frequency bins.
     n_avg : int
         Number of neighbour bins to estimate noise over. Make sure that this
-        value doesn't overlap with neighbouring target frequencies
+        value doesn't overlap with neighbouring target frequencies.
     n_harm : int
         Compute SNR at each frequency bin as a pooled RMS over this bin and
-        n_harm harmonics (see references below)
+        n_harm harmonics (see references below).
 
     Returns
     -------
-        SNR : ndarray, shape=(Nconds, Nchans, Nsamples) or (Nchans, Nsamples)
-            Signal-to-Noise-corrected spectrum
+        SNR : ndarray, shape=(n_freqs, n_chans, n_trials) or (n_freqs, n_chans)
+            Signal-to-Noise-corrected spectrum.
 
     References
     ----------
@@ -366,22 +366,22 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
         # SNR at central bin is ratio between (power at central
         # bin) to (average of N surrounding bins)
         # --------------------------------------------------------------------------
-        for i_trial in range(n_trials * n_chans):
+        for i_trial in range(n_chans * n_trials):
 
             # RMS of signal over fundamental+harmonics
-            A = data[bin_peaks, i_trial]
+            A = np.mean(data[bin_peaks, i_trial])
 
             # Noise around fundamental+harmonics
             B = np.zeros(len(bin_noise))
             for h in range(len(B)):
-                B[h] = np.mean(data[bin_noise[h], i_trial::n_trials].flatten())
+                B[h] = np.mean(data[bin_noise[h], i_trial].flatten())
 
             # Ratio
             with np.errstate(divide='ignore', invalid='ignore'):
-                SNR[i_bin, i_trial] = np.sqrt(np.sum(A)) / np.sqrt(np.sum(B))
-                SNR[np.abs(SNR) == np.inf] = 1
-                SNR[SNR == 0] = 1
-                SNR[np.isnan(SNR)] = 1
+                SNR[i_bin, i_trial] = A / B
+                SNR[np.abs(SNR) == np.inf] = np.nan
+                SNR[SNR == 0] = np.nan
+                SNR[np.isnan(SNR)] = np.nan
 
             del A
             del B
