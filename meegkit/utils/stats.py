@@ -368,7 +368,7 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
         # --------------------------------------------------------------------------
         for i_trial in range(n_chans * n_trials):
 
-            # RMS of signal over fundamental+harmonics
+            # Mean of signal over fundamental+harmonics
             A = np.mean(data[bin_peaks, i_trial])
 
             # Noise around fundamental+harmonics
