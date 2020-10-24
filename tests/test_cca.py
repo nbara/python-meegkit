@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal, assert_equal
 from scipy.io import loadmat
 from sklearn.cross_decomposition import CCA
 
-from meegkit.cca import cca_crossvalidate, nt_cca
+from meegkit.cca import cca_crossvalidate, nt_cca, mcca
 from meegkit.utils import multishift, tscov
 
 
@@ -216,6 +216,121 @@ def test_cca_crossvalidate_shifts2():
     # f.set_tight_layout(True)
     # plt.show()
 
+
+def test_mcca(show=False):
+    """Test multiway CCA."""
+    # We create 3 uncorrelated data sets. There should be no common structure
+    # between them.
+
+    # Build data
+    x1 = np.random.randn(10000, 10)
+    x2 = np.random.randn(10000, 10)
+    x3 = np.random.randn(10000, 10)
+    x = np.hstack((x1, x2, x3))
+    C = np.dot(x.T, x)
+
+    ###############################################################################
+    # Apply CCA
+    [A, score, AA] = mcca(C, 10)
+    z = x @ A
+
+    ###############################################################################
+    # Plot results
+    if show:
+        import matplotlib.pyplot as plt
+        f, axes = plt.subplots(2, 3, figsize=(10, 6))
+        axes[0, 0].imshow(A, aspect='auto')
+        axes[0, 0].set_title('mCCA transform matrix')
+        axes[0, 1].imshow(A.T @ C @ A, aspect='auto')
+        axes[0, 1].set_title('Covariance of\ntransformed data')
+        axes[0, 2].imshow(x.T @ x @ A, aspect='auto')
+        axes[0, 2].set_title('Cross-correlation between\nraw & transformed data')
+        axes[0, 2].set_xlabel('transformed')
+        axes[0, 2].set_ylabel('raw')
+        ax = plt.subplot2grid((2, 3), (1, 0), colspan=3)
+        ax.plot(np.mean(z ** 2, axis=0), ':o')
+        ax.set_ylabel('Power')
+        ax.set_xlabel('CC')
+        plt.tight_layout(True)
+        plt.show()
+
+    # assert np.diag_indices
+
+    # Second example
+    # -------------------------------------------------------------------------
+    # Now Create 3 data sets with some shared parts.
+
+    # Build data
+    x1 = np.random.randn(10000, 5)
+    x2 = np.random.randn(10000, 5)
+    x3 = np.random.randn(10000, 5)
+    x4 = np.random.randn(10000, 5)
+    x = np.hstack((x2, x1, x3, x1, x4, x1))
+    C = np.dot(x.T, x)
+
+    # Apply mCCA
+    A, score, AA = mcca(C, 10)
+    z = x @ A
+
+    if show:
+        f, axes = plt.subplots(2, 3, figsize=(10, 6))
+        axes[0, 0].imshow(A, aspect='auto')
+        axes[0, 0].set_title('mCCA transform matrix')
+        axes[0, 1].imshow(A.T.dot(C.dot(A)), aspect='auto')
+        axes[0, 1].set_title('Covariance of\ntransformed data')
+        axes[0, 2].imshow(x.T.dot((x.dot(A))), aspect='auto')
+        axes[0, 2].set_title('Cross-correlation between\nraw & transformed data')
+        axes[0, 2].set_xlabel('transformed')
+        axes[0, 2].set_ylabel('raw')
+        ax = plt.subplot2grid((2, 3), (1, 0), colspan=3)
+        ax.plot(np.mean(z ** 2, axis=0), ':o')
+        ax.set_ylabel('Power')
+        ax.set_xlabel('CC')
+        plt.tight_layout(True)
+        plt.show()
+
+    # Third example
+    # -------------------------------------------------------------------------
+    # Finally let's create 3 identical 10-channel data sets. Only 10 worthwhile
+    # components should be found, and the transformed dataset should perfectly
+    # explain all the variance (empty last two block-columns in the
+    # cross-correlation plot).
+
+    # Build data
+    x1 = np.random.randn(10000, 10)
+    x = np.hstack((x1, x1, x1))
+    C = np.dot(x.T, x)
+
+    # Compute mCCA
+    A, score, AA = mcca(C, 10)
+    z = x @ A
+
+    # Plot results
+    if show:
+        f, axes = plt.subplots(2, 3, figsize=(10, 6))
+        axes[0, 0].imshow(A, aspect='auto')
+        axes[0, 0].set_title('mCCA transform matrix')
+
+        axes[0, 1].imshow(A.T @ C @ A, aspect='auto')
+        axes[0, 1].set_title('Covariance of\ntransformed data')
+
+        axes[0, 2].imshow(x.T @ x @ A, aspect='auto')
+        axes[0, 2].set_title('Cross-correlation between\nraw & transformed data')
+        axes[0, 2].set_xlabel('transformed')
+        axes[0, 2].set_ylabel('raw')
+        ax = plt.subplot2grid((2, 3), (1, 0), colspan=3)
+        ax.plot(np.mean(z ** 2, axis=0), ':o')
+        ax.set_ylabel('Power')
+        ax.set_xlabel('CC')
+        plt.tight_layout(True)
+        plt.show()
+
+    # Only first 10 components should be non-negligible
+    diagonal = np.diag(x.T @ x @ A) ** 2
+    assert np.all(diagonal[:10] > 1)
+    assert np.all(diagonal[10:] < .01)
+
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
+    # test_mcca(False)
