@@ -1,5 +1,5 @@
 """Math utils."""
-from scipy.linalg import lstsq, solve
+from scipy import linalg
 
 
 def mrdivide(A, B):
@@ -36,7 +36,14 @@ def mldivide(A, B):
     https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
 
     """
-    if A.shape[0] == A.shape[1]:
-        return solve(A, B)
-    else:
-        return lstsq(A, B)
+    try:
+        # Note: we must use overwrite_a=False in order to be able to
+        # use the fall-back solution below in case a LinAlgError is raised
+        return linalg.solve(A, B, sym_pos=True, overwrite_a=False)
+    except linalg.LinAlgError:
+        # Singular matrix in solving dual problem. Using least-squares
+        # solution instead.
+        return linalg.lstsq(A, B, lapack_driver='gelsy')[0]
+    except linalg.LinAlgError:
+        print('Solution not stable. Model not updated!')
+        return None

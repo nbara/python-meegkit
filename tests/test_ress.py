@@ -7,7 +7,7 @@ from meegkit import ress
 from meegkit.utils import fold, rms, unfold, snr_spectrum
 
 
-def create_data(n_times, n_chans=10, n_trials=50, freq=12, sfreq=250,
+def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
                 noise_dim=8, SNR=1, t0=100, show=False):
     """Create synthetic data.
 
@@ -59,29 +59,39 @@ def test_ress(target, n_trials, show=False):
 
     out = ress.RESS(data, sfreq=sfreq, peak_freq=target)
 
-    nfft = 250
-    bins, psd = ss.welch(out, sfreq, window="hamming", nperseg=nfft,
-                         noverlap=125, axis=0)
+    nfft = 500
+    bins, psd = ss.welch(out, sfreq, window="boxcar", nperseg=nfft,
+                         noverlap=0, axis=0, average='mean')
+    # psd = np.abs(np.fft.fft(out, nfft, axis=0))
+    # psd = psd[0:psd.shape[0] // 2 + 1]
+    # bins = np.linspace(0, sfreq // 2, psd.shape[0])
+    # print(psd.shape)
+    # print(bins[:10])
 
-    print(psd.shape)
-    psd = psd.mean(axis=1, keepdims=True)  # average over trials
-    snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
-
+    psd = psd.mean(axis=-1, keepdims=True)  # average over trials
+    snr = snr_spectrum(psd + psd.max() / 20, bins, skipbins=1, n_avg=2)
+    # snr = snr.mean(1)
     if show:
-        f, ax = plt.subplots(1)
-        ax.plot(bins, snr, 'o')
-        ax.axhline(1, ls=':', c='grey', zorder=0)
-        ax.axvline(target, ls=':', c='grey', zorder=0)
-        ax.set_ylabel('SNR (a.u.)')
-        ax.set_xlabel('Frequency (Hz)')
-        ax.set_xlim([0, 40])
+        f, ax = plt.subplots(2)
+        ax[0].plot(bins, snr, ':o')
+        ax[0].axhline(1, ls=':', c='grey', zorder=0)
+        ax[0].axvline(target, ls=':', c='grey', zorder=0)
+        ax[0].set_ylabel('SNR (a.u.)')
+        ax[0].set_xlabel('Frequency (Hz)')
+        ax[0].set_xlim([0, 40])
+        ax[0].set_ylim([0, 10])
+        ax[1].plot(bins, psd)
+        ax[1].axvline(target, ls=':', c='grey', zorder=0)
+        ax[1].set_ylabel('PSD')
+        ax[1].set_xlabel('Frequency (Hz)')
+        ax[1].set_xlim([0, 40])
         plt.show()
 
     assert snr[bins == target] > 10
-    assert (snr[(bins < target - 1) | (bins > target + 1)] < 2).all()
+    assert (snr[(bins <= target - 2) | (bins >= target + 2)] < 2).all()
 
 
 if __name__ == '__main__':
     import pytest
-    # pytest.main([__file__])
-    test_ress(12, 10, show=True)
+    pytest.main([__file__])
+    # test_ress(12, 20, show=True)
