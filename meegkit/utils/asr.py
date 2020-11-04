@@ -316,7 +316,8 @@ def yulewalk_filter(X, sfreq, zi=None, ab=None, axis=-1):
     # apply the signal shaping filter and initialize the IIR filter state
     if zi is None:
         zi = signal.lfilter_zi(B, A)
-        out, zf = signal.lfilter(B, A, X, zi=zi[:, None] * X[:, 0], axis=axis)
+        zi = np.transpose(X[:, 0] * zi[:, None])
+        out, zf = signal.lfilter(B, A, X, zi=zi, axis=axis)
     else:
         out, zf = signal.lfilter(B, A, X, zi=zi, axis=axis)
 
