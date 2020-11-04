@@ -90,6 +90,31 @@ def test_yulewalk(sfreq, show=False):
         plt.show()
 
 
+@pytest.mark.parametrize(argnames='n_chans', argvalues=(4, 8, 12))
+def test_yulewalk_filter(n_chans, show=False):
+    """Test yulewalk filter."""
+    rawp = raw.copy()
+    n_chan_orig = rawp.shape[0]
+    rawp = np.random.randn(n_chans, n_chan_orig) @ rawp
+    raw_filt, iirstate = yulewalk_filter(rawp, sfreq)
+
+    if show:
+        f, ax = plt.subplots(n_chans, sharex=True, figsize=(8, 5))
+        for i in range(n_chans):
+            ax[i].plot(rawp[i], lw=.5, label='before')
+            ax[i].plot(raw_filt[i], label='after', lw=.5)
+            ax[i].set_ylim([-50, 50])
+            if i < n_chans - 1:
+                ax[i].set_yticks([])
+        ax[i].set_xlabel('Time (s)')
+        ax[i].set_ylabel(f'ch{i}')
+        ax[0].legend(fontsize='small', bbox_to_anchor=(1.04, 1),
+                     borderaxespad=0)
+        plt.subplots_adjust(hspace=0, right=0.75)
+        plt.suptitle('Before/after filter')
+        plt.show()
+
+
 def test_asr_functions(show=False, method='riemann'):
     """Test ASR functions (offline use).
 
@@ -178,3 +203,4 @@ if __name__ == "__main__":
     # test_yulewalk(250, True)
     # test_asr_functions(True)
     # test_asr_class(True)
+    # test_yulewalk_filter(16, True)

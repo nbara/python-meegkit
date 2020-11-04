@@ -27,10 +27,6 @@ class ASR():
 
     Parameters
     ----------
-    X : array, shape=()
-        *zero-mean* (e.g., high-pass filtered) and reasonably clean EEG of not
-        much less than 30 seconds (this method is typically used with 1 minute
-        or more).
     sfreq : float
         Sampling rate of the data, in Hz.
 
@@ -162,7 +158,9 @@ class ASR():
         ----------
         X : array, shape=(n_channels, n_samples)
             The calibration data should have been high-pass filtered (for
-            example at 0.5Hz or 1Hz using a Butterworth IIR filter).
+            example at 0.5Hz or 1Hz using a Butterworth IIR filter), and be
+            reasonably clean not less than 30 seconds (this method is typically
+            used with 1 minute or more).
 
         """
         if X.ndim == 3:
@@ -202,8 +200,6 @@ class ASR():
         ----------
         X : array, shape=([n_trials, ]n_channels, n_samples)
             Raw data.
-        X_filt : array, shape=([n_trials, ]n_channels, n_samples)
-            Yulewalk-filtered data (optional). If this i
 
         Returns
         -------
@@ -218,7 +214,7 @@ class ASR():
             else:
                 return X
 
-        # Yulewalk-filtered data (optional).
+        # Yulewalk-filtered data
         X_filt, self.zi_ = yulewalk_filter(
             X, sfreq=self.sfreq, ab=self.ab_, zi=self.zi_)
 
