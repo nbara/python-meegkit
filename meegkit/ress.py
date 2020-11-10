@@ -24,6 +24,8 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
         FWHM of the neighboring frequencies (default=1).
     n_keep : int
         Number of components to keep.
+    return_maps : bool
+        If True, also output maps (mixing matrix).
 
     References
     ----------
@@ -82,4 +84,4 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     if return_maps:
         return out, maps
     else:
-        return maps
+        return out
