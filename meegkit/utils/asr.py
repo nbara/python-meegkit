@@ -77,7 +77,7 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     X = np.sort(X)
     n = len(X)
 
-    # calc z bounds for the truncated standard generalized Gaussian pdf and
+    # compute z bounds for the truncated standard generalized Gaussian pdf and
     # pdf rescaler
     quants = np.array(fit_quantiles)
     zbounds = []
@@ -96,24 +96,27 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     # minimum width of the fit interval, as fraction of data
     min_width = min_clean_fraction * max_width
 
-    rowval = np.array(
-        np.round(n * np.arange(lower_min, lower_min +
-                               max_dropout_fraction + (step_sizes[0] * 1e-9),
-                               step_sizes[0])))
-    colval = np.array(np.arange(0, int(np.round(n * max_width))))
-    newX = []
-    for iX in range(len(colval)):
-        newX.append(X[np.int_(iX + rowval)])
+    # Build quantile interval matrix
+    rowval = np.arange(lower_min,
+                       lower_min + max_dropout_fraction + step_sizes[0] * 1e-9,
+                       step_sizes[0])
+    rowval = np.round(n * rowval).astype(int)
+    colval = np.arange(0, int(np.round(n * max_width)))
+    newX = np.zeros((len(colval), len(rowval)))
+    for i, c in enumerate(range(len(colval))):
+        newX[i] = X[c + rowval]
 
-    X1 = newX[0]
-    newX = newX - repmat(X1, len(colval), 1)
+    # subtract baseline value for each interval
+    X1 = newX[0, :]
+    newX = newX - X1
     opt_val = np.inf
 
-    for m in (np.round(n * np.arange(max_width, min_width, -step_sizes[1]))):
-        mcurr = int(m - 1)
+    gridsearch = np.round(n * np.arange(max_width, min_width, -step_sizes[1]))
+    for m in gridsearch.astype(int):
+        mcurr = m - 1
         nbins = int(np.round(3 * np.log2(1 + m / 2)))
-        rowval = np.array(nbins / newX[mcurr])
-        H = newX[0:int(m)] * repmat(rowval, int(m), 1)
+        rowval = nbins / newX[mcurr]
+        H = newX[0:m] * repmat(rowval, m, 1)
 
         hist_all = []
         for ih in range(len(rowval)):
@@ -124,29 +127,23 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
         logq = np.log(hist_all + 0.01)
 
         # for each shape value...
-        for b in range(len(shape_range)):
-            bounds = zbounds[b]
-            x = bounds[0] + (np.arange(0.5, nbins + 0.5) /
-                             nbins * np.diff(bounds))
-            p = np.exp(-np.abs(x)**shape_range[b]) * rescale[b]
+        for k, b in enumerate(shape_range):
+            bounds = zbounds[k]
+            x = bounds[0] + np.arange(0.5, nbins + 0.5) / nbins * np.diff(bounds)  # noqa:E501
+            p = np.exp(-np.abs(x) ** b) * rescale[k]
             p = p / np.sum(p)
 
             # calc KL divergences
-            kl = np.sum(
-                np.transpose(repmat(p, logq.shape[1], 1)) *
-                (np.transpose(repmat(np.log(p), logq.shape[1], 1)) -
-                 logq[:-1, :]),
-                axis=0) + np.log(m)
+            kl = np.sum(p * (np.log(p) - logq[:-1, :].T), axis=1) + np.log(m)
 
             # update optimal parameters
             min_val = np.min(kl)
             idx = np.argmin(kl)
-
-            if (min_val < opt_val):
+            if min_val < opt_val:
                 opt_val = min_val
-                opt_beta = shape_range[b]
+                opt_beta = shape_range[k]
                 opt_bounds = bounds
-                opt_lu = [X1[idx], (X1[idx] + newX[int(m - 1), idx])]
+                opt_lu = [X1[idx], X1[idx] + newX[m - 1, idx]]
 
     # recover distribution parameters at optimum
     alpha = (opt_lu[1] - opt_lu[0]) / np.diff(opt_bounds)
@@ -385,79 +382,29 @@ def geometric_median(X, tol, y, max_iter):
 
     Parameters
     ----------
-    X : array, shape=()
+    X : array, shape=(n_observations, n_variables)
         The data.
     tol : tolerance (default=1.e-5)
-    y : initial value (default=median(X))
-    max_iter : max number of iterations (default=500)
+    y : array, shape=(n_variables)
+        Initial value (default=median(X)).
+    max_iter : int
+        Max number of iterations (default=500):
 
     Returns
     -------
-    g : array, shape=()
+    g : array, shape=(n_variables,)
         Geometric median over X.
 
     """
     for i in range(max_iter):
-        invnorms = 1 / np.sqrt(
-            np.sum((X - repmat(y, X.shape[0], 1))**2, axis=1))
-        oldy = y
-        y = np.sum(X * np.transpose(repmat(invnorms, X.shape[1], 1)), axis=0)
-        y /= np.sum(invnorms)
+        invnorms = 1. / np.sqrt(np.sum((X - y[None, :]) ** 2, axis=1))
+        oldy = y.copy()
+        y = np.sum(X * invnorms[:, None], axis=0) / np.sum(invnorms)
 
         if ((linalg.norm(y - oldy) / linalg.norm(y)) < tol):
             break
 
     return y
-
-
-def moving_average(N, X, Zi):
-    """Moving-average filter along the second dimension of the data.
-
-    Parameters
-    ----------
-    N : filter length in samples
-    X : data matrix [#Channels x #Samples]
-    Zi : initial filter conditions (default=[])
-
-    Returns
-    -------
-    X : the filtered data
-    Zf : final filter conditions
-
-    Christian Kothe, Swartz Center for Computational Neuroscience, UCSD
-    2012-01-10
-
-    """
-    [C, S] = X.shape
-
-    if Zi is None:
-        Zi = np.zeros((C, N))
-
-    # pre-pend initial state & get dimensions
-    Y = np.concatenate((Zi, X), axis=1)
-    [CC, M] = Y.shape
-
-    # get alternating index vector (for additions & subtractions)
-    idx = np.vstack((np.arange(0, M - N), np.arange(N, M)))
-
-    # get sign vector (also alternating, and includes the scaling)
-    S = np.vstack((- np.ones((1, M - N)), np.ones((1, M - N)))) / N
-
-    # run moving average
-    YS = np.zeros((C, S.shape[1] * 2))
-    for i in range(C):
-        YS[i, :] = Y[i, idx.flatten(order='F')] * S.flatten(order='F')
-
-    X = np.cumsum(YS, axis=1)
-    # read out result
-    X = X[:, 1::2]
-
-    Zf = np.transpose(
-        np.vstack((-((X[:, -1] * N) - Y[:, -N])),
-                  np.transpose(Y[:, -N + 1:]))
-    )
-
-    return X, Zf
 
 
 def polystab(a):
