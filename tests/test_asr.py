@@ -140,18 +140,18 @@ def test_asr_functions(show=False, method='riemann'):
     if show:
         f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
         for i in range(8):
-            ax[i].fill_between(train_idx / sfreq, 0, 1, color='grey', alpha=.3,
+            ax[i].fill_between(train_idx, 0, 1, color='grey', alpha=.3,
                                transform=ax[i].get_xaxis_transform(),
                                label='calibration window')
-            ax[i].fill_between(train_idx / sfreq, 0, 1, where=sample_mask.flat,
+            ax[i].fill_between(train_idx, 0, 1, where=sample_mask.flat,
                                transform=ax[i].get_xaxis_transform(),
                                facecolor='none', hatch='...', edgecolor='k',
                                label='selected window')
-            ax[i].plot(raw.times, raw._data[i], lw=.5, label='before ASR')
-            ax[i].plot(raw.times, clean[i], label='after ASR', lw=.5)
+            ax[i].plot(raw[i], lw=.5, label='before ASR')
+            ax[i].plot(clean[i], label='after ASR', lw=.5)
             # ax[i].set_xlim([10, 50])
             ax[i].set_ylim([-50, 50])
-            ax[i].set_ylabel(raw.ch_names[i])
+            # ax[i].set_ylabel(raw.ch_names[i])
             if i < 7:
                 ax[i].set_yticks([])
         ax[i].set_xlabel('Time (s)')
@@ -162,17 +162,37 @@ def test_asr_functions(show=False, method='riemann'):
         plt.show()
 
 
-def test_asr_class(show=False):
+@pytest.mark.parametrize(argnames='method', argvalues=('riemann', 'euclid'))
+@pytest.mark.parametrize(argnames='reref', argvalues=(False, True))
+def test_asr_class(method, reref, show=False):
     """Test ASR class (simulate online use)."""
     from meegkit.utils.matrix import sliding_window
 
-    asr = ASR(method='riemann')
-
     # Train on a clean portion of data
     train_idx = np.arange(5 * sfreq, 45 * sfreq, dtype=int)
-    asr.fit(raw[:, train_idx])
 
-    X = sliding_window(raw, window=int(sfreq), step=int(sfreq))
+    # Rereference
+    if reref:
+        raw2 = raw - np.nanmean(raw, axis=0, keepdims=True)
+    else:
+        raw2 = raw
+
+    # Rank deficient matrix
+    if reref:
+        if method == 'riemann':
+            with pytest.raises(ValueError, match='Add regularization'):
+                asr = ASR(method=method, estimator='scm')
+                asr.fit(raw2[:, train_idx])
+
+            asr = ASR(method=method, estimator='lwf')
+            asr.fit(raw2[:, train_idx])
+        else:
+            asr = ASR(method=method, estimator='scm')
+            asr.fit(raw2[:, train_idx])
+    else:
+        asr = ASR(method=method, estimator='scm')
+
+    X = sliding_window(raw2, window=int(sfreq), step=int(sfreq))
     Y = np.zeros_like(X)
     for i in range(X.shape[1]):
         Y[:, i, :] = asr.transform(X[:, i, :])
@@ -186,7 +206,7 @@ def test_asr_class(show=False):
             ax[i].plot(times, X[i], lw=.5, label='before ASR')
             ax[i].plot(times, Y[i], label='after ASR', lw=.5)
             ax[i].set_ylim([-50, 50])
-            ax[i].set_ylabel(raw.ch_names[i])
+            # ax[i].set_ylabel(raw.ch_names[i])
             if i < 7:
                 ax[i].set_yticks([])
         ax[i].set_xlabel('Time (s)')
@@ -198,9 +218,8 @@ def test_asr_class(show=False):
 
 
 if __name__ == "__main__":
-    import pytest
     pytest.main([__file__])
     # test_yulewalk(250, True)
     # test_asr_functions(True)
-    # test_asr_class(True)
+    # test_asr_class('riemann', True, True)
     # test_yulewalk_filter(16, True)

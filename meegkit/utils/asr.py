@@ -1,10 +1,10 @@
 """Utils for ASR functions."""
 import numpy as np
-from scipy.special import gamma, gammaincinv
 from numpy import linalg
 from numpy.matlib import repmat
 from scipy import signal
 from scipy.linalg import toeplitz
+from scipy.special import gamma, gammaincinv
 
 
 def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
@@ -355,9 +355,9 @@ def block_geometric_median(X, blocksize, tol=1e-5, max_iter=500):
 
     """
     if (blocksize > 1):
-        o, v = X.shape       # #observations & #variables
-        r = np.mod(o, blocksize)  # #rest in last block
-        b = int((o - r) / blocksize)   # #blocks
+        o, v = X.shape  # observations & variables
+        r = np.mod(o, blocksize)  # rest in last block
+        b = int((o - r) / blocksize)  # blocks
         Xreshape = np.zeros((b + 1, v))
         if (r > 0):
             Xreshape[0:b, :] = np.reshape(
@@ -385,23 +385,24 @@ def geometric_median(X, tol, y, max_iter):
 
     Parameters
     ----------
-    X : the data, as in mean
+    X : array, shape=()
+        The data.
     tol : tolerance (default=1.e-5)
     y : initial value (default=median(X))
     max_iter : max number of iterations (default=500)
 
     Returns
     -------
-    g : geometric median over X
+    g : array, shape=()
+        Geometric median over X.
 
     """
     for i in range(max_iter):
         invnorms = 1 / np.sqrt(
             np.sum((X - repmat(y, X.shape[0], 1))**2, axis=1))
         oldy = y
-        y = np.sum(X * np.transpose(
-            repmat(invnorms, X.shape[1], 1)), axis=0
-        ) / np.sum(invnorms)
+        y = np.sum(X * np.transpose(repmat(invnorms, X.shape[1], 1)), axis=0)
+        y /= np.sum(invnorms)
 
         if ((linalg.norm(y - oldy) / linalg.norm(y)) < tol):
             break

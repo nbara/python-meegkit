@@ -17,19 +17,24 @@ def block_covariance(data, window=128, overlap=0.5, padding=True,
 
     Parameters
     ----------
-    data : array, shape=(n_channels, n_samples)
+    data : array, shape=(n_chans, n_samples)
         Input data (must be 2D)
     window : int
         Window size.
     overlap : float
         Overlap between successive windows.
 
+    Returns
+    -------
+    cov : array, shape=(n_blocks, n_chans, n_chans)
+        Block covariance.
+
     """
     from pyriemann.utils.covariance import _check_est
 
     assert 0 <= overlap < 1, "overlap must be < 1"
     est = _check_est(estimator)
-    X = []
+    cov = []
     n_chans, n_samples = data.shape
     if padding:  # pad data with zeros
         pad = np.zeros((n_chans, int(window / 2)))
@@ -38,10 +43,10 @@ def block_covariance(data, window=128, overlap=0.5, padding=True,
     jump = int(window * overlap)
     ix = 0
     while (ix + window < n_samples):
-        X.append(est(data[:, ix:ix + window]))
+        cov.append(est(data[:, ix:ix + window]))
         ix = ix + jump
 
-    return np.array(X)
+    return np.array(cov)
 
 
 def cov_lags(X, Y, shifts=None):

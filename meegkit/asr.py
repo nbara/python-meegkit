@@ -2,11 +2,10 @@
 import logging
 
 import numpy as np
-
 from scipy import linalg, signal
 from statsmodels.robust.scale import mad
 
-from .utils import nonlinear_eigenspace, block_covariance
+from .utils import block_covariance, nonlinear_eigenspace
 from .utils.asr import (block_geometric_median, fit_eeg_distribution, yulewalk,
                         yulewalk_filter)
 
@@ -64,6 +63,9 @@ class ASR():
         ASR [2]_.
     memory : float
         Memory size (s), regulates the number of covariance matrices to store.
+    estimator : str in {'scm', 'lwf', 'oas', 'mcd'}
+        Covariance estimator (default: 'scm' which computes the sample
+        covariance). Use 'lwf' if you need regularization (requires pyriemann).
 
     Attributes
     ----------
@@ -102,7 +104,7 @@ class ASR():
     def __init__(self, sfreq=250, cutoff=5, blocksize=10, win_len=0.5,
                  win_overlap=0.66, max_dropout_fraction=0.1,
                  min_clean_fraction=0.25, name='asrfilter', method='euclid',
-                 **kwargs):
+                 estimator='scm', **kwargs):
 
         if pyriemann is None and method == 'riemann':
             logging.warning('Need pyriemann to use riemannian ASR flavor.')
@@ -118,6 +120,7 @@ class ASR():
         self.method = method
         self.memory = 1 * sfreq  # smoothing window for covariances
         self.sfreq = sfreq
+        self.estimator = estimator
 
         # Initialise yulewalk-filter coefficients with sensible defaults
         F = np.array([0, 2, 3, 13, 16, 40, np.minimum(
@@ -186,7 +189,8 @@ class ASR():
             win_overlap=self.win_overlap,
             max_dropout_fraction=self.max_dropout_fraction,
             min_clean_fraction=self.min_clean_fraction,
-            method=self.method)
+            method=self.method,
+            estimator=self.estimator)
 
         self.state_ = dict(M=M, T=T, R=None)
         self._fitted = True
@@ -212,17 +216,23 @@ class ASR():
                 out = self.transform(X[0])
                 return out[None, ...]
             else:
-                return X
-
-        # Yulewalk-filtered data
-        X_filt, self.zi_ = yulewalk_filter(
-            X, sfreq=self.sfreq, ab=self.ab_, zi=self.zi_)
+                outs = [self.transform(x) for x in X]
+                return np.stack(outs, 0)
+        else:
+            # Yulewalk-filtered data
+            X_filt, self.zi_ = yulewalk_filter(
+                X, sfreq=self.sfreq, ab=self.ab_, zi=self.zi_)
 
         if not self._fitted:
             logging.warning('ASR is not fitted ! Returning unfiltered data.')
             return X
 
-        cov = 1 / X.shape[-1] * X_filt @ X_filt.T
+        if self.estimator == 'scm':
+            cov = 1 / X.shape[-1] * X_filt @ X_filt.T
+        else:
+            cov = pyriemann.estimation.covariances(X_filt[None, ...],
+                                                   self.estimator)[0]
+
         self._counter.append(X.shape[-1])
         self.cov_.append(cov)
 
@@ -409,9 +419,9 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     return clean, sample_mask
 
 
-def asr_calibrate(X, sfreq, cutoff=5, blocksize=10, win_len=0.5,
+def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
                   win_overlap=0.66, max_dropout_fraction=0.1,
-                  min_clean_fraction=0.25, method='euclid'):
+                  min_clean_fraction=0.25, method='euclid', estimator='scm'):
     """Calibration function for the Artifact Subspace Reconstruction method.
 
     The input to this data is a multi-channel time series of calibration data.
@@ -455,8 +465,8 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=10, win_len=0.5,
     blocksize : int
         Block size for calculating the robust data covariance and thresholds,
         in samples; allows to reduce the memory and time requirements of the
-        robust estimators by this factor (down to Channels x Channels x Samples
-        x 16 / Blocksize bytes) (default=10).
+        robust estimators by this factor (down to n_chans x n_chans x n_samples
+        x 16 / blocksize bytes) (default=100).
     win_len : float
         Window length that is used to check the data for artifact content. This
         is ideally as long as the expected time scale of the artifacts but
@@ -490,23 +500,18 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=10, win_len=0.5,
     # window length for calculating thresholds
     N = int(np.round(win_len * sfreq))
 
+    U = block_covariance(X, window=blocksize, overlap=win_overlap,
+                         estimator=estimator)
     if method == 'euclid':
-        U = np.zeros((blocksize, nc, nc))
-        for k in range(blocksize):
-            rangevect = np.minimum(ns - 1, np.arange(k, ns + k, blocksize))
-            x = X[:, rangevect]
-            U[k, ...] = x @ x.T
         Uavg = block_geometric_median(U.reshape((-1, nc * nc)) / blocksize, 2)
         Uavg = Uavg.reshape((nc, nc))
-    elif method == 'riemann':
-        blocksize = int(ns // blocksize)
-        U = block_covariance(X, window=blocksize, overlap=win_overlap)
+    else:  # method == 'riemann'
         Uavg = pyriemann.utils.mean.mean_covariance(U, metric='riemann')
 
     # get the mixing matrix M
     M = linalg.sqrtm(np.real(Uavg))
     D, Vtmp = linalg.eig(M)
-    # D, Vtmp = nonlinear_eigenspace(M, nc)
+    # D, Vtmp = nonlinear_eigenspace(M, nc)  TODO
     V = Vtmp[:, np.argsort(D)]
 
     # get the threshold matrix T
@@ -573,11 +578,17 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
     if cov is None:
         if detrend:
             X_filt = signal.detrend(X_filt, axis=1, type='constant')
-        cov = np.cov(X_filt, bias=True)
-    else:
-        if cov.ndim == 3:
+        cov = block_covariance(X_filt, window=nc ** 2)
+
+    cov = cov.squeeze()
+    if cov.ndim == 3:
+        if method == 'riemann':
             cov = pyriemann.utils.mean.mean_covariance(
                 cov, metric='riemann', sample_weight=sample_weight)
+        else:
+            bs = nc ** 2
+            cov = block_geometric_median(cov.reshape((-1, nc * nc)) / bs, bs)
+            cov = cov.reshape((nc, nc))
 
     maxdims = int(np.fix(0.66 * nc))  # constant TODO make param
 
