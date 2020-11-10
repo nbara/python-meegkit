@@ -6,7 +6,7 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
-         neig_width: float = 1, n_keep: int = 1,
+         neig_width: float = 1, n_keep: int = 1, return_maps: bool = False,
          show: bool = False):
     """Rhythmic entrainment source separation [1]_.
 
@@ -79,4 +79,7 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     if n_keep == 1:
         out = out.squeeze(1)
 
-    return out
+    if return_maps:
+        return out, maps
+    else:
+        return maps
