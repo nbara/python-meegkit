@@ -6,7 +6,7 @@ from scipy import linalg, signal
 from statsmodels.robust.scale import mad
 
 from .utils import block_covariance, nonlinear_eigenspace
-from .utils.asr import (block_geometric_median, fit_eeg_distribution, yulewalk,
+from .utils.asr import (geometric_median, fit_eeg_distribution, yulewalk,
                         yulewalk_filter)
 
 try:
@@ -101,7 +101,7 @@ class ASR():
 
     """
 
-    def __init__(self, sfreq=250, cutoff=5, blocksize=10, win_len=0.5,
+    def __init__(self, sfreq=250, cutoff=5, blocksize=100, win_len=0.5,
                  win_overlap=0.66, max_dropout_fraction=0.1,
                  min_clean_fraction=0.25, name='asrfilter', method='euclid',
                  estimator='scm', **kwargs):
@@ -122,9 +122,14 @@ class ASR():
         self.sfreq = sfreq
         self.estimator = estimator
 
+        self.reset()
+
+    def reset(self):
+        """Reset filter."""
         # Initialise yulewalk-filter coefficients with sensible defaults
-        F = np.array([0, 2, 3, 13, 16, 40, np.minimum(
-            80.0, (sfreq / 2.0) - 1.0), sfreq / 2.0]) * 2.0 / sfreq
+        F = np.array([0, 2, 3, 13, 16, 40,
+                      np.minimum(80.0, (self.sfreq / 2.0) - 1.0),
+                      self.sfreq / 2.0]) * 2.0 / self.sfreq
         M = np.array([3, 0.75, 0.33, 0.33, 1, 1, 3, 3])
         B, A = yulewalk(8, F, M)
         self.ab_ = (A, B)
@@ -133,10 +138,6 @@ class ASR():
         self.state_ = {}
         self._counter = []
         self._fitted = False
-
-    def _reset(self):
-        """Reset filter."""
-        return
 
     def fit(self, X, y=None, **kwargs):
         """Calibration for the Artifact Subspace Reconstruction method.
@@ -217,7 +218,7 @@ class ASR():
                 return out[None, ...]
             else:
                 outs = [self.transform(x) for x in X]
-                return np.stack(outs, 0)
+                return np.stack(outs, axis=0)
         else:
             # Yulewalk-filtered data
             X_filt, self.zi_ = yulewalk_filter(
@@ -232,6 +233,9 @@ class ASR():
         else:
             cov = pyriemann.estimation.covariances(X_filt[None, ...],
                                                    self.estimator)[0]
+
+        if np.sum(np.isnan(cov).flatten()) > 0:
+            print('ho')
 
         self._counter.append(X.shape[-1])
         self.cov_.append(cov)
@@ -503,14 +507,14 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     U = block_covariance(X, window=blocksize, overlap=win_overlap,
                          estimator=estimator)
     if method == 'euclid':
-        Uavg = block_geometric_median(U.reshape((-1, nc * nc)) / blocksize, 2)
+        Uavg = geometric_median(U.reshape((-1, nc * nc)))
         Uavg = Uavg.reshape((nc, nc))
     else:  # method == 'riemann'
         Uavg = pyriemann.utils.mean.mean_covariance(U, metric='riemann')
 
     # get the mixing matrix M
     M = linalg.sqrtm(np.real(Uavg))
-    D, Vtmp = linalg.eig(M)
+    D, Vtmp = linalg.eigh(M)
     # D, Vtmp = nonlinear_eigenspace(M, nc)  TODO
     V = Vtmp[:, np.argsort(D)]
 
@@ -586,8 +590,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
             cov = pyriemann.utils.mean.mean_covariance(
                 cov, metric='riemann', sample_weight=sample_weight)
         else:
-            bs = nc ** 2
-            cov = block_geometric_median(cov.reshape((-1, nc * nc)) / bs, bs)
+            cov = geometric_median(cov.reshape((-1, nc * nc)))
             cov = cov.reshape((nc, nc))
 
     maxdims = int(np.fix(0.66 * nc))  # constant TODO make param
@@ -596,7 +599,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
     if method == 'riemann':
         D, Vtmp = nonlinear_eigenspace(cov, nc)  # TODO
     else:
-        D, Vtmp = np.linalg.eig(cov)
+        D, Vtmp = linalg.eigh(cov)
 
     V = np.real(Vtmp[:, np.argsort(D)])
     D = np.real(D[np.argsort(D)])
@@ -613,7 +616,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
     else:
         VT = np.dot(V.T, M)
         demux = VT * keep[:, None]
-        R = np.dot(np.dot(M, np.linalg.pinv(demux)), V.T)
+        R = np.dot(np.dot(M, linalg.pinv(demux)), V.T)
 
     if state['R'] is not None:
         # apply the reconstruction to intermediate samples (using raised-cosine

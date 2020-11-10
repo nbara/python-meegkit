@@ -219,6 +219,8 @@ def test_cca_crossvalidate_shifts2():
 
 def test_mcca(show=False):
     """Test multiway CCA."""
+    np.random.seed(9)
+
     # We create 3 uncorrelated data sets. There should be no common structure
     # between them.
 
@@ -251,7 +253,7 @@ def test_mcca(show=False):
         ax.plot(np.mean(z ** 2, axis=0), ':o')
         ax.set_ylabel('Power')
         ax.set_xlabel('CC')
-        plt.tight_layout(True)
+        plt.tight_layout()
         plt.show()
 
     # assert np.diag_indices
@@ -286,7 +288,7 @@ def test_mcca(show=False):
         ax.plot(np.mean(z ** 2, axis=0), ':o')
         ax.set_ylabel('Power')
         ax.set_xlabel('CC')
-        plt.tight_layout(True)
+        plt.tight_layout()
         plt.show()
 
     # Third example
@@ -322,12 +324,12 @@ def test_mcca(show=False):
         ax.plot(np.mean(z ** 2, axis=0), ':o')
         ax.set_ylabel('Power')
         ax.set_xlabel('CC')
-        plt.tight_layout(True)
+        plt.tight_layout()
         plt.show()
 
     # Only first 10 components should be non-negligible
     diagonal = np.diag(x.T @ x @ A) ** 2
-    assert np.all(diagonal[:10] > 1)
+    assert np.all(diagonal[:10] > 1), diagonal[:10]
     assert np.all(diagonal[10:] < .01)
 
 if __name__ == '__main__':

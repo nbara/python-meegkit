@@ -2,13 +2,14 @@
 import os
 
 import matplotlib.pyplot as plt
-# import mne
 import numpy as np
 import pytest
-
 from meegkit.asr import ASR, asr_calibrate, asr_process, clean_windows
 from meegkit.utils.asr import yulewalk, yulewalk_filter
+from meegkit.utils.matrix import sliding_window
 from scipy import signal
+
+np.random.seed(9)
 
 # Data files
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
@@ -19,8 +20,6 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 # raw.crop(0, 60)  # keep 60s only
 # raw.pick_types(eeg=True, misc=False)
 # raw = raw._data
-raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
-sfreq = 250
 
 
 @pytest.mark.parametrize(argnames='sfreq', argvalues=(250, 256, 2048))
@@ -93,15 +92,16 @@ def test_yulewalk(sfreq, show=False):
 @pytest.mark.parametrize(argnames='n_chans', argvalues=(4, 8, 12))
 def test_yulewalk_filter(n_chans, show=False):
     """Test yulewalk filter."""
-    rawp = raw.copy()
-    n_chan_orig = rawp.shape[0]
-    rawp = np.random.randn(n_chans, n_chan_orig) @ rawp
-    raw_filt, iirstate = yulewalk_filter(rawp, sfreq)
+    raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
+    sfreq = 250
+    n_chan_orig = raw.shape[0]
+    raw = np.random.randn(n_chans, n_chan_orig) @ raw
+    raw_filt, iirstate = yulewalk_filter(raw, sfreq)
 
     if show:
         f, ax = plt.subplots(n_chans, sharex=True, figsize=(8, 5))
         for i in range(n_chans):
-            ax[i].plot(rawp[i], lw=.5, label='before')
+            ax[i].plot(raw[i], lw=.5, label='before')
             ax[i].plot(raw_filt[i], label='after', lw=.5)
             ax[i].set_ylim([-50, 50])
             if i < n_chans - 1:
@@ -122,6 +122,8 @@ def test_asr_functions(show=False, method='riemann'):
     estimated only once and not updated online as is intended.
 
     """
+    raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
+    sfreq = 250
     raw_filt = raw.copy()
     raw_filt, iirstate = yulewalk_filter(raw_filt, sfreq)
 
@@ -166,8 +168,8 @@ def test_asr_functions(show=False, method='riemann'):
 @pytest.mark.parametrize(argnames='reref', argvalues=(False, True))
 def test_asr_class(method, reref, show=False):
     """Test ASR class (simulate online use)."""
-    from meegkit.utils.matrix import sliding_window
-
+    raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
+    sfreq = 250
     # Train on a clean portion of data
     train_idx = np.arange(5 * sfreq, 45 * sfreq, dtype=int)
 
@@ -175,30 +177,38 @@ def test_asr_class(method, reref, show=False):
     if reref:
         raw2 = raw - np.nanmean(raw, axis=0, keepdims=True)
     else:
-        raw2 = raw
+        raw2 = raw.copy()
 
     # Rank deficient matrix
     if reref:
         if method == 'riemann':
             with pytest.raises(ValueError, match='Add regularization'):
-                asr = ASR(method=method, estimator='scm')
-                asr.fit(raw2[:, train_idx])
+                blah = ASR(method=method, estimator='scm')
+                blah.fit(raw2[:, train_idx])
 
-            asr = ASR(method=method, estimator='lwf')
-            asr.fit(raw2[:, train_idx])
-        else:
-            asr = ASR(method=method, estimator='scm')
-            asr.fit(raw2[:, train_idx])
+        asr = ASR(method=method, estimator='lwf')
+        asr.fit(raw2[:, train_idx])
     else:
         asr = ASR(method=method, estimator='scm')
+        asr.fit(raw2[:, train_idx])
 
-    X = sliding_window(raw2, window=int(sfreq), step=int(sfreq))
+    # Split into small windows
+    X = sliding_window(raw2, window=int(sfreq // 2), step=int(sfreq // 2))
+    X = X.swapaxes(0, 1)
+
+    # Transform each trial
     Y = np.zeros_like(X)
-    for i in range(X.shape[1]):
-        Y[:, i, :] = asr.transform(X[:, i, :])
+    for i in range(X.shape[0]):
+        Y[i] = asr.transform(X[i])
 
-    X = X.reshape(8, -1)
-    Y = Y.reshape(8, -1)
+    # Transform all trials at once
+    asr.reset()
+    asr.fit(raw2[:, train_idx])
+    Y2 = asr.transform(X)
+
+    X = X.swapaxes(0, 1).reshape(8, -1)
+    Y = Y.swapaxes(0, 1).reshape(8, -1)
+    Y2 = Y2.swapaxes(0, 1).reshape(8, -1)
     times = np.arange(X.shape[-1]) / sfreq
     if show:
         f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
@@ -206,7 +216,7 @@ def test_asr_class(method, reref, show=False):
             ax[i].plot(times, X[i], lw=.5, label='before ASR')
             ax[i].plot(times, Y[i], label='after ASR', lw=.5)
             ax[i].set_ylim([-50, 50])
-            # ax[i].set_ylabel(raw.ch_names[i])
+            ax[i].set_ylabel(f'ch{i}')
             if i < 7:
                 ax[i].set_yticks([])
         ax[i].set_xlabel('Time (s)')
@@ -214,12 +224,27 @@ def test_asr_class(method, reref, show=False):
                      borderaxespad=0)
         plt.subplots_adjust(hspace=0, right=0.75)
         plt.suptitle('Before/after ASR')
+
+        f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
+        for i in range(8):
+            ax[i].plot(times, Y[i], label='incremental', lw=.5)
+            ax[i].plot(times, Y2[i], label='bulk', lw=.5)
+            ax[i].plot(times, Y[i] - Y2[i], label='difference', lw=.5)
+            if i < 7:
+                ax[i].set_yticks([])
+        ax[i].set_xlabel('Time (s)')
+        plt.suptitle('incremental vs. bulk difference ')
         plt.show()
 
+    # TODO: investigate difference
+    # np.testing.assert_almost_equal(Y, Y2, decimal=4)
+    # assert np.all(np.abs(Y - Y2) < 1), np.max(np.abs(Y - Y2))  # < 1uV diff
+    assert np.all(np.isreal(Y)), "output should be real-valued"
+    assert np.all(np.isreal(Y2)), "output should be real-valued"
 
 if __name__ == "__main__":
-    pytest.main([__file__])
+    # pytest.main([__file__])
     # test_yulewalk(250, True)
     # test_asr_functions(True)
-    # test_asr_class('riemann', True, True)
+    test_asr_class(method='riemann', reref=False, show=False)
     # test_yulewalk_filter(16, True)
