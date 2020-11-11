@@ -116,7 +116,8 @@ class ASR():
         self.min_clean_fraction = min_clean_fraction
         self.max_bad_chans = 0.3
         self.method = method
-        self.memory = 1 * sfreq  # smoothing window for covariances
+        self.memory = int(2 * sfreq)  # smoothing window for covariances
+        self.sample_weight = np.geomspace(0.05, 1, num=self.memory + 1)
         self.sfreq = sfreq
         self.estimator = estimator
 
@@ -232,10 +233,7 @@ class ASR():
             cov = pyriemann.estimation.covariances(X_filt[None, ...],
                                                    self.estimator)[0]
 
-        if np.sum(np.isnan(cov).flatten()) > 0:
-            print('ho')
-
-        self._counter.append(X.shape[-1])
+        self._counter.append(X_filt.shape[-1])
         self.cov_.append(cov)
 
         # Regulate the number of covariance matrices that are stored
@@ -244,19 +242,20 @@ class ASR():
                 self.cov_.pop(0)
                 self._counter.pop(0)
             else:
-                self._counter[0] = self.memory
+                self._counter = [self.memory, ]
                 break
 
-        # Exponential covariance weight – the most recent covariance has a
+        # Exponential covariance weights – the most recent covariance has a
         # weight of 1, while the oldest one in memory has a weight of 5%
-        sample_weight = np.geomspace(0.05, 1, num=self.memory + 1)
-        sample_weight = sample_weight[self._counter]
+        weights = [1, ]
+        for c in np.cumsum(self._counter[1:]):
+            weights = [self.sample_weight[-c]] + weights
 
         # Clean data, using covariances weighted by sample_weight
         out, self.state_ = asr_process(X, X_filt, self.state_,
                                        cov=np.stack(self.cov_),
                                        method=self.method,
-                                       sample_weight=sample_weight)
+                                       sample_weight=weights)
 
         return out
 
