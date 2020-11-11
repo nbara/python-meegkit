@@ -22,11 +22,18 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 # raw = raw._data
 
 
-@pytest.mark.parametrize(argnames='sfreq', argvalues=(250, 256, 2048))
+@pytest.mark.parametrize(argnames='sfreq', argvalues=(125, 250, 256, 2048))
 def test_yulewalk(sfreq, show=False):
     """Test that my version of yulewelk works just like MATLAB's."""
     # Temp fix, values are computed in matlab using yulewalk.m
-    if sfreq == 256:
+    if sfreq == 125:
+        a = [1, -0.983952187817050, -0.520232502560362, 0.603540557711479,
+             0.116893105621457, -0.0291261609247754, -0.282359853603720,
+             0.0407847933579206, 0.103437108246108]
+        b = [1.08742316795540, -1.83643555381637, 0.573976014496824,
+             0.361020603610170, 0.0592714561864745, 0.0767631759850725,
+             -0.498304757808424, 0.276872948140515, -0.00693079202803615]
+    elif sfreq == 256:
         a = [1, -1.70080396393018, 1.92328303910588, -2.08269297269299,
              1.59826387425574, -1.07358541839301, 0.567971922565269,
              -0.188618149976820, 0.0572954115997260]
@@ -175,11 +182,11 @@ def test_asr_class(method, reref, show=False):
 
     # Rereference
     if reref:
+        # Rank deficient matrix
         raw2 = raw - np.nanmean(raw, axis=0, keepdims=True)
     else:
         raw2 = raw.copy()
 
-    # Rank deficient matrix
     if reref:
         if method == 'riemann':
             with pytest.raises(ValueError, match='Add regularization'):
@@ -241,6 +248,15 @@ def test_asr_class(method, reref, show=False):
     # assert np.all(np.abs(Y - Y2) < 1), np.max(np.abs(Y - Y2))  # < 1uV diff
     assert np.all(np.isreal(Y)), "output should be real-valued"
     assert np.all(np.isreal(Y2)), "output should be real-valued"
+
+    # Test different sampling rates
+    with pytest.raises(ValueError):
+        ASR(sfreq=60)
+
+    ASR(sfreq=80)
+    ASR(sfreq=100)
+    ASR(sfreq=125)
+    ASR(Sfreq=150)
 
 if __name__ == "__main__":
     # pytest.main([__file__])
