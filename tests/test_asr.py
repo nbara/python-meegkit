@@ -243,9 +243,9 @@ def test_asr_class(method, reref, show=False):
         plt.suptitle('incremental vs. bulk difference ')
         plt.show()
 
-    # TODO: investigate difference
-    # np.testing.assert_almost_equal(Y, Y2, decimal=4)
-    # assert np.all(np.abs(Y - Y2) < 1), np.max(np.abs(Y - Y2))  # < 1uV diff
+    # TODO: the transform() process is stochastic, so Y and Y2 are not going to
+    # be entirely idetntical but close enough
+    assert np.all(np.abs(Y - Y2) < 5), np.max(np.abs(Y - Y2))  # < 5uV diff
     assert np.all(np.isreal(Y)), "output should be real-valued"
     assert np.all(np.isreal(Y2)), "output should be real-valued"
 
@@ -259,8 +259,8 @@ def test_asr_class(method, reref, show=False):
     ASR(Sfreq=150)
 
 if __name__ == "__main__":
-    # pytest.main([__file__])
+    pytest.main([__file__])
     # test_yulewalk(250, True)
     # test_asr_functions(True)
-    test_asr_class(method='riemann', reref=False, show=False)
+    # test_asr_class(method='riemann', reref=False, show=True)
     # test_yulewalk_filter(16, True)
