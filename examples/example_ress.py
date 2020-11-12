@@ -84,8 +84,10 @@ ax.set_ylabel('SNR (a.u.)')
 ax.set_xlabel('Frequency (Hz)')
 ax.set_xlim([0, 40])
 
-# Project components back into sensor space
-# -----------------------------------------------------------------------------
+###############################################################################
+# Project components back into sensor space to see the effects of RESS on the
+# average SSVEP.
+
 proj = matmul3d(out, maps.T)
 f, ax = plt.subplots(n_chans, 2, sharey='col')
 for c in range(n_chans):
