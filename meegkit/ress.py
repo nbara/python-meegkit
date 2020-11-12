@@ -6,7 +6,7 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
-         neig_width: float = 1, n_keep: int = 1,
+         neig_width: float = 1, n_keep: int = 1, return_maps: bool = False,
          show: bool = False):
     """Rhythmic entrainment source separation [1]_.
 
@@ -23,7 +23,26 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     neig_width : float
         FWHM of the neighboring frequencies (default=1).
     n_keep : int
-        Number of components to keep.
+        Number of components to keep (default=1). -1 keeps all components.
+    return_maps : bool
+        If True, also output maps (mixing matrix).
+
+    Returns
+    -------
+    out : array, shape=(n_samples, n_keep, n_trials)
+        RESS time series.
+    maps : array, shape=(n_channels, n_keep)
+        If return_maps is True, also output mixing matrix.
+
+    Notes
+    -----
+    To project the RESS components back into sensor space, one can proceed as
+    follows. First apply RESS:
+    >> out, maps = ress.RESS(data, sfreq, peak_freq, return_maps=True)
+
+    Then multiply each trial by the mixing matrix:
+    >> from meegkit.utils import matmul3d
+    >> proj = matmul3d(out, maps.T)
 
     References
     ----------
@@ -34,6 +53,9 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     """
     n_samples, n_chans, n_trials = theshapeof(X)
     X = demean(X)
+
+    if n_keep == -1:
+        n_keep = n_chans
 
     # Covariance of signal and covariance of noise
     c01, _ = tscov(gaussfilt(X, sfreq, peak_freq + neig_freq,
@@ -58,25 +80,21 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     #     d = d[idx]
     #     V = V[:, idx]
 
-    # Keep a fixed number of components
-    # max_comps = np.min((n_keep, V.shape[1]))
-    # V = V[:, np.arange(max_comps)]
-    # d = d[np.arange(max_comps)]
-
     # Normalize components
     V /= np.sqrt(np.sum(V, axis=0) ** 2)
 
-    # extract components and force sign
+    # extract components
     maps = mrdivide(c1 @ V, V.T @ c1 @ V)
-    idx = np.argmax(np.abs(maps[:, 0]))  # find biggest component
-    maps = maps * np.sign(maps[idx, 0])  # force to positive sign
+    maps = maps[:, :n_keep]
+    # idx = np.argmax(np.abs(maps[:, 0]))  # find biggest component
+    # maps = maps * np.sign(maps[idx, 0])  # force to positive sign
 
     # reconstruct RESS component time series
     out = np.zeros((n_samples, n_keep, n_trials))
     for t in range(n_trials):
         out[..., t] = X[:, :, t] @ V[:, np.arange(n_keep)]
 
-    if n_keep == 1:
-        out = out.squeeze(1)
-
-    return out
+    if return_maps:
+        return out, maps
+    else:
+        return out

@@ -12,9 +12,8 @@ Uses `meegkit.RESS()`.
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal as ss
-
 from meegkit import ress
-from meegkit.utils import unfold, rms, fold, snr_spectrum
+from meegkit.utils import fold, matmul3d, rms, snr_spectrum, unfold
 
 # import config
 
@@ -26,11 +25,11 @@ np.random.seed(1)
 # Create synthetic data containing a single oscillatory component at 12 hz.
 n_times = 1000
 n_chans = 10
-n_trials = 50
+n_trials = 30
 target = 12
 sfreq = 250
 noise_dim = 8
-SNR = 1.
+SNR = .2
 t0 = 100
 
 # source
@@ -66,13 +65,13 @@ ax[2].legend()
 # -----------------------------------------------------------------------------
 
 # Apply RESS
-out = ress.RESS(data, sfreq=sfreq, peak_freq=target)
+out, maps = ress.RESS(data, sfreq=sfreq, peak_freq=target, return_maps=True)
 
 # Compute PSD
 nfft = 250
 df = sfreq / nfft  # frequency resolution
-bins, psd = ss.welch(out, sfreq, window="hamming", nperseg=nfft,
-                        noverlap=125, axis=0)
+bins, psd = ss.welch(out.squeeze(1), sfreq, window="hamming", nperseg=nfft,
+                     noverlap=125, axis=0)
 psd = psd.mean(axis=1, keepdims=True)  # average over trials
 snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
 
@@ -84,4 +83,21 @@ ax.axvline(target, ls=':', c='grey', zorder=0)
 ax.set_ylabel('SNR (a.u.)')
 ax.set_xlabel('Frequency (Hz)')
 ax.set_xlim([0, 40])
+
+###############################################################################
+# Project components back into sensor space to see the effects of RESS on the
+# average SSVEP.
+
+proj = matmul3d(out, maps.T)
+f, ax = plt.subplots(n_chans, 2, sharey='col')
+for c in range(n_chans):
+    ax[c, 0].plot(data[:, c].mean(-1), lw=.5)
+    ax[c, 1].plot(proj[:, c].mean(-1), lw=.5)
+    ax[c, 0].set_ylabel(f'ch{c}')
+    if c < n_chans:
+        ax[c, 0].set_xticks([])
+        ax[c, 1].set_xticks([])
+
+ax[0, 0].set_title('Trial average (before)')
+ax[0, 1].set_title('Trial average (after)')
 plt.show()
