@@ -606,6 +606,27 @@ def normcol(X, weights=None, return_norm=False):
         return X_norm
 
 
+def matmul3d(X, mixin):
+    """Apply mixing matrix to each trial of X.
+
+    This is a simple wrapper or np.einsum.
+
+    Parameters
+    ----------
+    X : array, shape=(n_samples, n_chans, n_trials)
+    mixing : array, shape=(n_chans, n_components)
+
+    Returns
+    -------
+    proj : array, shape=(n_samples, n_components, n_trials)
+        Projection.
+
+    """
+    assert X.ndim == 3, 'data must be of shape (n_samples, n_chans, n_trials)'
+    assert mixin.ndim == 2, 'mixing matrix must be 2D'
+    return np.einsum('sct,ck->skt', X, mixin)
+
+
 def _check_shifts(shifts, allow_floats=False):
     """Check shifts."""
     types = (int, np.int_)

@@ -4,11 +4,11 @@ import numpy as np
 import pytest
 import scipy.signal as ss
 from meegkit import ress
-from meegkit.utils import fold, rms, unfold, snr_spectrum
+from meegkit.utils import fold, rms, unfold, snr_spectrum, matmul3d
 
 
 def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
-                noise_dim=8, SNR=1, t0=100, show=False):
+                noise_dim=8, SNR=.8, t0=100, show=False):
     """Create synthetic data.
 
     Returns
@@ -50,7 +50,7 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
 
 
 @pytest.mark.parametrize('target', [12, 15, 20])
-@pytest.mark.parametrize('n_trials', [10, 20])
+@pytest.mark.parametrize('n_trials', [16, 20])
 def test_ress(target, n_trials, show=False):
     """Test RESS."""
     sfreq = 250
@@ -60,7 +60,7 @@ def test_ress(target, n_trials, show=False):
     out = ress.RESS(data, sfreq=sfreq, peak_freq=target)
 
     nfft = 500
-    bins, psd = ss.welch(out, sfreq, window="boxcar", nperseg=nfft,
+    bins, psd = ss.welch(out.squeeze(1), sfreq, window="boxcar", nperseg=nfft,
                          noverlap=0, axis=0, average='mean')
     # psd = np.abs(np.fft.fft(out, nfft, axis=0))
     # psd = psd[0:psd.shape[0] // 2 + 1]
@@ -85,11 +85,33 @@ def test_ress(target, n_trials, show=False):
         ax[1].set_ylabel('PSD')
         ax[1].set_xlabel('Frequency (Hz)')
         ax[1].set_xlim([0, 40])
-        plt.show()
+        # plt.show()
 
     assert snr[bins == target] > 10
     assert (snr[(bins <= target - 2) | (bins >= target + 2)] < 2).all()
 
+    # test multiple components
+    out, maps = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=1,
+                          return_maps=True)
+    _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=2)
+    _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=-1)
+
+    proj = matmul3d(out, maps.T)
+    assert proj.shape == data.shape
+
+    if show:
+        f, ax = plt.subplots(data.shape[1], 2, sharey='col')
+        for c in range(data.shape[1]):
+            ax[c, 0].plot(data[:, c].mean(-1), lw=.5, label='data')
+            ax[c, 1].plot(proj[:, c].mean(-1), lw=.5, label='projection')
+            if c < data.shape[1]:
+                ax[c, 0].set_xticks([])
+                ax[c, 1].set_xticks([])
+
+        ax[0, 0].set_title('Before')
+        ax[0, 1].set_title('After')
+        plt.legend()
+        plt.show()
 
 if __name__ == '__main__':
     import pytest
