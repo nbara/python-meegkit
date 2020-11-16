@@ -1,10 +1,10 @@
 """Utils for ASR functions."""
 import numpy as np
-from scipy.special import gamma, gammaincinv
 from numpy import linalg
-from numpy.matlib import repmat
 from scipy import signal
 from scipy.linalg import toeplitz
+from scipy.spatial.distance import cdist, euclidean
+from scipy.special import gamma, gammaincinv
 
 
 def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
@@ -77,7 +77,7 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     X = np.sort(X)
     n = len(X)
 
-    # calc z bounds for the truncated standard generalized Gaussian pdf and
+    # compute z bounds for the truncated standard generalized Gaussian pdf and
     # pdf rescaler
     quants = np.array(fit_quantiles)
     zbounds = []
@@ -96,57 +96,58 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     # minimum width of the fit interval, as fraction of data
     min_width = min_clean_fraction * max_width
 
-    rowval = np.array(
-        np.round(n * np.arange(lower_min, lower_min +
-                               max_dropout_fraction + (step_sizes[0] * 1e-9),
-                               step_sizes[0])))
-    colval = np.array(np.arange(0, int(np.round(n * max_width))))
-    newX = []
-    for iX in range(len(colval)):
-        newX.append(X[np.int_(iX + rowval)])
+    # Build quantile interval matrix
+    cols = np.arange(lower_min,
+                     lower_min + max_dropout_fraction + step_sizes[0] * 1e-9,
+                     step_sizes[0])
+    cols = np.round(n * cols).astype(int)
+    rows = np.arange(0, int(np.round(n * max_width)))
+    newX = np.zeros((len(rows), len(cols)))
+    for i, c in enumerate(range(len(rows))):
+        newX[i] = X[c + cols]
 
-    X1 = newX[0]
-    newX = newX - repmat(X1, len(colval), 1)
+    # subtract baseline value for each interval
+    X1 = newX[0, :]
+    newX = newX - X1
     opt_val = np.inf
 
-    for m in (np.round(n * np.arange(max_width, min_width, -step_sizes[1]))):
-        mcurr = int(m - 1)
+    opt_val = np.inf
+    opt_lu = np.inf
+    opt_bounds = np.inf
+    opt_beta = np.inf
+    gridsearch = np.round(n * np.arange(max_width, min_width, -step_sizes[1]))
+    for m in gridsearch.astype(int):
+        mcurr = m - 1
         nbins = int(np.round(3 * np.log2(1 + m / 2)))
-        rowval = np.array(nbins / newX[mcurr])
-        H = newX[0:int(m)] * repmat(rowval, int(m), 1)
+        cols = nbins / newX[mcurr]
+        H = newX[:m] * cols
 
         hist_all = []
-        for ih in range(len(rowval)):
+        for ih in range(len(cols)):
             histcurr = np.histogram(H[:, ih], bins=np.arange(0, nbins + 1))
             hist_all.append(histcurr[0])
         hist_all = np.array(hist_all, dtype=int).T
-        hist_all = np.vstack((hist_all, np.zeros(len(rowval), dtype=int)))
+        hist_all = np.vstack((hist_all, np.zeros(len(cols), dtype=int)))
         logq = np.log(hist_all + 0.01)
 
         # for each shape value...
-        for b in range(len(shape_range)):
-            bounds = zbounds[b]
-            x = bounds[0] + (np.arange(0.5, nbins + 0.5) /
-                             nbins * np.diff(bounds))
-            p = np.exp(-np.abs(x)**shape_range[b]) * rescale[b]
+        for k, b in enumerate(shape_range):
+            bounds = zbounds[k]
+            x = bounds[0] + np.arange(0.5, nbins + 0.5) / nbins * np.diff(bounds)  # noqa:E501
+            p = np.exp(-np.abs(x) ** b) * rescale[k]
             p = p / np.sum(p)
 
             # calc KL divergences
-            kl = np.sum(
-                np.transpose(repmat(p, logq.shape[1], 1)) *
-                (np.transpose(repmat(np.log(p), logq.shape[1], 1)) -
-                 logq[:-1, :]),
-                axis=0) + np.log(m)
+            kl = np.sum(p * (np.log(p) - logq[:-1, :].T), axis=1) + np.log(m)
 
             # update optimal parameters
             min_val = np.min(kl)
             idx = np.argmin(kl)
-
-            if (min_val < opt_val):
+            if min_val < opt_val:
                 opt_val = min_val
-                opt_beta = shape_range[b]
+                opt_beta = shape_range[k]
                 opt_bounds = bounds
-                opt_lu = [X1[idx], (X1[idx] + newX[int(m - 1), idx])]
+                opt_lu = [X1[idx], X1[idx] + newX[m - 1, idx]]
 
     # recover distribution parameters at optimum
     alpha = (opt_lu[1] - opt_lu[0]) / np.diff(opt_bounds)
@@ -154,7 +155,7 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     beta = opt_beta
 
     # calculate the distribution's standard deviation from alpha and beta
-    sig = np.sqrt((alpha**2) * gamma(3 / beta) / gamma(1 / beta))
+    sig = np.sqrt((alpha ** 2) * gamma(3 / beta) / gamma(1 / beta))
 
     return mu, sig, alpha, beta
 
@@ -324,139 +325,64 @@ def yulewalk_filter(X, sfreq, zi=None, ab=None, axis=-1):
     return out, zf
 
 
-def block_geometric_median(X, blocksize, tol=1e-5, max_iter=500):
-    """Calculate a blockwise geometric median.
+def geometric_median(X, tol=1e-5, max_iter=500):
+    """Geometric median.
 
-    This is faster and less memory-intensive than the regular geom_median
-    function. This statistic is not robust to artifacts that persist over a
-    duration that is significantly shorter than the blocksize.
+    This code is adapted from [2]_ using the Vardi and Zhang algorithm
+    described in [1]_.
 
     Parameters
     ----------
-    X : array, shape=(observations, variables)
+    X : array, shape=(n_observations, n_variables)
         The data.
-    blocksize : int
-        The number of successive samples over which a regular mean should be
-        taken.
     tol : float
-        Tolerance (default=1e-5)
+        Tolerance (default=1.e-5)
     max_iter : int
-        Max number of iterations (default=500).
+        Max number of iterations (default=500):
 
     Returns
     -------
-    g : array,
+    y1 : array, shape=(n_variables,)
         Geometric median over X.
 
-    Notes
-    -----
-    This function is noticeably faster if the length of the data is divisible
-    by the block size. Uses the GPU if available.
-
+    References
+    ----------
+    .. [1] Vardi, Y., & Zhang, C. H. (2000). The multivariate L1-median and
+       associated data depth. Proceedings of the National Academy of Sciences,
+       97(4), 1423-1426. https://doi.org/10.1073/pnas.97.4.1423
+    .. [2] https://stackoverflow.com/questions/30299267/
     """
-    if (blocksize > 1):
-        o, v = X.shape       # #observations & #variables
-        r = np.mod(o, blocksize)  # #rest in last block
-        b = int((o - r) / blocksize)   # #blocks
-        Xreshape = np.zeros((b + 1, v))
-        if (r > 0):
-            Xreshape[0:b, :] = np.reshape(
-                np.sum(np.reshape(X[0:(o - r), :],
-                                  (blocksize, b * v)), axis=0),
-                (b, v))
-            Xreshape[b, :] = np.sum(
-                X[(o - r + 1):o, :], axis=0) * (blocksize / r)
+    y = np.mean(X, 0)  # initial value
+
+    i = 0
+    while i < max_iter:
+        D = cdist(X, [y])
+        nonzeros = (D != 0)[:, 0]
+
+        Dinv = 1. / D[nonzeros]
+        Dinvs = np.sum(Dinv)
+        W = Dinv / Dinvs
+        T = np.sum(W * X[nonzeros], 0)
+
+        num_zeros = len(X) - np.sum(nonzeros)
+        if num_zeros == 0:
+            y1 = T
+        elif num_zeros == len(X):
+            return y
         else:
-            Xreshape = np.reshape(
-                np.sum(np.reshape(X, (blocksize, b * v)), axis=0), (b, v))
-        X = Xreshape
+            R = (T - y) * Dinvs
+            r = np.linalg.norm(R)
+            rinv = 0 if r == 0 else num_zeros / r
+            y1 = max(0, 1 - rinv) * T + min(1, rinv) * y
 
-    y = np.median(X, axis=0)
-    y = geometric_median(X, tol, y, max_iter) / blocksize
+        if euclidean(y, y1) < tol:
+            return y1
 
-    return y
-
-
-def geometric_median(X, tol, y, max_iter):
-    """Calculate the geometric median for a set of observations.
-
-    This is using Weiszfeld's algorithm (mean under a Laplacian noise
-    distribution)
-
-    Parameters
-    ----------
-    X : the data, as in mean
-    tol : tolerance (default=1.e-5)
-    y : initial value (default=median(X))
-    max_iter : max number of iterations (default=500)
-
-    Returns
-    -------
-    g : geometric median over X
-
-    """
-    for i in range(max_iter):
-        invnorms = 1 / np.sqrt(
-            np.sum((X - repmat(y, X.shape[0], 1))**2, axis=1))
-        oldy = y
-        y = np.sum(X * np.transpose(
-            repmat(invnorms, X.shape[1], 1)), axis=0
-        ) / np.sum(invnorms)
-
-        if ((linalg.norm(y - oldy) / linalg.norm(y)) < tol):
-            break
-
-    return y
-
-
-def moving_average(N, X, Zi):
-    """Moving-average filter along the second dimension of the data.
-
-    Parameters
-    ----------
-    N : filter length in samples
-    X : data matrix [#Channels x #Samples]
-    Zi : initial filter conditions (default=[])
-
-    Returns
-    -------
-    X : the filtered data
-    Zf : final filter conditions
-
-    Christian Kothe, Swartz Center for Computational Neuroscience, UCSD
-    2012-01-10
-
-    """
-    [C, S] = X.shape
-
-    if Zi is None:
-        Zi = np.zeros((C, N))
-
-    # pre-pend initial state & get dimensions
-    Y = np.concatenate((Zi, X), axis=1)
-    [CC, M] = Y.shape
-
-    # get alternating index vector (for additions & subtractions)
-    idx = np.vstack((np.arange(0, M - N), np.arange(N, M)))
-
-    # get sign vector (also alternating, and includes the scaling)
-    S = np.vstack((- np.ones((1, M - N)), np.ones((1, M - N)))) / N
-
-    # run moving average
-    YS = np.zeros((C, S.shape[1] * 2))
-    for i in range(C):
-        YS[i, :] = Y[i, idx.flatten(order='F')] * S.flatten(order='F')
-
-    X = np.cumsum(YS, axis=1)
-    # read out result
-    X = X[:, 1::2]
-
-    Zf = np.transpose(
-        np.vstack((-((X[:, -1] * N) - Y[:, -N])),
-                  np.transpose(Y[:, -N + 1:]))
-    )
-
-    return X, Zf
+        y = y1
+        i += 1
+    else:
+        print(f"Geometric median could converge in {i} iterations "
+              f"with a tolerance of {tol}")
 
 
 def polystab(a):

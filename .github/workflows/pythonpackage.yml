@@ -2,7 +2,7 @@ name: unit-tests
 
 on:
   push:
-    branches: 
+    branches:
       - master
   pull_request:
     branches:
@@ -35,7 +35,7 @@ jobs:
         make pep
     - name: Test with pytest
       run: |
-        pytest --cov=meegkit --cov-report=xml tests/
+        pytest --cov=./ --cov-report=xml tests/
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
