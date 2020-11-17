@@ -6,8 +6,8 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
-         neig_width: float = 1, n_keep: int = 1, return_maps: bool = False,
-         show: bool = False):
+         peak_width: float = .5, neig_width: float = 1, n_keep: int = 1,
+         return_maps: bool = False, show: bool = False):
     """Rhythmic entrainment source separation [1]_.
 
     Parameters
@@ -19,7 +19,10 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     peak_freq : float
         Peak frequency.
     neig_freq : float
-        Distance of neighbouring frequencies away from peak frequency, in Hz.
+        Distance of neighbouring frequencies away from peak frequency, +/- in
+        Hz (default=1).
+    peak_width : float
+        FWHM of the peak frequency (default=.5).
     neig_width : float
         FWHM of the neighboring frequencies (default=1).
     n_keep : int
@@ -61,8 +64,8 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     c01, _ = tscov(gaussfilt(X, sfreq, peak_freq + neig_freq,
                              fwhm=neig_width, n_harm=1))
     c02, _ = tscov(gaussfilt(X, sfreq, peak_freq - neig_freq,
-                             fwhm=1, n_harm=1))
-    c1, _ = tscov(gaussfilt(X, sfreq, peak_freq, fwhm=1, n_harm=1))
+                             fwhm=neig_width, n_harm=1))
+    c1, _ = tscov(gaussfilt(X, sfreq, peak_freq, fwhm=peak_width, n_harm=1))
 
     # perform generalized eigendecomposition
     d, V = linalg.eig(c1, (c01 + c02) / 2)

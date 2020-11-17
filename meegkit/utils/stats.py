@@ -299,6 +299,8 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
     n_harm : int
         Compute SNR at each frequency bin as a pooled RMS over this bin and
         n_harm harmonics (see references below).
+    skipbins : int
+        Number of bins skipped to estimate noise of neighbouring bins.
 
     Returns
     -------
