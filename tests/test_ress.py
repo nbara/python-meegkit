@@ -51,16 +51,21 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
 
 @pytest.mark.parametrize('target', [12, 15, 20])
 @pytest.mark.parametrize('n_trials', [16, 20])
-def test_ress(target, n_trials, show=False):
+@pytest.mark.parametrize('peak_width', [.5, 1])
+@pytest.mark.parametrize('neig_width', [.5, 1])
+@pytest.mark.parametrize('neig_freq', [.5, 1])
+def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     """Test RESS."""
     sfreq = 250
     data, source = create_data(n_times=1000, n_trials=n_trials, freq=target,
                                sfreq=sfreq, show=False)
 
-    out = ress.RESS(data, sfreq=sfreq, peak_freq=target)
+    out = ress.RESS(data, sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
+                    peak_width=peak_width, neig_width=neig_width)
 
     nfft = 500
-    bins, psd = ss.welch(out.squeeze(1), sfreq, window="boxcar", nperseg=nfft,
+    bins, psd = ss.welch(out.squeeze(1), sfreq, window="boxcar",
+                         nperseg=nfft / (peak_width * 2),
                          noverlap=0, axis=0, average='mean')
     # psd = np.abs(np.fft.fft(out, nfft, axis=0))
     # psd = psd[0:psd.shape[0] // 2 + 1]
@@ -91,8 +96,9 @@ def test_ress(target, n_trials, show=False):
     assert (snr[(bins <= target - 2) | (bins >= target + 2)] < 2).all()
 
     # test multiple components
-    out, maps = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=1,
-                          return_maps=True)
+    out, maps = ress.RESS(data, sfreq=sfreq, peak_freq=target,
+                          neig_freq=neig_freq, peak_width=peak_width,
+                          neig_width=neig_width, n_keep=1, return_maps=True)
     _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=2)
     _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=-1)
 
