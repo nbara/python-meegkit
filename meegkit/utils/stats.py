@@ -208,9 +208,8 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
     pre = epochs.times <= 0
 
     # SNR for each bootstrap iteration
-    for i in range(n_bootstrap):
-        snr_dist[i] = 20 * np.log10(
-            np.mean(gfp_bs[i, :, post]) / np.mean(gfp_bs[i, :, pre]))
+    snr_dist = 20 * np.log10(gfp_bs[..., post].mean(-1) /
+                             gfp_bs[..., pre].mean(-1))
 
     # Mean, lower, and upper bound SNR
     snr_low, snr_up = np.percentile(snr_dist, (10, 90), axis=0)
