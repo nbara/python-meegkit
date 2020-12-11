@@ -142,7 +142,7 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
     Parameters
     ----------
     epochs : mne.Epochs instance
-        Epochs instance to compute ERP from.
+        Epochs instance to compute SNR from.
     n_bootstrap : int
         Number of bootstrap iterations (should be > 10000 for publication
         quality).
@@ -174,19 +174,19 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
 
     """
     indices = np.arange(len(epochs.selection), dtype=int)
-    erp_bs = np.empty((n_bootstrap, len(epochs.times)))
-    gfp_bs = np.empty((n_bootstrap, len(epochs.times)))
+    n_chans = len(epochs.ch_names)
+    erp_bs = np.empty((n_bootstrap, n_chans, len(epochs.times)))
+    gfp_bs = np.empty((n_bootstrap, n_chans, len(epochs.times)))
 
     for i in range(n_bootstrap):
-        if 100 * i / n_bootstrap == np.floor(100 * i / n_bootstrap):
-            print('Bootstrapping... {}%'.format(round(100 * i / n_bootstrap)),
-                  end='\r'),
         bs_indices = np.random.choice(indices, replace=True, size=len(indices))
-        erp_bs[i] = np.mean(epochs._data[bs_indices, 0, :], 0)
+        erp_bs[i] = np.mean(epochs._data[bs_indices, ...], 0)
 
         # Baseline correct mean waveform
-        erp_bs[i] = mne.baseline.rescale(erp_bs[i], epochs.times,
-                                         baseline=baseline, verbose='ERROR')
+        if baseline:
+            erp_bs[i] = mne.baseline.rescale(erp_bs[i], epochs.times,
+                                             baseline=baseline,
+                                             verbose='ERROR')
 
         # Rectify waveform
         gfp_bs[i] = np.sqrt(erp_bs[i] ** 2)
@@ -195,7 +195,7 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
     ci_low, ci_up = np.percentile(erp_bs, (10, 90), axis=0)
 
     # Calculate SNR for each bootstrapped ERP; form distribution in `snr_dist`
-    snr_dist = np.zeros((n_bootstrap,))
+    snr_dist = np.zeros((n_bootstrap, n_chans))
     if window is not None:
         if window[0] is None:
             window[0] = 0
@@ -210,13 +210,11 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
     # SNR for each bootstrap iteration
     for i in range(n_bootstrap):
         snr_dist[i] = 20 * np.log10(
-            np.mean(gfp_bs[i, post]) / np.mean(gfp_bs[i, pre]))
-
-    print('Bootstrapping... OK!   ')
+            np.mean(gfp_bs[i, :, post]) / np.mean(gfp_bs[i, :, pre]))
 
     # Mean, lower, and upper bound SNR
     snr_low, snr_up = np.percentile(snr_dist, (10, 90), axis=0)
-    snr_mean = np.mean(snr_dist)
+    snr_mean = np.mean(snr_dist, axis=0)
     mean_bs_erp = np.mean(erp_bs, axis=0)
 
     return (mean_bs_erp, ci_low, ci_up), (snr_mean, snr_low, snr_up)
@@ -238,48 +236,50 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
 
     Parameters
     ----------
-    epochs: instance of mne.Epochs
+    epochs : mne.Epochs | ndarray, shape=(n_trials, n_chans, n_samples)
         Epochs to compute alpha from.
-    K: int
+    K : int
         Number of trials to use for alpha computation.
-    n_bootstrap: int
+    n_bootstrap : int
         Number of bootstrap resamplings.
-    tmin: float
+    tmin : float
         Start time of epoch.
-    tmax: float
+    tmax : float
         End of epoch.
 
     Returns
     -------
-    alpha:
+    alpha : array, shape=(n_chans,)
         Cronbach alpha value
     bounds: length-2 tuple
         Lower and higher bound of CI.
 
     """
-    if tmin:
-        tmin = epochs.time_as_index(tmin)[0]
+    if isinstance(epochs, mne.BaseEpochs):
+        erp = epochs.get_data()
+        tmin = epochs.time_as_index(tmin)[0] if tmin else 0
+        tmax = epochs.time_as_index(tmax)[0] if tmax else -1
+    elif isinstance(epochs, np.ndarray):
+        erp = epochs
+        tmin = tmin if tmin else 0
+        tmax = tmax if tmax else -1
     else:
-        tmin = 0
+        raise ValueError("epochs must be an mne.Epochs or numpy array.")
 
-    if tmax:
-        tmax = epochs.time_as_index(tmax)[0]
-    else:
-        tmax = -1
-
+    n_trials, n_chans, n_samples = erp.shape
     if K is None:
-        K = epochs._data.shape[0]
+        K = n_trials
 
-    alpha = np.empty(n_bootstrap)
+    alpha = np.empty((n_bootstrap, n_chans))
     for b in np.arange(n_bootstrap):  # take K trials randomly
-        idx = np.random.choice(range(epochs._data.shape[0]), K)
-        X = epochs._data[idx, 0, tmin:tmax]
-        sigmaY = X.var(axis=1)  # var over time
-        sigmaX = X.sum(axis=0).var()  # var of average
-        alpha[b] = K / (K - 1) * (1 - sigmaY.sum() / sigmaX)
+        idx = np.random.choice(range(n_trials), K)
+        X = erp[idx, :, tmin:tmax]
+        sigmaY = X.var(axis=2)  # var over time
+        sigmaX = X.sum(axis=0).var(-1)  # var of average
+        alpha[b] = K / (K - 1) * (1 - sigmaY.sum(0) / sigmaX)
 
-    ci_lb, ci_ub = np.percentile(alpha, (10, 90))
-    return np.max([alpha.mean(), 0]), (ci_lb, ci_ub)
+    ci_lo, ci_hi = np.percentile(alpha, (10, 90), axis=0)
+    return alpha.mean(0), ci_lo, ci_hi
 
 
 def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
