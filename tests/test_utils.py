@@ -2,8 +2,31 @@ import numpy as np
 from meegkit.utils import (bootstrap_ci, demean, find_outlier_samples,
                            find_outlier_trials, fold, mean_over_trials,
                            multishift, multismooth, relshift, rms, shift,
-                           shiftnd, unfold, widen_mask)
+                           shiftnd, unfold, widen_mask, cronbach, robust_mean)
 from numpy.testing import assert_almost_equal, assert_equal
+
+
+def _sim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
+    """Create synthetic data."""
+    # source
+    source = np.sin(2 * np.pi * np.linspace(0, .5, n_times - t0))[np.newaxis].T
+    s = source * np.random.randn(1, n_chans)
+    s = s[:, :, np.newaxis]
+    s = np.tile(s, (1, 1, n_trials))
+    signal = np.zeros((n_times, n_chans, n_trials))
+    signal[t0:, :, :] = s
+
+    # noise
+    noise = np.dot(
+        unfold(np.random.randn(n_times, noise_dim, n_trials)),
+        np.random.randn(noise_dim, n_chans))
+    noise = fold(noise, n_times)
+
+    # mix signal and noise
+    signal = SNR * signal / rms(signal.flatten())
+    noise = noise / rms(noise.flatten())
+    noisy_data = signal + noise
+    return noisy_data, signal
 
 
 def test_multishift():
@@ -119,7 +142,7 @@ def test_demean(show=False):
     n_chans = 8
     n_times = 1000
     x = np.random.randn(n_times, n_chans, n_trials)
-    x, s = _stim_data(n_times, n_chans, n_trials, 8, SNR=10)
+    x, s = _sim_data(n_times, n_chans, n_trials, 8, SNR=10)
 
     # 1. demean and check trial average is almost zero
     x1 = demean(x)
@@ -169,29 +192,6 @@ def test_demean(show=False):
     np.testing.assert_array_equal(x1, x3)
 
 
-def _stim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
-    """Create synthetic data."""
-    # source
-    source = np.sin(2 * np.pi * np.linspace(0, .5, n_times - t0))[np.newaxis].T
-    s = source * np.random.randn(1, n_chans)
-    s = s[:, :, np.newaxis]
-    s = np.tile(s, (1, 1, n_trials))
-    signal = np.zeros((n_times, n_chans, n_trials))
-    signal[t0:, :, :] = s
-
-    # noise
-    noise = np.dot(
-        unfold(np.random.randn(n_times, noise_dim, n_trials)),
-        np.random.randn(noise_dim, n_chans))
-    noise = fold(noise, n_times)
-
-    # mix signal and noise
-    signal = SNR * signal / rms(signal.flatten())
-    noise = noise / rms(noise.flatten())
-    noisy_data = signal + noise
-    return noisy_data, signal
-
-
 def test_computeci():
     """Compute CI."""
     x = np.random.randn(1000, 8, 100)
@@ -231,6 +231,23 @@ def test_outliers(show=False):
     assert idx.shape == x.shape
 
 
+def test_cronbach():
+    """Test Cronbach's alpha."""
+    X, _ = _sim_data(800, 8, 80, noise_dim=6, SNR=.2)
+    X = X.transpose([2, 1, 0])  # trials, channels, samples
+    alpha, lo, hi = cronbach(X, tmin=0, n_bootstrap=100)
+    print(alpha)
+    assert np.all(lo < hi)
+
+    X, _ = _sim_data(800, 8, 80, noise_dim=6, SNR=1)
+    X = X.transpose([2, 1, 0])
+    alpha2, lo, hi = cronbach(X, tmin=100, n_bootstrap=100)
+    print(alpha2)
+    assert np.sum(alpha2 > alpha) >= 6
+
+    m = robust_mean(X, axis=0)
+    assert m.shape == (X.shape[1], X.shape[2])
+
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
@@ -241,3 +258,5 @@ if __name__ == '__main__':
     # y = multismooth(x, np.arange(1, 200, 4))
     # plt.imshow(y.T, aspect='auto')
     # plt.show()
+
+    # test_cronbach()
