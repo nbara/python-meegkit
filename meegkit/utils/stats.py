@@ -11,25 +11,25 @@ except ImportError:
     mne = None
 
 
-def rms(x, axis=0):
+def rms(X, axis=0):
     """Root-mean-square along given axis."""
-    return np.sqrt(np.mean(x ** 2, axis=axis, keepdims=True))
+    return np.sqrt(np.mean(X ** 2, axis=axis, keepdims=True))
 
 
-def robust_mean(x, axis=0, percentile=[5, 95]):
+def robust_mean(X, axis=0, percentile=[5, 95]):
     """Do robust mean based on JR Kings implementation."""
-    x = np.array(x)
+    X = np.array(X)
     axis_ = axis
     # force axis to be 0 for facilitation
     if axis is not None and axis != 0:
-        x = np.transpose(x, [axis] + range(0, axis) + range(axis + 1, x.ndim))
+        X = np.transpose(X, [axis] + range(0, axis) + range(axis + 1, X.ndim))
         axis_ = 0
-    mM = np.percentile(x, percentile, axis=axis_)
-    indices_min = np.where((x - mM[0][np.newaxis, ...]) < 0)
-    indices_max = np.where((x - mM[1][np.newaxis, ...]) > 0)
-    x[indices_min] = np.nan
-    x[indices_max] = np.nan
-    m = np.nanmean(x, axis=axis_)
+    mM = np.percentile(X, percentile, axis=axis_)
+    indices_min = np.where((X - mM[0][np.newaxis, ...]) < 0)
+    indices_max = np.where((X - mM[1][np.newaxis, ...]) > 0)
+    X[indices_min] = np.nan
+    X[indices_max] = np.nan
+    m = np.nanmean(X, axis=axis_)
     return m
 
 
@@ -254,14 +254,14 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
         Lower and higher bound of CI.
 
     """
-    if isinstance(epochs, mne.BaseEpochs):
-        erp = epochs.get_data()
-        tmin = epochs.time_as_index(tmin)[0] if tmin else 0
-        tmax = epochs.time_as_index(tmax)[0] if tmax else -1
-    elif isinstance(epochs, np.ndarray):
+    if isinstance(epochs, np.ndarray):
         erp = epochs
         tmin = tmin if tmin else 0
         tmax = tmax if tmax else -1
+    elif isinstance(epochs, mne.BaseEpochs):
+        erp = epochs.get_data()
+        tmin = epochs.time_as_index(tmin)[0] if tmin else 0
+        tmax = epochs.time_as_index(tmax)[0] if tmax else -1
     else:
         raise ValueError("epochs must be an mne.Epochs or numpy array.")
 
@@ -273,20 +273,20 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
     for b in np.arange(n_bootstrap):  # take K trials randomly
         idx = np.random.choice(range(n_trials), K)
         X = erp[idx, :, tmin:tmax]
-        sigmaY = X.var(axis=2)  # var over time
+        sigmaY = X.var(axis=2).sum(0)  # var over time
         sigmaX = X.sum(axis=0).var(-1)  # var of average
-        alpha[b] = K / (K - 1) * (1 - sigmaY.sum(0) / sigmaX)
+        alpha[b] = K / (K - 1) * (1 - sigmaY / sigmaX)
 
     ci_lo, ci_hi = np.percentile(alpha, (10, 90), axis=0)
     return alpha.mean(0), ci_lo, ci_hi
 
 
-def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
+def snr_spectrum(X, freqs, n_avg=1, n_harm=1, skipbins=1):
     """Compute Signal-to-Noise-corrected spectrum.
 
     Parameters
     ----------
-    data : ndarray , shape=(n_freqs, n_chans,[ n_trials,])
+    X : ndarray , shape=(n_freqs, n_chans,[ n_trials,])
         One-sided power spectral density estimate, specified as a real-valued,
         nonnegative array. The power spectral density must be expressed in
         linear units, not decibels.
@@ -318,21 +318,21 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
        natural face images in the infant right hemisphere. Elife, 4.
 
     """
-    if data.ndim == 3:
-        n_freqs = data.shape[0]
-        n_chans = data.shape[1]
-        n_trials = data.shape[-1]
-    elif data.ndim == 2:
+    if X.ndim == 3:
+        n_freqs = X.shape[0]
+        n_chans = X.shape[1]
+        n_trials = X.shape[-1]
+    elif X.ndim == 2:
         n_trials = 1
-        n_freqs = data.shape[0]
-        n_chans = data.shape[1]
+        n_freqs = X.shape[0]
+        n_chans = X.shape[1]
     else:
         raise ValueError('Data must have shape (n_freqs, n_chans, [n_trials,])'
-                         f', got {data.shape}')
+                         f', got {X.shape}')
 
     # Number of points to get desired resolution
-    data = np.reshape(data, (n_freqs, n_chans * n_trials))
-    SNR = np.zeros_like(data)
+    X = np.reshape(X, (n_freqs, n_chans * n_trials))
+    SNR = np.zeros_like(X)
 
     for i_bin in range(n_freqs):
 
@@ -375,12 +375,12 @@ def snr_spectrum(data, freqs, n_avg=1, n_harm=1, skipbins=1):
         for i_trial in range(n_chans * n_trials):
 
             # Mean of signal over fundamental+harmonics
-            A = np.mean(data[bin_peaks, i_trial] ** 2)
+            A = np.mean(X[bin_peaks, i_trial] ** 2)
 
             # Noise around fundamental+harmonics
             B = np.zeros(len(bin_noise))
             for h in range(len(B)):
-                B[h] = np.mean(data[bin_noise[h], i_trial].flatten() ** 2)
+                B[h] = np.mean(X[bin_noise[h], i_trial].flatten() ** 2)
 
             # Ratio
             with np.errstate(divide='ignore', invalid='ignore'):
