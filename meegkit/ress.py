@@ -7,7 +7,8 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
          peak_width: float = .5, neig_width: float = 1, n_keep: int = 1,
-         return_maps: bool = False, show: bool = False):
+         return_maps: bool = False, return_comps: bool = False,
+         show: bool = False):
     """Rhythmic entrainment source separation [1]_.
 
     Parameters
@@ -29,6 +30,9 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
         Number of components to keep (default=1). -1 keeps all components.
     return_maps : bool
         If True, also output maps (mixing matrix).
+    return_comps : bool
+        If True, also output eigenvectors used to transform the data into RESS 
+        components
 
     Returns
     -------
@@ -36,6 +40,8 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
         RESS time series.
     maps : array, shape=(n_channels, n_keep)
         If return_maps is True, also output mixing matrix.
+    comps : array, shape=(n_channels, n_keep)
+        If return_comps is True, also output eigenvectors
 
     Notes
     -----
@@ -46,6 +52,13 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     Then multiply each trial by the mixing matrix:
     >> from meegkit.utils import matmul3d
     >> proj = matmul3d(out, maps.T)
+
+    To transform a new observation into RESS components, one starts by
+    applying RESS:
+    >> out, comps = ress.RESS(data, sfreq, peak_freq, return_comps=True)
+
+    Then multiply your data by the component:
+    >> new_comp = new_data @ comp
 
     References
     ----------
@@ -86,18 +99,25 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     # Normalize components
     V /= np.sqrt(np.sum(V, axis=0) ** 2)
 
-    # extract components
+    # Extract components
     maps = mrdivide(c1 @ V, V.T @ c1 @ V)
     maps = maps[:, :n_keep]
     # idx = np.argmax(np.abs(maps[:, 0]))  # find biggest component
     # maps = maps * np.sign(maps[idx, 0])  # force to positive sign
 
+    # Select Eigenvectors to use
+    comps = V[:, np.arange(n_keep)]
+
     # reconstruct RESS component time series
     out = np.zeros((n_samples, n_keep, n_trials))
     for t in range(n_trials):
-        out[..., t] = X[:, :, t] @ V[:, np.arange(n_keep)]
+        out[..., t] = X[:, :, t] @ comps
 
-    if return_maps:
+    if return_maps and return_comps:
+        return out, maps, V
+    elif return_maps:
         return out, maps
+    elif return_comps:
+        return out, comps
     else:
         return out
