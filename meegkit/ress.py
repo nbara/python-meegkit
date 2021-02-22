@@ -31,7 +31,7 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     return_maps : bool
         If True, also output maps (mixing matrix).
     return_comps : bool
-        If True, also output eigenvectors used to transform the data into RESS 
+        If True, also output eigenvectors used to transform the data into RESS
         components.
 
     Returns
@@ -112,8 +112,6 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     out = np.zeros((n_samples, n_keep, n_trials))
     for t in range(n_trials):
         out[..., t] = X[:, :, t] @ comps
-
-    from IPython import embed;embed()
 
     if return_maps and return_comps:
         return out, maps, V
