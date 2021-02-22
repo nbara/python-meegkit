@@ -15,4 +15,4 @@ codespell
 pydocstyle
 tqdm
 statsmodels
-pyriemann
+pyriemann @ git+https://github.com/alexandrebarachant/pyRiemann.git@1ecaa372b7c432f13e82685b2541ee48424a11c9
