@@ -45,6 +45,7 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     --------
     To project the RESS components back into sensor space, one can proceed as
     follows:
+
     >>> # First apply RESS
     >>> from meegkit.utils import matmul3d  # handles 3D matrix multiplication
     >>> out, fromRESS, _ = ress.RESS(data, sfreq, peak_freq, return_maps=True)
@@ -53,6 +54,7 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
 
     To transform a new observation into RESS component space (e.g. in the
     context of a cross-validation, with separate train/test sets):
+
     >>> # Start by applying RESS to the train set:
     >>> out, _, toRESS = ress.RESS(data, sfreq, peak_freq, return_maps=True)
     >>> # Then multiply your test data by the toRESS:
