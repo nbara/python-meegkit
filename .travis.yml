@@ -8,7 +8,7 @@ os: linux
 dist: xenial
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
-  - "3.7"
+  - "3.8"
 install:
   - sudo apt-get update
   - pip install -r requirements.txt
