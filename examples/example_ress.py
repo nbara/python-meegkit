@@ -65,7 +65,7 @@ ax[2].legend()
 # -----------------------------------------------------------------------------
 
 # Apply RESS
-out, maps = ress.RESS(data, sfreq=sfreq, peak_freq=target, return_maps=True)
+out, maps, _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, return_maps=True)
 
 # Compute PSD
 nfft = 250
@@ -88,7 +88,7 @@ ax.set_xlim([0, 40])
 # Project components back into sensor space to see the effects of RESS on the
 # average SSVEP.
 
-proj = matmul3d(out, maps.T)
+proj = matmul3d(out, maps)
 f, ax = plt.subplots(n_chans, 2, sharey='col')
 for c in range(n_chans):
     ax[c, 0].plot(data[:, c].mean(-1), lw=.5)
