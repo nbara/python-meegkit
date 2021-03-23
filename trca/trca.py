@@ -31,7 +31,6 @@ def trca(eeg):
     ISAE-SUPAERO
     github: gferraro2019 
     email: giuseppe.ferraro@isae.supaero.fr"""
-    
     num_chans = eeg.shape[1]
     num_smpls = eeg.shape[2]
 

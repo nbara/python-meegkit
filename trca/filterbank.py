@@ -35,7 +35,6 @@ def filterbank(eeg, fs, idx_fb):
     ISAE-SUPAERO
     github: gferraro2019 
     email: giuseppe.ferraro@isae.supaero.fr"""
-    
     if(eeg.ndim == 3):
         num_chans = eeg.shape[1]
         num_trials = eeg.shape[0]

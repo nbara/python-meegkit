@@ -25,7 +25,6 @@ def itrFunc(n, p, t):
     ISAE-SUPAERO
     github: gferraro2019 
     email: giuseppe.ferraro@isae.supaero.fr"""
-
     itr=0
 
     if (p < 0 or 1 < p):

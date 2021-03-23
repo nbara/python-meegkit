@@ -12,11 +12,10 @@ from  train_trca import train_trca
 from  trca import trca 
 from  utils import normfit,round_half_up
 
-t = time.time()
 
 """Sample codes for the task-related component analysis (TRCA)-based steady
- -state visual evoked potential (SSVEP) detection method [1]. The filter
- bank analysis [2] can also be combined to the TRCA-based algorithm.
+-state visual evoked potential (SSVEP) detection method [1]. The filter
+bank analysis [2] can also be combined to the TRCA-based algorithm.
 
  Reference:
    [1] M. Nakanishi, Y. Wang, X. Chen, Y.-T. Wang, X. Gao, and T.-P. Jung,
@@ -31,12 +30,14 @@ t = time.time()
        "High-speed spelling with a noninvasive brain-computer interface",
        Proc. Int. Natl. Acad. Sci. U. S. A, 112(44): E6058-6067, 2015.
 
-    Code based on the Matlab implementation from https://github.com/mnakanishi/TRCA-SSVEP translated and adapted in Python by:
+Code based on the Matlab implementation from https://github.com/mnakanishi/TRCA-SSVEP translated and adapted in Python by:
 
-    Giuseppe Ferraro
-    ISAE-SUPAERO
-    github: gferraro2019 
-    email: giuseppe.ferraro@isae.supaero.fr"""
+Giuseppe Ferraro
+ISAE-SUPAERO
+github: gferraro2019 
+email: giuseppe.ferraro@isae.supaero.fr"""
+
+t = time.time()
 
 # Data length for target identification [s]
 len_gaze_s = 0.5   

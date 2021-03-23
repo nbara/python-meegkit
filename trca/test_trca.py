@@ -38,8 +38,6 @@ def test_trca(eeg, model, is_ensemble):
     ISAE-SUPAERO
     github: gferraro2019 
     email: giuseppe.ferraro@isae.supaero.fr"""
-    
-    
     fb_coefs = [(x+1)**(-1.25)+0.25 for x in range(model["num_fbs"])] #  Alpha coefficients for the fusion of filterbank analysis
     testdata_len = len(eeg)
     
