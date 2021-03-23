@@ -5,7 +5,8 @@ from  trca import trca
 
 
 def train_trca(eeg, y_train, fs, num_fbs): 
-    """Training stage of the task-related component analysis (TRCA)-based
+    """
+    Training stage of the task-related component analysis (TRCA)-based
     steady-state visual evoked potentials (SSVEPs) detection [1].
     
     Parameters
@@ -52,7 +53,8 @@ def train_trca(eeg, y_train, fs, num_fbs):
     Giuseppe Ferraro
     ISAE-SUPAERO
     github: gferraro2019 
-    email: giuseppe.ferraro@isae.supaero.fr"""
+    email: giuseppe.ferraro@isae.supaero.fr
+    """
     num_chans = eeg.shape[1]
     num_smpls = eeg.shape[2]
 

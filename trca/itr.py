@@ -1,7 +1,8 @@
 import numpy as np
 
 def itrFunc(n, p, t):
-    """Calculate information transfer rate (ITR) for brain-computer interface 
+    """
+    Calculate information transfer rate (ITR) for brain-computer interface 
     (BCI) [2]
     function [ itr ] = itr(n, p, t)
     
@@ -24,7 +25,8 @@ def itrFunc(n, p, t):
     Giuseppe Ferraro
     ISAE-SUPAERO
     github: gferraro2019 
-    email: giuseppe.ferraro@isae.supaero.fr"""
+    email: giuseppe.ferraro@isae.supaero.fr
+    """
     itr=0
 
     if (p < 0 or 1 < p):

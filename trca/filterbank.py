@@ -3,7 +3,8 @@ import scipy.signal as scp
 
 
 def filterbank(eeg, fs, idx_fb):
-    """Filter bank design for decomposing EEG data into sub-band components [1]
+    """
+    Filter bank design for decomposing EEG data into sub-band components [1]
     
     Parameters
     ----------
@@ -34,7 +35,8 @@ def filterbank(eeg, fs, idx_fb):
     Giuseppe Ferraro
     ISAE-SUPAERO
     github: gferraro2019 
-    email: giuseppe.ferraro@isae.supaero.fr"""
+    email: giuseppe.ferraro@isae.supaero.fr
+    """
     if(eeg.ndim == 3):
         num_chans = eeg.shape[1]
         num_trials = eeg.shape[0]

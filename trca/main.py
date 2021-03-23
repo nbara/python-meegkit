@@ -13,7 +13,8 @@ from  trca import trca
 from  utils import normfit,round_half_up
 
 
-"""Sample codes for the task-related component analysis (TRCA)-based steady
+"""
+Sample codes for the task-related component analysis (TRCA)-based steady
 -state visual evoked potential (SSVEP) detection method [1]. The filter
 bank analysis [2] can also be combined to the TRCA-based algorithm.
 
@@ -35,7 +36,8 @@ Code based on the Matlab implementation from https://github.com/mnakanishi/TRCA-
 Giuseppe Ferraro
 ISAE-SUPAERO
 github: gferraro2019 
-email: giuseppe.ferraro@isae.supaero.fr"""
+email: giuseppe.ferraro@isae.supaero.fr
+"""
 
 t = time.time()
 

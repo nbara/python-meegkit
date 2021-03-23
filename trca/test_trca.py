@@ -5,7 +5,8 @@ from filterbank import filterbank
 
 
 def test_trca(eeg, model, is_ensemble):
-    """Test phase of the task-related component analysis (TRCA)-based
+    """
+    Test phase of the task-related component analysis (TRCA)-based
     steady-state visual evoked potentials (SSVEPs) detection [1].
 
     Parameters
@@ -37,7 +38,8 @@ def test_trca(eeg, model, is_ensemble):
     Giuseppe Ferraro
     ISAE-SUPAERO
     github: gferraro2019 
-    email: giuseppe.ferraro@isae.supaero.fr"""
+    email: giuseppe.ferraro@isae.supaero.fr
+    """
     fb_coefs = [(x+1)**(-1.25)+0.25 for x in range(model["num_fbs"])] #  Alpha coefficients for the fusion of filterbank analysis
     testdata_len = len(eeg)
     
