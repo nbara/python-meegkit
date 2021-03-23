@@ -2,26 +2,28 @@ import math
 import numpy as np
 import scipy 
 
-def round_half_up(n, decimals=0):
+def round_half_up(num, decimals=0):
     """
-    This function rounds the last decimal of the number as below:
+    This function rounds the last decimal of the number.
+    The rules are:
     from 0 to 4 rounds down
     from 5 to 9 rounds up
 
     Parameters
     ----------
-    n: number to round
+    num: number to round
     decimals : number of decimals
 
     Returns
     ---------
-    n rounded
+    num rounded
     """ 
     multiplier = 10 ** decimals
-    return int(math.floor(n*multiplier + 0.5) / multiplier)
+    return int(math.floor(num*multiplier + 0.5) / multiplier)
 
 def normfit(data, confidence=0.95):
     """
+    This funciton computes the mean, std and interval of confidence for them.
     Parameters
     ----------
     data: array of numbers
@@ -34,16 +36,15 @@ def normfit(data, confidence=0.95):
     [m - h, m + h] : confidence interval of the mean
     [sigmaCI_lower, sigmaCI_upper] : confidence interval of the std
     """
-
-    a = 1.0 * np.array(data)
-    n = len(a)
-    m, se = np.mean(a), scipy.stats.sem(a)
-    h = se * scipy.stats.t.ppf((1 + confidence) / 2., n - 1)
+    arr = 1.0 * np.array(data)
+    num = len(arr)
+    avg, std_err = np.mean(arr), scipy.stats.sem(arr)
+    h_int = std_err * scipy.stats.t.ppf((1 + confidence) / 2., num - 1)
     var = np.var(data, ddof=1)
-    varCI_upper = var * (n - 1) / (scipy.stats.chi2.ppf((1-confidence) / 2, n - 1))
-    varCI_lower = var * (n - 1) / (scipy.stats.chi2.ppf(1-(1-confidence) / 2, n - 1))
+    var_ci_upper = var * (num - 1) / (scipy.stats.chi2.ppf((1-confidence) / 2, num - 1))
+    var_ci_lower = var * (num - 1) / (scipy.stats.chi2.ppf(1-(1-confidence) / 2, num - 1))
     sigma = np.sqrt(var)
-    sigmaCI_lower = np.sqrt(varCI_lower)
-    sigmaCI_upper = np.sqrt(varCI_upper)
+    sigma_ci_lower = np.sqrt(var_ci_lower)
+    sigma_ci_upper = np.sqrt(var_ci_upper)
 
-    return m, sigma, [m - h, m + h], [sigmaCI_lower, sigmaCI_upper]
+    return avg, sigma, [avg - h_int, avg + h_int], [sigma_ci_lower, sigma_ci_upper]
