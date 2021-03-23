@@ -3,10 +3,7 @@ import scipy.linalg as linalg
 from joblib import Parallel, delayed
 
 def trca(eeg):
-    """
-    Transaled in Python by Giuseppe Ferraro, github: gferraro2019 email: gferraro2016@gmail.com
-
-    Task-related component analysis (TRCA). This script was written based on
+    """Task-related component analysis (TRCA). This script was written based on
     the reference paper [1].
     
     Parameters
@@ -28,9 +25,13 @@ def trca(eeg):
            task-related component analysis",
           IEEE Trans. Biomed. Eng, 65(1):104-112, 2018.
     
-    Code based on the Matlab implementation from authors of [1]
-    (https://github.com/mnakanishi/TRCA-SSVEP).
-    """
+    Code based on the Matlab implementation from https://github.com/mnakanishi/TRCA-SSVEP translated and adapted in Python by:
+
+    Giuseppe Ferraro
+    ISAE-SUPAERO
+    github: gferraro2019 
+    email: giuseppe.ferraro@isae.supaero.fr"""
+    
     num_chans = eeg.shape[1]
     num_smpls = eeg.shape[2]
 

@@ -1,8 +1,7 @@
 import numpy as np
 
 def itrFunc(n, p, t):
-    """
-    Transaled in Python by Giuseppe Ferraro, github: gferraro2019 email: gferraro2016@gmail.com
+    """Transaled in Python by Giuseppe Ferraro, github: gferraro2019 email: gferraro2016@gmail.com
 
     Calculate information transfer rate (ITR) for brain-computer interface 
     (BCI) [2]
@@ -22,11 +21,12 @@ def itrFunc(n, p, t):
             Transfer Rates",
         IEEE Trans. Biomed. Eng. 49, 1181-1186, 2002.
     
-    Masaki Nakanishi, 22-Dec-2017
-    Swartz Center for Computational Neuroscience, Institute for Neural
-    Computation, University of California San Diego
-    E-mail: masaki@sccn.ucsd.edu
-    """
+    Code based on the Matlab implementation from https://github.com/mnakanishi/TRCA-SSVEP translated and adapted in Python by:
+
+    Giuseppe Ferraro
+    ISAE-SUPAERO
+    github: gferraro2019 
+    email: giuseppe.ferraro@isae.supaero.fr"""
 
     itr=0
 
