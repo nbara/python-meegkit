@@ -4,11 +4,10 @@ import scipy.signal as scp
 
 def filterbank(eeg, fs, idx_fb):
     """
-    Filter bank design for decomposing EEG data into sub-band components [1]
+    Filter bank design for decomposing EEG data into sub-band components [1].
     
     Parameters
     ----------
-    
     eeg: np.array, shape (trials, channels, samples)
         Training data 
         
@@ -20,7 +19,6 @@ def filterbank(eeg, fs, idx_fb):
             
     Returns
     -------
-    
     y: np.array, shape (trials, channels, samples)
         Sub-band components decomposed by a filter bank
 

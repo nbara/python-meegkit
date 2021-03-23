@@ -2,10 +2,8 @@ import numpy as np
 
 def itrFunc(n, p, t):
     """
-    Calculate information transfer rate (ITR) for brain-computer interface 
-    (BCI) [2]
-    function [ itr ] = itr(n, p, t)
-    
+    Calculate information transfer rate (ITR) for brain-computer interface (BCI) [2].
+        
     Input:
     n   :  of targets
     p   : Target identification accuracy (0 <= p <= 1) 

@@ -11,7 +11,6 @@ def train_trca(eeg, y_train, fs, num_fbs):
     
     Parameters
     ----------
-    
     eeg: np.array, shape (trials, channels, samples)
         Training data 
           
@@ -27,7 +26,6 @@ def train_trca(eeg, y_train, fs, num_fbs):
             
     Returns
     -------
-    
     model: dict
         Fitted model containing:
         - traindata   : Reference (training) data decomposed into sub-band components 
