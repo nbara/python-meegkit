@@ -4,7 +4,8 @@ import scipy
 
 def round_half_up(num, decimals=0):
     """
-    This function rounds the last decimal of the number.
+    round_half_up round the last decimal of the number.
+
     The rules are:
     from 0 to 4 rounds down
     from 5 to 9 rounds up
@@ -23,7 +24,8 @@ def round_half_up(num, decimals=0):
 
 def normfit(data, confidence=0.95):
     """
-    This funciton computes the mean, std and interval of confidence for them.
+    normfit compute the mean, std and interval of confidence for them.
+
     Parameters
     ----------
     data: array of numbers
