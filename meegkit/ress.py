@@ -7,7 +7,7 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
          peak_width: float = .5, neig_width: float = 1, n_keep: int = 1,
-         return_maps: bool = False, show: bool = False):
+         return_maps: bool = False):
     """Rhythmic entrainment source separation [1]_.
 
     Parameters
@@ -28,24 +28,37 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     n_keep : int
         Number of components to keep (default=1). -1 keeps all components.
     return_maps : bool
-        If True, also output maps (mixing matrix).
+        If True, also output mixing (to_ress) and unmixing matrices
+        (from_ress), used to transform the data into RESS component space and
+        back into sensor space, respectively.
 
     Returns
     -------
     out : array, shape=(n_samples, n_keep, n_trials)
         RESS time series.
-    maps : array, shape=(n_channels, n_keep)
-        If return_maps is True, also output mixing matrix.
+    from_ress : array, shape=(n_components, n_channels)
+        Unmixing matrix (projects to sensor space).
+    to_ress : array, shape=(n_channels, n_components)
+        Mixing matrix (projects to component space).
 
-    Notes
-    -----
+    Examples
+    --------
     To project the RESS components back into sensor space, one can proceed as
-    follows. First apply RESS:
-    >> out, maps = ress.RESS(data, sfreq, peak_freq, return_maps=True)
+    follows:
 
-    Then multiply each trial by the mixing matrix:
-    >> from meegkit.utils import matmul3d
-    >> proj = matmul3d(out, maps.T)
+    >>> # First apply RESS
+    >>> from meegkit.utils import matmul3d  # handles 3D matrix multiplication
+    >>> out, fromRESS, _ = ress.RESS(data, sfreq, peak_freq, return_maps=True)
+    >>> # Then matrix multiply each trial by the unmixing matrix:
+    >>> proj = matmul3d(out, fromRESS)
+
+    To transform a new observation into RESS component space (e.g. in the
+    context of a cross-validation, with separate train/test sets):
+
+    >>> # Start by applying RESS to the train set:
+    >>> out, _, toRESS = ress.RESS(data, sfreq, peak_freq, return_maps=True)
+    >>> # Then multiply your test data by the toRESS:
+    >>> new_comp = new_data @ toRESS
 
     References
     ----------
@@ -68,36 +81,38 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     c1, _ = tscov(gaussfilt(X, sfreq, peak_freq, fwhm=peak_width, n_harm=1))
 
     # perform generalized eigendecomposition
-    d, V = linalg.eig(c1, (c01 + c02) / 2)
+    d, to_ress = linalg.eig(c1, (c01 + c02) / 2)
     d = d.real
-    V = V.real
+    to_ress = to_ress.real
 
     # Sort eigenvectors by decreasing eigenvalues
     idx = np.argsort(d)[::-1]
     d = d[idx]
-    V = V[:, idx]
+    to_ress = to_ress[:, idx]
 
     # Truncate weak components
     # if thresh is not None:
     #     idx = np.where(d / d.max() > thresh)[0]
     #     d = d[idx]
-    #     V = V[:, idx]
+    #     to_ress = to_ress[:, idx]
 
-    # Normalize components
-    V /= np.sqrt(np.sum(V, axis=0) ** 2)
+    # Normalize components (yields mixing matrix)
+    to_ress /= np.sqrt(np.sum(to_ress, axis=0) ** 2)
+    to_ress = to_ress[:, np.arange(n_keep)]
 
-    # extract components
-    maps = mrdivide(c1 @ V, V.T @ c1 @ V)
-    maps = maps[:, :n_keep]
-    # idx = np.argmax(np.abs(maps[:, 0]))  # find biggest component
-    # maps = maps * np.sign(maps[idx, 0])  # force to positive sign
+    # Compute unmixing matrix
+    from_ress = mrdivide(c1 @ to_ress, to_ress.T @ c1 @ to_ress).T
+    from_ress = from_ress[:n_keep, :]
 
-    # reconstruct RESS component time series
+    # idx = np.argmax(np.abs(from_ress[:, 0]))  # find biggest component
+    # from_ress = from_ress * np.sign(from_ress[idx, 0])  # force positive sign
+
+    # Output `n_keep` RESS component time series
     out = np.zeros((n_samples, n_keep, n_trials))
     for t in range(n_trials):
-        out[..., t] = X[:, :, t] @ V[:, np.arange(n_keep)]
+        out[..., t] = X[:, :, t] @ to_ress
 
     if return_maps:
-        return out, maps
+        return out, from_ress, to_ress
     else:
         return out

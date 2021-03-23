@@ -19,19 +19,18 @@ import sphinx_bootstrap_theme  # noqa
 import matplotlib
 matplotlib.use('agg')
 
-# import meegkit
-
 curdir = os.path.dirname(__file__)
 sys.path.append(os.path.abspath(os.path.join(curdir, '..')))
 sys.path.append(os.path.abspath(os.path.join(curdir, '..', 'meegkit')))
 
+import meegkit # noqa
 
 # -- Project information -----------------------------------------------------
 
 project = 'MEEGkit'
 copyright = '2020, Nicolas Barascud'
 author = 'Nicolas Barascud'
-version = '0.1'
+version = meegkit.__version__
 
 # -- General configuration ---------------------------------------------------
 
