@@ -4,18 +4,15 @@ from joblib import Parallel, delayed
 
 def trca(eeg):
     """
-    Task-related component analysis (TRCA). This script was written based on
-    the reference paper [1].
+    Task-related component analysis (TRCA). This script was written based on the reference paper [1].
     
     Parameters
     ----------
-    
     eeg: np.array, shape (trials, channels, samples)
         Training data 
             
     Returns
     -------
-    
     W: np.array, shape (channels)
         Weight coefficients for electrodes which can be used as 
         a spatial filter.

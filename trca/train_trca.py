@@ -6,8 +6,7 @@ from  trca import trca
 
 def train_trca(eeg, y_train, fs, num_fbs): 
     """
-    Training stage of the task-related component analysis (TRCA)-based
-    steady-state visual evoked potentials (SSVEPs) detection [1].
+    Training stage of the task-related component analysis (TRCA)-based steady-state visual evoked potentials (SSVEPs) detection [1].
     
     Parameters
     ----------
