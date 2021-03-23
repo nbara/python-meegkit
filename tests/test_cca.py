@@ -26,7 +26,7 @@ def test_cca():
     C1 = tscov(np.hstack((X1, Y1)))[0]
 
     # Sklearn CCA
-    cca = CCA(n_components=9, scale=False, max_iter=1e6)
+    cca = CCA(n_components=9, scale=False, max_iter=int(1e6))
     X2, Y2 = cca.fit_transform(x, y)
     # C2 = tscov(np.hstack((X2, Y2)).T)[0]
     # import matplotlib.pyplot as plt

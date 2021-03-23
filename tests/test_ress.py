@@ -3,8 +3,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import scipy.signal as ss
+from scipy.linalg import pinv
 from meegkit import ress
-from meegkit.utils import fold, rms, unfold, snr_spectrum, matmul3d
+from meegkit.utils import fold, matmul3d, rms, snr_spectrum, unfold
 
 
 def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
@@ -50,18 +51,24 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
 
 
 @pytest.mark.parametrize('target', [12, 15, 20])
-@pytest.mark.parametrize('n_trials', [16, 20])
+@pytest.mark.parametrize('n_trials', [16])
 @pytest.mark.parametrize('peak_width', [.5, 1])
-@pytest.mark.parametrize('neig_width', [.5, 1])
-@pytest.mark.parametrize('neig_freq', [.5, 1])
+@pytest.mark.parametrize('neig_width', [1])
+@pytest.mark.parametrize('neig_freq', [1])
 def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     """Test RESS."""
     sfreq = 250
-    data, source = create_data(n_times=1000, n_trials=n_trials, freq=target,
-                               sfreq=sfreq, show=False)
+    n_keep = 1
+    n_chans = 10
+    n_times = 1000
+    data, source = create_data(n_times=n_times, n_trials=n_trials,
+                               n_chans=n_chans, freq=target, sfreq=sfreq,
+                               show=False)
 
-    out = ress.RESS(data, sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
-                    peak_width=peak_width, neig_width=neig_width)
+    out = ress.RESS(
+        data, sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
+        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep
+    )
 
     nfft = 500
     bins, psd = ss.welch(out.squeeze(1), sfreq, window="boxcar",
@@ -96,14 +103,14 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     assert (snr[(bins <= target - 2) | (bins >= target + 2)] < 2).all()
 
     # test multiple components
-    out, maps = ress.RESS(data, sfreq=sfreq, peak_freq=target,
-                          neig_freq=neig_freq, peak_width=peak_width,
-                          neig_width=neig_width, n_keep=1, return_maps=True)
-    _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=2)
-    _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, n_keep=-1)
+    out, fromress, toress = ress.RESS(
+        data, sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
+        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep,
+        return_maps=True
+    )
 
-    proj = matmul3d(out, maps.T)
-    assert proj.shape == data.shape
+    proj = matmul3d(out, fromress)
+    assert proj.shape == (n_times, n_chans, n_trials)
 
     if show:
         f, ax = plt.subplots(data.shape[1], 2, sharey='col')
@@ -117,9 +124,36 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
         ax[0, 0].set_title('Before')
         ax[0, 1].set_title('After')
         plt.legend()
+
+    # 2 comps
+    _ = ress.RESS(
+        data, sfreq=sfreq, peak_freq=target, n_keep=2
+    )
+
+    # All comps
+    out, fromress, toress = ress.RESS(
+        data, sfreq=sfreq, peak_freq=target, n_keep=-1, return_maps=True
+    )
+
+    if show:
+        # Inspect mixing/unmixing matrices
+        combined_data = np.array([toress, fromress, pinv(toress)])
+        _max = np.amax(combined_data)
+
+        f, ax = plt.subplots(3)
+        ax[0].imshow(toress, label='toRESS')
+        ax[0].set_title('toRESS')
+        ax[1].imshow(fromress, label='fromRESS', vmin=-_max, vmax=_max)
+        ax[1].set_title('fromRESS')
+        ax[2].imshow(pinv(toress), vmin=-_max, vmax=_max)
+        ax[2].set_title('toRESS$^{-1}$')
+        plt.tight_layout()
         plt.show()
+
+    print(np.sum(np.abs(pinv(toress) - fromress) >= .1))
+
 
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
-    # test_ress(12, 20, show=True)
+    # test_ress(12, 20, 1, 1, 1, show=True)

@@ -91,8 +91,8 @@ def widen_mask(mask, widen=4, axis=0):
 
     Examples
     --------
-    >> test = widen_mask(np.array([False, False, False, True, False], 1)
-    >> print(test)
+    >>> test = widen_mask(np.array([False, False, False, True, False], 1)
+    >>> print(test)
     [False False False True True]]
 
     """
