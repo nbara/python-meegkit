@@ -15,7 +15,8 @@ def round_half_up(num, decimals=0):
 
     Parameters
     ----------
-    num: number to round
+    num : float
+        Number to round
     decimals : number of decimals
 
     Returns
@@ -103,7 +104,7 @@ def filterbank(eeg, fs, idx_fb):
 
     Parameters
     ----------
-    eeg : np.array, shape=(trials, channels, samples)
+    eeg : np.array, shape=(n_samples, n_chans[, n_trials])
         Training data.
     fs : int
         Sampling frequency of the data.
@@ -116,16 +117,7 @@ def filterbank(eeg, fs, idx_fb):
         Sub-band components decomposed by a filter bank.
 
     """
-    if(eeg.ndim == 3):
-        num_chans = eeg.shape[1]
-        num_trials = eeg.shape[0]
-
-    elif(eeg.ndim == 2):  # Testdata come with only one trial at the time
-        num_chans = eeg.shape[0]
-        num_trials = 1
-
     fs = fs / 2
-
     passband = [6, 14, 22, 30, 38, 46, 54, 62, 70, 78]
     stopband = [4, 10, 16, 24, 32, 40, 48, 56, 64, 72]
     Wp = [passband[idx_fb] / fs, 90 / fs]
@@ -136,22 +128,8 @@ def filterbank(eeg, fs, idx_fb):
     # Chebyshev type I filter design
     B, A = cheby1(N, 0.5, Wn, btype="bandpass")
 
-    y = np.zeros(eeg.shape)
-    if num_trials == 1:  # For testdata
-        for ch_i in range(num_chans):
-            try:
-                y[ch_i, :] = filtfilt(
-                    B, A, eeg[ch_i, :], axis=0, padtype='odd',
-                    padlen=3 * (max(len(B), len(A)) - 1))
-            except BaseException:
-                print(num_chans)
-    else:
-        for trial_i in range(num_trials):  # Filter each trial sequentially
-            for ch_i in range(num_chans):  # Filter each channel sequentially
-                # the arguments 'axis=0, padtype='odd',
-                # padlen=3*(max(len(B),len(A))-1)' correspond to Matlab
-                # filtfilt : https://dsp.stackexchange.com/a/47945
-                y[trial_i, ch_i, :] = filtfilt(
-                    B, A, eeg[trial_i, ch_i, :], axis=0, padtype='odd',
-                    padlen=3 * (max(len(B), len(A)) - 1))
+    # the arguments 'axis=0, padtype='odd', padlen=3*(max(len(B),len(A))-1)'
+    # correspond to Matlab filtfilt : https://dsp.stackexchange.com/a/47945
+    y = filtfilt(B, A, eeg, axis=0, padtype='odd',
+                 padlen=3 * (max(len(B), len(A)) - 1))
     return y

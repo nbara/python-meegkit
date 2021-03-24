@@ -4,6 +4,7 @@ import numpy as np
 import scipy.linalg as linalg
 
 from .utils.trca import filterbank
+from .utils import theshapeof
 
 
 def trca(eeg):
@@ -13,7 +14,7 @@ def trca(eeg):
 
     Parameters
     ----------
-    eeg : array, shape=(n_trials, n_chans, n_samples)
+    eeg : array, shape=(n_samples, n_chans[, n_trials])
         Training data.
 
     Returns
@@ -30,50 +31,40 @@ def trca(eeg):
        65(1):104-112, 2018.
 
     """
-    num_chans = eeg.shape[1]
-    num_smpls = eeg.shape[2]
+    n_samples, n_chans, n_trials = theshapeof(eeg)
 
-    if(eeg.ndim == 3):
-        num_trials = eeg.shape[0]
+    S = np.zeros((n_chans, n_chans))
+    for trial_i in range(n_trials - 1):
+        x1 = np.squeeze(eeg[..., trial_i])
 
-    elif(eeg.ndim == 2):  # For testdata
-        num_trials = 1
-
-    S = np.zeros((num_chans, num_chans))
-    for trial_i in range(num_trials - 1):
-        x1 = np.squeeze(eeg[trial_i, :, :])
-        if x1.ndim > 1:
-            # Mean centering for the selected trial
-            x1 -= (np.mean(x1, 1) * np.ones((x1.shape[0], x1.shape[1])).T).T
-        else:
-            x1 -= np.mean(x1)
+        # Mean centering for the selected trial
+        x1 -= np.mean(x1, 0)
 
         # Select a second trial that is different
-        for trial_j in range(trial_i + 1, num_trials):
-            x2 = np.squeeze(eeg[trial_j, :, :])
-            if x2.ndim > 1:
-                # Mean centering for the selected trial
-                x2 = x2 - (np.mean(x2, 1) *
-                           np.ones((x2.shape[0], x2.shape[1])).T).T
-            else:
-                x2 = x2 - np.mean(x2)
+        for trial_j in range(trial_i + 1, n_trials):
+            x2 = np.squeeze(eeg[..., trial_j])
 
-            # Compute empirical covariance betwwen the two selected trials and
+            # Mean centering for the selected trial
+            x2 -= np.mean(x2, 0)
+
+            # Compute empirical covariance between the two selected trials and
             # sum it
-            S = S + np.dot(x1, x2.T) + np.dot(x2, x1.T)
+            S = S + x1.T @ x2 + x2.T @ x1
 
     # Reshape to have all the data as a sequence
-    UX = np.zeros((num_chans, num_smpls * num_trials))
-    for trial in range(num_trials):
-        UX[:, trial * num_smpls:(trial + 1) * num_smpls] = eeg[trial, :, :]
+    UX = np.zeros((n_chans, n_samples * n_trials))
+    for trial in range(n_trials):
+        UX[:, trial * n_samples:(trial + 1) * n_samples] = eeg[..., trial].T
 
     # Mean centering
-    UX = UX - (np.mean(UX, 1) * np.ones((UX.shape[0], UX.shape[1])).T).T
+    UX -= np.mean(UX, 1)[:, None]
+
     # Compute empirical variance of all data (to be bounded)
     Q = np.dot(UX, UX.T)
 
     # Compute eigenvalues and vectors
     lambdas, W = linalg.eig(S, Q, left=True, right=False)
+
     # Select the eigenvector corresponding to the biggest eigenvalue
     W_best = W[:, np.argmax(lambdas)]
 
@@ -81,18 +72,17 @@ def trca(eeg):
 
 
 def train_trca(eeg, y_train, fs, num_fbs):
-    """Training stage of the TRCA-based SSVEP detection [1].
+    """Training stage of the TRCA-based SSVEP detection.
 
     Parameters
     ----------
-    eeg: np.array, shape (trials, channels, samples)
+    eeg : array, shape=(n_samples, n_chans[, n_trials])
         Training data
-    y_train: list or np.array, shape (trials)
-        True label corresponding to each trial of the data
-        array.
-    fs: int
+    y_train : array, shape=(trials,)
+        True label corresponding to each trial of the data array.
+    fs : int
         Sampling frequency of the data.
-    num_fb: int
+    num_fb : int
         Number of sub-bands considered for the filterbank analysis
 
     Returns
@@ -100,7 +90,7 @@ def train_trca(eeg, y_train, fs, num_fbs):
     model: dict
         Fitted model containing:
 
-        - traindata : array, shape=(n_trials, n_sub-bands, n_chans)
+        - traindata : array, shape=(n_sub-bands, n_chans, n_trials)
             Reference (training) data decomposed into sub-band components by
             the filter bank analysis.
         - y_train : array, shape=(n_trials)
@@ -116,25 +106,24 @@ def train_trca(eeg, y_train, fs, num_fbs):
             Number of targets
 
     """
-    num_chans = eeg.shape[1]
-    num_smpls = eeg.shape[2]
+    n_samples, n_chans, n_trials = theshapeof(eeg)
+    n_classes = np.unique(y_train)
 
-    num_class = np.unique(y_train)
+    trains = np.zeros((len(n_classes), num_fbs, n_samples, n_chans))
 
-    trains = np.zeros((len(num_class), num_fbs, num_chans, num_smpls))
+    W = np.zeros((num_fbs, len(n_classes), n_chans))
 
-    W = np.zeros((num_fbs, len(num_class), num_chans))
-
-    for class_i in num_class:
-        eeg_tmp = eeg[y_train == class_i]  # Select data with a specific label
+    for class_i in n_classes:
+        # Select data with a specific label
+        eeg_tmp = eeg[..., y_train == class_i]
         for fb_i in range(num_fbs):
             # Filter the signal with fb_i
             eeg_tmp = filterbank(eeg_tmp, fs, fb_i)
-            if(eeg_tmp.ndim == 3):
+            if (eeg_tmp.ndim == 3):
                 # Compute mean of the signal across the trials
-                trains[class_i, fb_i, :, :] = np.mean(eeg_tmp, 0)
+                trains[class_i, fb_i] = np.mean(eeg_tmp, -1)
             else:
-                trains[class_i, fb_i, :, :] = eeg_tmp
+                trains[class_i, fb_i] = eeg_tmp
             # Find the spatial filter for the corresponding filtered signal and
             # label
             w_best = trca(eeg_tmp)
@@ -144,7 +133,7 @@ def train_trca(eeg, y_train, fs, num_fbs):
              'W': W,
              'num_fbs': num_fbs,
              'fs': fs,
-             'num_targs': num_class}
+             'num_targs': n_classes}
     return model
 
 
@@ -153,7 +142,7 @@ def test_trca(eeg, model, is_ensemble):
 
     Parameters
     ----------
-    eeg: array, shape=(n_trials, n_chans, n_samples)
+    eeg: array, shape=(n_samples, n_chans[, n_trials])
         Test data.
     model: dict
         Fitted model to be used in testing phase.
@@ -166,15 +155,15 @@ def test_trca(eeg, model, is_ensemble):
         The target estimated by the method.
 
     """
-    fb_coefs = [(x + 1)**(-1.25) + 0.25 for x in range(model["num_fbs"])
-                ]  # Alpha coefficients for the fusion of filterbank analysis
-    testdata_len = len(eeg)
+    # Alpha coefficients for the fusion of filterbank analysis
+    fb_coefs = [(x + 1)**(-1.25) + 0.25 for x in range(model["num_fbs"])]
+    n_samples, n_chans, n_trials = theshapeof(eeg)
 
     r = np.zeros((model["num_fbs"], len(model["num_targs"])))
-    results = np.zeros((testdata_len), 'int')  # To store predictions
+    results = np.zeros((n_trials), 'int')  # To store predictions
 
-    for trial in range(testdata_len):
-        test_tmp = eeg[trial, :, :]  # Pick a trial to be analysed
+    for trial in range(n_trials):
+        test_tmp = eeg[..., trial]  # Pick a trial to be analysed
         for fb_i in range(model["num_fbs"]):
 
             # Filterbank on testdata
@@ -183,20 +172,18 @@ def test_trca(eeg, model, is_ensemble):
             for class_i in model["num_targs"]:
                 # Retrieve reference signal for clss_i (shape: (# of channel, #
                 # of sample))
-                traindata = np.squeeze(model["trains"][class_i, fb_i, :, :])
+                traindata = np.squeeze(model["trains"][class_i, fb_i])
                 if is_ensemble:
                     # Shape of (# of channel, # of class)
-                    w = np.squeeze(model["W"][fb_i, :, :]).T
+                    w = np.squeeze(model["W"][fb_i]).T
                 else:
                     # Shape of (# of channel)
-                    w = np.squeeze(model["W"][fb_i, class_i, :])
+                    w = np.squeeze(model["W"][fb_i, class_i])
 
                 # Compute 2D correlation of spatially filtered test data with
                 # ref
-                r_tmp = np.corrcoef(
-                    np.dot(
-                        testdata.T, w).flatten(), np.dot(
-                        traindata.T, w).flatten())
+                r_tmp = np.corrcoef((testdata @ w).flatten(),
+                                    (traindata @ w).flatten())
                 r[fb_i, class_i] = r_tmp[0, 1]
 
         rho = np.dot(fb_coefs, r)  # Fusion for the filterbank analysis
