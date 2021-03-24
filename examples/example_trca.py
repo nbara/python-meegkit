@@ -66,7 +66,7 @@ print('Results of the ensemble TRCA-based method.\n')
 ###############################################################################
 # Load data
 # -----------------------------------------------------------------------------
-path = os.path.join('.', 'tests', 'data', 'trcadata.mat')
+path = os.path.join('..', 'tests', 'data', 'trcadata.mat')
 mat = scipy.io.loadmat(path)
 eeg = mat["eeg"]
 
