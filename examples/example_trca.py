@@ -6,10 +6,10 @@ Sample code for the task-related component analysis (TRCA)-based steady
 -state visual evoked potential (SSVEP) detection method [1]_. The filter
 bank analysis [2, 3]_ can also be combined to the TRCA-based algorithm.
 
-Uses meegkit.trca
+Uses meegkit.trca.TRCA()
 
-References
-----------
+References:
+
 .. [1] M. Nakanishi, Y. Wang, X. Chen, Y.-T. Wang, X. Gao, and T.-P. Jung,
    "Enhancing detection of SSVEPs for a high-speed brain speller using
    task-related component analysis", IEEE Trans. Biomed. Eng, 65(1): 104-112,
@@ -31,7 +31,7 @@ import time
 
 import numpy as np
 import scipy.io
-from meegkit.trca import train_trca, test_trca
+from meegkit.trca import TRCA
 from meegkit.utils.trca import itr, normfit, round_half_up
 
 t = time.time()
@@ -89,6 +89,8 @@ eeg = eeg[crop_data]
 # -----------------------------------------------------------------------------
 # Estimate classification performance with a Leave-One-Block-Out
 # cross-validation approach
+trca = TRCA(fs, n_bands, is_ensemble)
+
 accs = np.zeros(n_blocks)
 itrs = np.zeros(n_blocks)
 for i in range(n_blocks):
@@ -104,12 +106,12 @@ for i in range(n_blocks):
         (labels[:i * n_trials], labels[(i + 1) * n_trials:]), 0)
 
     # Construction of the spatial filter and the reference signals
-    model = train_trca(traindata, y_train, fs, n_bands)
+    trca.fit(traindata, y_train)
 
     # Test stage
     testdata = eeg[..., i * n_trials:(i + 1) * n_trials]
     y_test = labels[i * n_trials:(i + 1) * n_trials]
-    estimated = test_trca(testdata, model, is_ensemble)
+    estimated = trca.predict(testdata)
 
     # Evaluation of the performance for this fold (accuracy and ITR)
     is_correct = estimated == y_test
@@ -119,6 +121,7 @@ for i in range(n_blocks):
 
 # Mean accuracy and ITR computation
 mu, _, muci, _ = normfit(accs, alpha_ci)
+print()
 print(f"Mean accuracy = {mu:.1f}%\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")  # noqa
 
 mu, _, muci, _ = normfit(itrs, alpha_ci)

@@ -7,14 +7,14 @@ from .utils.trca import filterbank
 from .utils import theshapeof
 
 
-def trca(eeg):
+def trca(X):
     """Task-related component analysis (TRCA).
 
-    This script was written based on the reference paper [1]_.
+    This function implements the method described in [1]_.
 
     Parameters
     ----------
-    eeg : array, shape=(n_samples, n_chans[, n_trials])
+    X : array, shape=(n_samples, n_chans[, n_trials])
         Training data.
 
     Returns
@@ -31,18 +31,18 @@ def trca(eeg):
        65(1):104-112, 2018.
 
     """
-    n_samples, n_chans, n_trials = theshapeof(eeg)
+    n_samples, n_chans, n_trials = theshapeof(X)
 
     S = np.zeros((n_chans, n_chans))
     for trial_i in range(n_trials - 1):
-        x1 = np.squeeze(eeg[..., trial_i])
+        x1 = np.squeeze(X[..., trial_i])
 
         # Mean centering for the selected trial
         x1 -= np.mean(x1, 0)
 
         # Select a second trial that is different
         for trial_j in range(trial_i + 1, n_trials):
-            x2 = np.squeeze(eeg[..., trial_j])
+            x2 = np.squeeze(X[..., trial_j])
 
             # Mean centering for the selected trial
             x2 -= np.mean(x2, 0)
@@ -54,7 +54,7 @@ def trca(eeg):
     # Reshape to have all the data as a sequence
     UX = np.zeros((n_chans, n_samples * n_trials))
     for trial in range(n_trials):
-        UX[:, trial * n_samples:(trial + 1) * n_samples] = eeg[..., trial].T
+        UX[:, trial * n_samples:(trial + 1) * n_samples] = X[..., trial].T
 
     # Mean centering
     UX -= np.mean(UX, 1)[:, None]
@@ -71,124 +71,128 @@ def trca(eeg):
     return W_best
 
 
-def train_trca(eeg, y_train, fs, num_fbs):
-    """Training stage of the TRCA-based SSVEP detection.
+class TRCA:
+    """Task-Related Component Analysis (TRCA).
 
     Parameters
     ----------
-    eeg : array, shape=(n_samples, n_chans[, n_trials])
-        Training data
-    y_train : array, shape=(trials,)
-        True label corresponding to each trial of the data array.
-    fs : int
-        Sampling frequency of the data.
-    num_fb : int
-        Number of sub-bands considered for the filterbank analysis
-
-    Returns
-    -------
-    model: dict
-        Fitted model containing:
-
-        - traindata : array, shape=(n_sub-bands, n_chans, n_trials)
-            Reference (training) data decomposed into sub-band components by
-            the filter bank analysis.
-        - y_train : array, shape=(n_trials)
-            Labels associated with the train data.
-        - W : array, shape=()
-            Weight coefficients for electrodes which can be used as a spatial
-            filter.
-        - num_fbs : int
-            Number of sub-bands
-        - fs : float
-            Sampling rate.
-        - num_targs : int
-            Number of targets
-
-    """
-    n_samples, n_chans, n_trials = theshapeof(eeg)
-    n_classes = np.unique(y_train)
-
-    trains = np.zeros((len(n_classes), num_fbs, n_samples, n_chans))
-
-    W = np.zeros((num_fbs, len(n_classes), n_chans))
-
-    for class_i in n_classes:
-        # Select data with a specific label
-        eeg_tmp = eeg[..., y_train == class_i]
-        for fb_i in range(num_fbs):
-            # Filter the signal with fb_i
-            eeg_tmp = filterbank(eeg_tmp, fs, fb_i)
-            if (eeg_tmp.ndim == 3):
-                # Compute mean of the signal across the trials
-                trains[class_i, fb_i] = np.mean(eeg_tmp, -1)
-            else:
-                trains[class_i, fb_i] = eeg_tmp
-            # Find the spatial filter for the corresponding filtered signal and
-            # label
-            w_best = trca(eeg_tmp)
-            W[fb_i, class_i, :] = w_best  # Store the spatial filter
-
-    model = {'trains': trains,
-             'W': W,
-             'num_fbs': num_fbs,
-             'fs': fs,
-             'num_targs': n_classes}
-    return model
-
-
-def test_trca(eeg, model, is_ensemble):
-    """Test phase of the TRCA-based SSVEP detection.
-
-    Parameters
-    ----------
-    eeg: array, shape=(n_samples, n_chans[, n_trials])
-        Test data.
-    model: dict
-        Fitted model to be used in testing phase.
-    is_ensemble: bool
+    fs : float
+        Sampling rate.
+    n_bands : int
+        Number of sub-bands
+    ensemble: bool
         Perform the ensemble TRCA analysis or not.
 
-    Returns
-    -------
-    results: np.array, shape (trials)
-        The target estimated by the method.
+    Attributes
+    ----------
+    traindata : array, shape=(n_sub-bands, n_chans, n_trials)
+        Reference (training) data decomposed into sub-band components by the
+        filter bank analysis.
+    y_train : array, shape=(n_trials)
+        Labels associated with the train data.
+    W : array, shape=(n_chans, n_chans)
+        Weight coefficients for electrodes which can be used as a spatial
+        filter.
+    classes : list
+        Classes.
 
     """
-    # Alpha coefficients for the fusion of filterbank analysis
-    fb_coefs = [(x + 1)**(-1.25) + 0.25 for x in range(model["num_fbs"])]
-    n_samples, n_chans, n_trials = theshapeof(eeg)
 
-    r = np.zeros((model["num_fbs"], len(model["num_targs"])))
-    results = np.zeros((n_trials), 'int')  # To store predictions
+    def __init__(self, fs, n_bands, ensemble=False):
+        self.fs = fs
+        self.n_bands = n_bands
+        self.ensemble = ensemble
 
-    for trial in range(n_trials):
-        test_tmp = eeg[..., trial]  # Pick a trial to be analysed
-        for fb_i in range(model["num_fbs"]):
+    def fit(self, X, y):
+        """Training stage of the TRCA-based SSVEP detection.
 
-            # Filterbank on testdata
-            testdata = filterbank(test_tmp, model["fs"], fb_i)
+        Parameters
+        ----------
+        X : array, shape=(n_samples, n_chans[, n_trials])
+            Training EEG data.
+        y : array, shape=(trials,)
+            True label corresponding to each trial of the data array.
 
-            for class_i in model["num_targs"]:
-                # Retrieve reference signal for clss_i (shape: (# of channel, #
-                # of sample))
-                traindata = np.squeeze(model["trains"][class_i, fb_i])
-                if is_ensemble:
-                    # Shape of (# of channel, # of class)
-                    w = np.squeeze(model["W"][fb_i]).T
+        """
+        n_samples, n_chans, _ = theshapeof(X)
+        classes = np.unique(y)
+
+        trains = np.zeros((len(classes), self.n_bands, n_samples, n_chans))
+
+        W = np.zeros((self.n_bands, len(classes), n_chans))
+
+        for class_i in classes:
+            # Select data with a specific label
+            eeg_tmp = X[..., y == class_i]
+            for fb_i in range(self.n_bands):
+                # Filter the signal with fb_i
+                eeg_tmp = filterbank(eeg_tmp, self.fs, fb_i)
+                if (eeg_tmp.ndim == 3):
+                    # Compute mean of the signal across trials
+                    trains[class_i, fb_i] = np.mean(eeg_tmp, -1)
                 else:
-                    # Shape of (# of channel)
-                    w = np.squeeze(model["W"][fb_i, class_i])
+                    trains[class_i, fb_i] = eeg_tmp
+                # Find the spatial filter for the corresponding filtered signal
+                # and label
+                w_best = trca(eeg_tmp)
+                W[fb_i, class_i, :] = w_best  # Store the spatial filter
 
-                # Compute 2D correlation of spatially filtered test data with
-                # ref
-                r_tmp = np.corrcoef((testdata @ w).flatten(),
-                                    (traindata @ w).flatten())
-                r[fb_i, class_i] = r_tmp[0, 1]
+        self.trains = trains
+        self.coef_ = W
+        self.classes = classes
 
-        rho = np.dot(fb_coefs, r)  # Fusion for the filterbank analysis
+        return self
 
-        tau = np.argmax(rho)  # Retrieving the index of the max
-        results[trial] = int(tau)
+    def predict(self, X):
+        """Test phase of the TRCA-based SSVEP detection.
 
-    return results
+        Parameters
+        ----------
+        X: array, shape=(n_samples, n_chans[, n_trials])
+            Test data.
+        model: dict
+            Fitted model to be used in testing phase.
+
+        Returns
+        -------
+        pred: np.array, shape (trials)
+            The target estimated by the method.
+
+        """
+        # Alpha coefficients for the fusion of filterbank analysis
+        fb_coefs = [(x + 1)**(-1.25) + 0.25 for x in range(self.n_bands)]
+        _, _, n_trials = theshapeof(X)
+
+        r = np.zeros((self.n_bands, len(self.classes)))
+        pred = np.zeros((n_trials), 'int')  # To store predictions
+
+        for trial in range(n_trials):
+            test_tmp = X[..., trial]  # Pick a trial to be analysed
+            for fb_i in range(self.n_bands):
+
+                # Filterbank on testdata
+                testdata = filterbank(test_tmp, self.fs, fb_i)
+
+                for class_i in self.classes:
+                    # Retrieve reference signal for class i
+                    # (shape: n_chans, n_samples)
+                    traindata = np.squeeze(self.trains[class_i, fb_i])
+                    if self.ensemble:
+                        # Shape of (# of channel, # of class)
+                        w = np.squeeze(self.coef_[fb_i]).T
+                    else:
+                        # Shape of (# of channel)
+                        w = np.squeeze(self.coef_[fb_i, class_i])
+
+                    # Compute 2D correlation of spatially filtered test data
+                    # with ref
+                    r_tmp = np.corrcoef((testdata @ w).flatten(),
+                                        (traindata @ w).flatten())
+                    r[fb_i, class_i] = r_tmp[0, 1]
+
+            rho = np.dot(fb_coefs, r)  # Fusion for the filterbank analysis
+
+            tau = np.argmax(rho)  # Retrieving the index of the max
+            pred[trial] = int(tau)
+
+        return pred
