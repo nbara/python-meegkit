@@ -78,14 +78,14 @@ class TRCA:
     ----------
     sfreq : float
         Sampling rate.
-    filterbank : list[list[list, list]]
+    filterbank : list[[2-tuple, 2-tuple]]
         Filterbank frequencies. Each list element is itself a list of passband
         `Wp` and stopband `Ws` edges frequencies `[Wp, Ws]`. For example, this
         creates 3 bands, starting at 6, 14, and 22 hz respectively::
 
-            [[[6, 90], [4, 100]],
-             [[14, 90], [10, 100]],
-             [[22, 90], [16, 100]]]
+            [[(6, 90), (4, 100)],
+             [(14, 90), (10, 100)],
+             [(22, 90), (16, 100)]]
 
         See :func:`scipy.signal.cheb1ord()` for more information on how to
         specify the `Wp` and `Ws`.

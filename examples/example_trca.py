@@ -91,13 +91,13 @@ eeg = eeg[crop_data]
 # cross-validation approach.
 
 # We use the filterbank specification described in [2]_.
-filterbank = [[[6, 90], [4, 100]],  # passband freqs, stopband freqs (Wp, Ws)
-              [[14, 90], [10, 100]],
-              [[22, 90], [16, 100]],
-              [[30, 90], [24, 100]],
-              [[38, 90], [32, 100]],
-              [[46, 90], [40, 100]],
-              [[54, 90], [48, 100]]]
+filterbank = [[(6, 90), (4, 100)],  # passband, stopband freqs [(Wp), (Ws)]
+              [(14, 90), (10, 100)],
+              [(22, 90), (16, 100)],
+              [(30, 90), (24, 100)],
+              [(38, 90), (32, 100)],
+              [(46, 90), (40, 100)],
+              [(54, 90), (48, 100)]]
 trca = TRCA(sfreq, filterbank, is_ensemble)
 
 accs = np.zeros(n_blocks)
