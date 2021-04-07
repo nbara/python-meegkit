@@ -99,34 +99,36 @@ def itr(n, p, t):
     return itr
 
 
-def filterbank(eeg, fs, idx_fb):
+def bandpass(eeg, sfreq, Wp, Ws):
     """Filter bank design for decomposing EEG data into sub-band components.
 
     Parameters
     ----------
     eeg : np.array, shape=(n_samples, n_chans[, n_trials])
         Training data.
-    fs : int
+    sfreq : int
         Sampling frequency of the data.
-    idx_fb : int
-        Index of filters in filter bank analysis
+    Wp : 2-tuple
+        Passband for Chebyshev filter.
+    Ws : 2-tuple
+        Stopband for Chebyshev filter.
 
     Returns
     -------
     y: np.array, shape=(n_trials, n_chans, n_samples)
         Sub-band components decomposed by a filter bank.
 
+    See Also
+    --------
+    scipy.signal.cheb1ord :
+        Chebyshev type I filter order selection.
+
     """
-    fs = fs / 2
-    passband = [6, 14, 22, 30, 38, 46, 54, 62, 70, 78]
-    stopband = [4, 10, 16, 24, 32, 40, 48, 56, 64, 72]
-    Wp = [passband[idx_fb] / fs, 90 / fs]
-    Ws = [stopband[idx_fb] / fs, 100 / fs]
     # Chebyshev type I filter order selection.
-    N, Wn = cheb1ord(Wp, Ws, 3, 40)
+    N, Wn = cheb1ord(Wp, Ws, 3, 40, fs=sfreq)
 
     # Chebyshev type I filter design
-    B, A = cheby1(N, 0.5, Wn, btype="bandpass")
+    B, A = cheby1(N, 0.5, Wn, btype="bandpass", fs=sfreq)
 
     # the arguments 'axis=0, padtype='odd', padlen=3*(max(len(B),len(A))-1)'
     # correspond to Matlab filtfilt : https://dsp.stackexchange.com/a/47945

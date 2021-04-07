@@ -1,9 +1,9 @@
 """Task-Related Component Analysis (TRCA)."""
-# Author: Giuseppe Ferraro <giuseppe.ferraro@isae.supaero.fr>
+# Author: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr>
 import numpy as np
 import scipy.linalg as linalg
 
-from .utils.trca import filterbank
+from .utils.trca import bandpass
 from .utils import theshapeof
 
 
@@ -76,32 +76,45 @@ class TRCA:
 
     Parameters
     ----------
-    fs : float
+    sfreq : float
         Sampling rate.
-    n_bands : int
-        Number of sub-bands
+    filterbank : list[list[list, list]]
+        Filterbank frequencies. Each list element is itself a list of passband
+        `Wp` and stopband `Ws` edges frequencies `[Wp, Ws]`. For example, this
+        creates 3 bands, starting at 6, 14, and 22 hz respectively::
+
+            [[[6, 90], [4, 100]],
+             [[14, 90], [10, 100]],
+             [[22, 90], [16, 100]]]
+
+        See :func:`scipy.signal.cheb1ord()` for more information on how to
+        specify the `Wp` and `Ws`.
     ensemble: bool
-        Perform the ensemble TRCA analysis or not.
+        If True, perform the ensemble TRCA analysis (default=False).
 
     Attributes
     ----------
-    traindata : array, shape=(n_sub-bands, n_chans, n_trials)
+    traindata : array, shape=(n_bands, n_chans, n_trials)
         Reference (training) data decomposed into sub-band components by the
         filter bank analysis.
     y_train : array, shape=(n_trials)
         Labels associated with the train data.
-    W : array, shape=(n_chans, n_chans)
+    coef_ : array, shape=(n_chans, n_chans)
         Weight coefficients for electrodes which can be used as a spatial
         filter.
     classes : list
         Classes.
+    n_bands : int
+        Number of sub-bands
 
     """
 
-    def __init__(self, fs, n_bands, ensemble=False):
-        self.fs = fs
-        self.n_bands = n_bands
+    def __init__(self, sfreq, filterbank, ensemble=False):
+        self.sfreq = sfreq
         self.ensemble = ensemble
+        self.filterbank = filterbank
+        self.n_bands = len(self.filterbank)
+        self.coef_ = None
 
     def fit(self, X, y):
         """Training stage of the TRCA-based SSVEP detection.
@@ -126,7 +139,9 @@ class TRCA:
             eeg_tmp = X[..., y == class_i]
             for fb_i in range(self.n_bands):
                 # Filter the signal with fb_i
-                eeg_tmp = filterbank(eeg_tmp, self.fs, fb_i)
+                eeg_tmp = bandpass(eeg_tmp, self.sfreq,
+                                   Wp=self.filterbank[fb_i][0],
+                                   Ws=self.filterbank[fb_i][1])
                 if (eeg_tmp.ndim == 3):
                     # Compute mean of the signal across trials
                     trains[class_i, fb_i] = np.mean(eeg_tmp, -1)
@@ -159,6 +174,9 @@ class TRCA:
             The target estimated by the method.
 
         """
+        if self.coef_ is None:
+            raise RuntimeError('TRCA is not fitted')
+
         # Alpha coefficients for the fusion of filterbank analysis
         fb_coefs = [(x + 1)**(-1.25) + 0.25 for x in range(self.n_bands)]
         _, _, n_trials = theshapeof(X)
@@ -171,7 +189,9 @@ class TRCA:
             for fb_i in range(self.n_bands):
 
                 # Filterbank on testdata
-                testdata = filterbank(test_tmp, self.fs, fb_i)
+                testdata = bandpass(test_tmp, self.sfreq,
+                                    Wp=self.filterbank[fb_i][0],
+                                    Ws=self.filterbank[fb_i][1])
 
                 for class_i in self.classes:
                     # Retrieve reference signal for class i

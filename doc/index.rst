@@ -26,6 +26,7 @@ Contents
    ~meegkit.ress
    ~meegkit.sns
    ~meegkit.star
+   ~meegkit.trca
    ~meegkit.tspca
    ~meegkit.utils
 

@@ -33,20 +33,26 @@ eeg = np.reshape(eeg.transpose([2, 1, 3, 0]),
                  (n_samples, n_chans, n_trials * n_blocks))
 labels = np.array([x for x in range(n_targets)] * n_blocks)
 
+# We use the filterbank specification described in [2]_.
+filterbank = [[[6, 90], [4, 100]],  # passband freqs, stopband freqs (Wp, Ws)
+              [[14, 90], [10, 100]],
+              [[22, 90], [16, 100]],
+              [[30, 90], [24, 100]],
+              [[38, 90], [32, 100]]]
+
 
 @pytest.mark.parametrize('ensemble', [True, False])
 def test_trcacode(ensemble):
     """Test TRCA."""
     len_gaze_s = 0.5  # data length for target identification [s]
     len_delay_s = 0.13  # visual latency being considered in the analysis [s]
-    n_bands = 5  # number of sub-bands in filter bank analysis
     alpha_ci = 0.05   # 100*(1-alpha_ci): confidence interval for accuracy
-    fs = 250  # sampling rate [Hz]
+    sfreq = 250  # sampling rate [Hz]
     len_shift_s = 0.5  # duration for gaze shifting [s]
 
     # Preparing useful variables (DONT'T need to modify)
-    len_gaze_smpl = round_half_up(len_gaze_s * fs)  # data length [samples]
-    len_delay_smpl = round_half_up(len_delay_s * fs)  # visual latency [samples]
+    len_gaze_smpl = round_half_up(len_gaze_s * sfreq)  # data length [samples]
+    len_delay_smpl = round_half_up(len_delay_s * sfreq)  # visual latency [samples]
     len_sel_s = len_gaze_s + len_shift_s  # selection time [s]
     ci = 100 * (1 - alpha_ci)  # confidence interval
 
@@ -57,7 +63,7 @@ def test_trcacode(ensemble):
     # -----------------------------------------------------------------------------
     # Estimate classification performance with a Leave-One-Block-Out
     # cross-validation approach
-    trca = TRCA(fs, n_bands, ensemble)
+    trca = TRCA(sfreq, filterbank, ensemble)
     accs = np.zeros(2)
     itrs = np.zeros(2)
     for i in range(2):

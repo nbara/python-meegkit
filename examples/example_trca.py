@@ -25,7 +25,7 @@ This code is based on the Matlab implementation from
 https://github.com/mnakanishi/TRCA-SSVEP
 
 """
-# Author: Giuseppe Ferraro <giuseppe.ferraro@isae.supaero.fr>
+# Author: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr>
 import os
 import time
 
@@ -44,7 +44,7 @@ len_delay_s = 0.13  # visual latency being considered in the analysis [s]
 n_bands = 5  # number of sub-bands in filter bank analysis
 is_ensemble = True  # True = ensemble TRCA method; False = TRCA method
 alpha_ci = 0.05   # 100*(1-alpha_ci): confidence interval for accuracy
-fs = 250  # sampling rate [Hz]
+sfreq = 250  # sampling rate [Hz]
 len_shift_s = 0.5  # duration for gaze shifting [s]
 list_freqs = np.concatenate(
     [[x + 8 for x in range(8)],
@@ -55,13 +55,13 @@ list_freqs = np.concatenate(
 n_targets = len(list_freqs)  # The number of stimuli
 
 # Preparing useful variables (DONT'T need to modify)
-len_gaze_smpl = round_half_up(len_gaze_s * fs)  # data length [samples]
-len_delay_smpl = round_half_up(len_delay_s * fs)  # visual latency [samples]
+len_gaze_smpl = round_half_up(len_gaze_s * sfreq)  # data length [samples]
+len_delay_smpl = round_half_up(len_delay_s * sfreq)  # visual latency [samples]
 len_sel_s = len_gaze_s + len_shift_s  # selection time [s]
 ci = 100 * (1 - alpha_ci)  # confidence interval
 
 # Performing the TRCA-based SSVEP detection algorithm
-print('Results of the ensemble TRCA-based method.\n')
+print('Results of the ensemble TRCA-based method:\n')
 
 ###############################################################################
 # Load data
@@ -88,8 +88,17 @@ eeg = eeg[crop_data]
 # TRCA classification
 # -----------------------------------------------------------------------------
 # Estimate classification performance with a Leave-One-Block-Out
-# cross-validation approach
-trca = TRCA(fs, n_bands, is_ensemble)
+# cross-validation approach.
+
+# We use the filterbank specification described in [2]_.
+filterbank = [[[6, 90], [4, 100]],  # passband freqs, stopband freqs (Wp, Ws)
+              [[14, 90], [10, 100]],
+              [[22, 90], [16, 100]],
+              [[30, 90], [24, 100]],
+              [[38, 90], [32, 100]],
+              [[46, 90], [40, 100]],
+              [[54, 90], [48, 100]]]
+trca = TRCA(sfreq, filterbank, is_ensemble)
 
 accs = np.zeros(n_blocks)
 itrs = np.zeros(n_blocks)

@@ -94,8 +94,7 @@ If you use this, you should cite the following article:
 
 ### 4. Task-Related Component Analysis (TRCA)
 
-This code is based on the [Matlab implementation from Masaki Nakanishi](https://github.com/mnakanishi/TRCA-SSVEP),
-and was adapted to python by [Giuseppe Ferraro](mailto:giuseppe.ferraro@isae.supaero.fr)
+This code is based on the [Matlab implementation from Masaki Nakanishi](https://github.com/mnakanishi/TRCA-SSVEP), and was adapted to python by [Giuseppe Ferraro](mailto:giuseppe.ferraro@isae-supaero.fr)
 
 If you use this, you should cite the following articles:
 
