@@ -1,4 +1,4 @@
-"""Task-Related Component Analysis (TRCA)."""
+"""Task-Related Component Analysis."""
 # Author: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr>
 import numpy as np
 import scipy.linalg as linalg
@@ -8,7 +8,7 @@ from .utils import theshapeof
 
 
 def trca(X):
-    """Task-related component analysis (TRCA).
+    """Task-related component analysis.
 
     This function implements the method described in [1]_.
 

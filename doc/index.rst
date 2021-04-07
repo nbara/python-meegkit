@@ -6,18 +6,17 @@
 Welcome to MEEGkit
 ==================
 
-The code of the project is on Github: `MEEGkit <https://github.com/nbara/python-meegkit>`_
+The source code of the project is available on Github: `MEEGkit <https://github.com/nbara/python-meegkit>`_
 
-
-Contents
---------
+Available modules
+-----------------
 
 :py:mod:`meegkit`:
 
 .. currentmodule:: meegkit
 
 .. autosummary::
-   :toctree: modules/
+   :caption: meegkit
 
    ~meegkit.asr
    ~meegkit.cca
@@ -33,12 +32,16 @@ Contents
 Examples gallery
 ----------------
 
-A gallery of examples is available at the following address:
+A gallery of examples is available:
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 0
+    :hidden:
 
-   auto_examples/index
+.. include:: auto_examples/index.rst
+   :start-after: Below is a gallery of examples
+   :end-line: -11
+
 
 Indices and tables
 ------------------

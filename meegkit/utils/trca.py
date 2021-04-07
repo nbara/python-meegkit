@@ -31,7 +31,7 @@ def normfit(data, ci=0.95):
 
     Parameters
     ----------
-    data: array, shape=()
+    data : array, shape=()
         Input data.
     ci : float
         Confidence interval (default=0.95).
@@ -61,8 +61,10 @@ def normfit(data, ci=0.95):
 def itr(n, p, t):
     """Compute information transfer rate (ITR).
 
-    Inputs
-    ------
+    Definition in [1]_.
+
+    Parameters
+    ----------
     n : int
         Number of targets.
     p : float

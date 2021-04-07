@@ -8,7 +8,9 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
          peak_width: float = .5, neig_width: float = 1, n_keep: int = 1,
          return_maps: bool = False):
-    """Rhythmic entrainment source separation [1]_.
+    """Rhythmic Entrainment Source Separation.
+
+    As described in [1]_.
 
     Parameters
     ----------

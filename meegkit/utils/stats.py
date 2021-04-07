@@ -225,8 +225,8 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
     Internal reliability of the ERN and Pe as a function of increasing trial
     numbers can be quantified with Cronbach's alpha:
 
-    $$\alpha = \frac{K}{K-1} \left(1-\frac{\sum_{i=1}^K
-    \sigma^2_{Y_i}}{ \sigma^2_X}\right)$$
+        $$\alpha = \frac{K}{K-1} \left(1-\frac{\sum_{i=1}^K
+          \sigma^2_{Y_i}}{ \sigma^2_X}\right)$$
 
     Hinton, Brownlow, McMurray, and Cozens (2004) have suggested that
     Cronbach's alpha exceeding .90 indicates excellent internal reliability,

@@ -1,0 +1,8 @@
+sphinx
+sphinx-copybutton
+pydata-sphinx-theme
+numpydoc
+matplotlib
+pillow
+sphinx-gallery
+jupyter-sphinx
