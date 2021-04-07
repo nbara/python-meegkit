@@ -71,9 +71,19 @@ Signal
 
 ----
 
-
 Statistics
 ----------
 .. automodule:: meegkit.utils.stats
+
+   .. autosummary::
+
+
+|
+
+----
+
+TRCA utilities
+--------------
+.. automodule:: meegkit.utils.trca
 
    .. autosummary::

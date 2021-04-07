@@ -91,3 +91,22 @@ If you use this, you should cite the following article:
 [1] Cohen, M. X., & Gulbinaite, R. (2017). Rhythmic entrainment source separation: Optimizing analyses
     of neural responses to rhythmic sensory stimulation. Neuroimage, 147, 43-56.
 ```
+
+### 4. Task-Related Component Analysis (TRCA)
+
+This code is based on the [Matlab implementation from Masaki Nakanishi](https://github.com/mnakanishi/TRCA-SSVEP), and was adapted to python by [Giuseppe Ferraro](mailto:giuseppe.ferraro@isae-supaero.fr)
+
+If you use this, you should cite the following articles:
+
+```sql
+[1] M. Nakanishi, Y. Wang, X. Chen, Y.-T. Wang, X. Gao, and T.-P. Jung,
+    "Enhancing detection of SSVEPs for a high-speed brain speller using
+    task-related component analysis", IEEE Trans. Biomed. Eng, 65(1): 104-112,
+    2018.
+[2] X. Chen, Y. Wang, S. Gao, T. -P. Jung and X. Gao, "Filter bank
+    canonical correlation analysis for implementing a high-speed SSVEP-based
+    brain-computer interface", J. Neural Eng., 12: 046008, 2015.
+[3] X. Chen, Y. Wang, M. Nakanishi, X. Gao, T. -P. Jung, S. Gao,
+    "High-speed spelling with a noninvasive brain-computer interface",
+    Proc. Int. Natl. Acad. Sci. U. S. A, 112(44): E6058-6067, 2015.
+```
