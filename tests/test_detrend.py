@@ -39,14 +39,15 @@ def test_regress():
     w[:, 1] == .8
     [b, z] = regress(y, x, w)
     assert z.shape == (1000, 2)
-    assert b.shape == (2, 1)
+    assert b.shape == (2, 3)
 
 
 def test_detrend(show=False):
     """Test detrending."""
     # basic
-    x = np.arange(100)[:, None]
-    x = x + np.random.randn(*x.shape)
+    x = np.arange(100)[:, None]  # trend
+    source = np.random.randn(*x.shape)
+    x = x + source
     y, _, _ = detrend(x, 1)
 
     assert y.shape == x.shape
@@ -57,20 +58,37 @@ def test_detrend(show=False):
 
     assert y.shape == x.shape
 
-    # weights
+    # test weights
     trend = np.linspace(0, 100, 1000)[:, None]
     data = 3 * np.random.randn(*trend.shape)
+    data[:100, :] = 100
     x = trend + data
-    x[:100, :] = 100
     w = np.ones(x.shape)
     w[:100, :] = 0
+
+    # Without weights – detrending fails
     y, _, _ = detrend(x, 3, None, show=show)
+
+    # With weights – detrending works
     yy, _, _ = detrend(x, 3, w, show=show)
 
     assert y.shape == x.shape
     assert yy.shape == x.shape
+    assert np.all(np.abs(yy[100:] - data[100:]) < 1.)
 
-    # assert_almost_equal(yy[100:], data[100:], decimal=1)
+    # detrend higher-dimensional data
+    x = np.cumsum(np.random.randn(1000, 16) + 0.1, axis=0)
+    y, _, _ = detrend(x, 1, show=False)
+
+    # detrend higher-dimensional data with order 3 polynomial
+    x = np.cumsum(np.random.randn(1000, 16) + 0.1, axis=0)
+    y, _, _ = detrend(x, 3, basis='polynomials', show=True)
+
+    # detrend with sinusoids
+    x = np.random.randn(1000, 2)
+    x += 2 * np.sin(2 * np.pi * np.arange(1000) / 200)[:, None]
+    y, _, _ = detrend(x, 5, basis='sinusoids', show=True)
+
 
 def test_ringing():
     """Test reduce_ringing function."""
@@ -87,4 +105,4 @@ def test_ringing():
 if __name__ == '__main__':
     import pytest
     pytest.main([__file__])
-    # test_detrend(True)
+    # test_detrend(False)

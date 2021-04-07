@@ -80,8 +80,8 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4,
         elif basis == 'sinusoids':
             r = np.zeros((n_times, order * 2))
             for i, o in enumerate(range(1, order + 1)):
-                r[:, 2 * i] = np.sin[2 * np.pi * o * lin / 2]
-                r[:, 2 * i + 1] = np.cos[2 * np.pi * o * lin / 2]
+                r[:, 2 * i] = np.sin(2 * np.pi * o * lin / 2)
+                r[:, 2 * i + 1] = np.cos(2 * np.pi * o * lin / 2)
         else:
             raise ValueError('!')
 
@@ -129,7 +129,8 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
         Weight to apply to `x`. `w` is either a matrix of same size as `x`, or
         a column vector to be applied to each column of `x`.
     threshold : float
-        PCA threshold (default=1e-7).
+        PCA threshold (default=1e-7). Dimensions of x with eigenvalue lower
+        than this value will be discarded.
     return_mean : bool
         If True, also return the signal mean prior to regression.
 
@@ -145,6 +146,7 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
     w = _check_weights(w, x)
     n_times = x.shape[0]
     n_chans = x.shape[1]
+    n_regs = r.shape[1]
     r = unfold(r)
     x = unfold(x)
     if r.shape[0] != x.shape[0]:
@@ -178,9 +180,9 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
             else:
                 yy = demean(x, w) * w
                 rr = demean(r, w) * w
-                V, _ = pca(rr.T.dot(rr), thresh=threshold)
-                rrr = rr.dot(V)
-                b = mrdivide(yy.T.dot(rrr), rrr.T.dot(rrr))
+                V, _ = pca(rr.T @ rr, thresh=threshold)
+                rr = rr @ V
+                b = mrdivide(yy.T @ rr, rr.T @ rr)
 
             z = demean(r, w).dot(V).dot(b.T)
             z = z + mn
@@ -189,25 +191,22 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
             if w.shape[1] != x.shape[1]:
                 raise ValueError('!')
             z = np.zeros(x.shape)
-            b = np.zeros((n_chans, n_chans))
+            b = np.zeros((n_chans, n_regs))
             for i in range(n_chans):
-                if sum(w[:, i]) == 0:
-                    print('weights all zero for channel {}'.format(i))
-                    c = np.zeros(x.shape[1], 1)
+                if not np.any(w[:, i]):
+                    print(f'weights are all zero for channel {i}')
                 else:
                     wc = w[:, i][:, None]  # channel-specific weight
-                    yy = demean(x[:, i], wc) * wc
+                    xx = demean(x[:, i], wc) * wc
+
                     # remove channel-specific-weighted mean from regressor
                     r = demean(r, wc)
                     rr = r * wc
-                    V, _ = pca(rr.T.dot(rr), thresh=threshold)
+                    V, _ = pca(rr.T @ rr, thresh=threshold)
                     rr = rr.dot(V)
-                    c = mrdivide(yy.T.dot(rr), rr.T.dot(rr))
+                    b[i, :V.shape[1]] = mrdivide(xx.T @ rr, rr.T @ rr)
 
-                z[:, i] = r.dot(V.dot(c.T)).flatten()
-                z[:, i] += mn[:, i]
-                b[i] = c
-            b = b[:, :V.shape[1]]
+                z[:, i] = np.squeeze(r @ (V @ b[i, :V.shape[1]].T)) + mn[:, i]
 
     return b, z
 
