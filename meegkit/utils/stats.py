@@ -284,6 +284,8 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
 def snr_spectrum(X, freqs, n_avg=1, n_harm=1, skipbins=1):
     """Compute Signal-to-Noise-corrected spectrum.
 
+    The implementation tries to replicate examples in [1; 2; 3]_.
+
     Parameters
     ----------
     X : ndarray , shape=(n_freqs, n_chans,[ n_trials,])
