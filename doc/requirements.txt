@@ -1,5 +1,6 @@
 sphinx
 sphinx-copybutton
+sphinxemoji
 pydata-sphinx-theme
 numpydoc
 matplotlib

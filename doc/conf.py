@@ -24,9 +24,10 @@ import meegkit # noqa
 # -- Project information -----------------------------------------------------
 
 project = f'MEEGkit v{meegkit.__version__}'
-copyright = '2020, Nicolas Barascud'
+copyright = '2021, Nicolas Barascud'
 author = 'Nicolas Barascud'
 release = meegkit.__version__
+version = meegkit.__version__
 
 # -- General configuration ---------------------------------------------------
 
@@ -40,6 +41,7 @@ extensions = [
     'numpydoc',
     'jupyter_sphinx',
     'sphinx_gallery.gen_gallery',
+    'sphinxemoji.sphinxemoji',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,6 +84,7 @@ html_static_path = ['_static']
 
 
 html_theme_options = {
+    "show_toc_level": 1,
     "external_links": [
         {
             "name": "GitHub",
@@ -101,7 +104,6 @@ html_theme_options = {
         },
     ],
     "use_edit_page_button": True,
-    "show_toc_level": 1,
 }
 
 html_context = {
@@ -119,4 +121,5 @@ sphinx_gallery_conf = {
     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
     'filename_pattern': '/example_',
     'ignore_pattern': 'config.py',
+    'run_stale_examples': False,
 }
