@@ -1,9 +1,8 @@
 """TRCA utils."""
 import numpy as np
-import scipy
 
 from scipy.signal import filtfilt, cheb1ord, cheby1
-from scipy.stats import chi2, t
+from scipy import stats
 
 
 def round_half_up(num, decimals=0):
@@ -46,11 +45,11 @@ def normfit(data, ci=0.95):
     """
     arr = 1.0 * np.array(data)
     num = len(arr)
-    avg, std_err = np.mean(arr), scipy.stats.sem(arr)
-    h_int = std_err * t.ppf((1 + ci) / 2., num - 1)
+    avg, std_err = np.mean(arr), stats.sem(arr)
+    h_int = std_err * stats.t.ppf((1 + ci) / 2., num - 1)
     var = np.var(data, ddof=1)
-    var_ci_upper = var * (num - 1) / (chi2.ppf((1 - ci) / 2, num - 1))
-    var_ci_lower = var * (num - 1) / (chi2.ppf(1 - (1 - ci) / 2, num - 1))
+    var_ci_upper = var * (num - 1) / stats.chi2.ppf((1 - ci) / 2, num - 1)
+    var_ci_lower = var * (num - 1) / stats.chi2.ppf(1 - (1 - ci) / 2, num - 1)
     sigma = np.sqrt(var)
     sigma_ci_lower = np.sqrt(var_ci_lower)
     sigma_ci_upper = np.sqrt(var_ci_upper)
