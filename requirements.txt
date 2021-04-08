@@ -3,11 +3,7 @@ scipy
 matplotlib
 scikit-learn
 pandas
-sphinx
-pillow
-sphinx-gallery
 joblib
-numpydoc
 flake8
 pytest
 pytest-cov
