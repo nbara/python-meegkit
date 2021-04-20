@@ -1,5 +1,6 @@
 """Task-Related Component Analysis."""
-# Author: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr> and Ludovic Darmet <ludovic.darmet@isae-supaero.fr>
+# Author: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr> and
+# Ludovic Darmet <ludovic.darmet@isae-supaero.fr>
 import numpy as np
 import scipy.linalg as linalg
 from pyriemann.utils.mean import mean_covariance
@@ -72,12 +73,14 @@ def trca(X):
 
     return W_best
 
+
 def trca_regul(X, regul):
     """Task-related component analysis.
 
     This function implements a variation of the method described in [1].
     It adds some regularization in covariance matrices estimations and
-    the computation of riemannian mean for the S matrix instead of euclid.
+    the computation of riemannian mean for the S matrix
+    instead of euclid.
 
     Parameters
     ----------
@@ -109,23 +112,23 @@ def trca_regul(X, regul):
     UX -= np.mean(UX, 1)[:, None]
 
     # Compute empirical variance of all data (to be bounded)
-    cov = Covariances(estimator=regul).fit_transform(UX[np.newaxis,...])
-    Q = np.squeeze(cov) 
-    
+    cov = Covariances(estimator=regul).fit_transform(UX[np.newaxis, ...])
+    Q = np.squeeze(cov)
+
     # Intertrial correlation computation
-    data = np.concatenate((X,X),axis=1)
+    data = np.concatenate((X, X), axis=1)
 
     # Swapaxes to fit pyriemann Covariances
     data = np.swapaxes(data, 0, 2)
-    cov = Covariances(estimator=regul).fit_transform(data) 
+    cov = Covariances(estimator=regul).fit_transform(data)
 
     # Keep only inter-trial
-    S = cov[:, :n_chans,n_chans:] + cov[:, n_chans:,:n_chans]
+    S = cov[:, :n_chans, n_chans:] + cov[:, n_chans:, :n_chans]
 
     if n_trials < 30:
-        S  = mean_covariance(S , metric='riemann')
+        S = mean_covariance(S, metric='riemann')
     else:
-        S  = mean_covariance(S , metric='logeuclid')
+        S = mean_covariance(S, metric='logeuclid')
         # If the number of samples is too big, we compute
         # an approximate of riemannian mean to speed up
         # the computation
@@ -175,17 +178,18 @@ class TRCA:
     n_bands : int
         Number of sub-bands
     method: str, default='original'
-        Use stricly implementation from [1] or a variation that use regularization and
-        geodesic mean instead.
+        Use original implementation from [1] or a variation that use
+        regularization and geodesic mean instead.
     regul : str
-        If method is 'riemann', regularization to use for covariance matrices estimations.
-        Consider 'schaefer', 'lwf', 'oas'. 'scm' does not add regularization and is almost
-        equivalent original implementation.
- 
+        If method is 'riemann', regularization to use for covariance matrices
+        estimations.
+        Consider 'schaefer', 'lwf', 'oas'. 'scm' does not add regularization
+        and is almost equivalent original implementation.
 
     """
 
-    def __init__(self, sfreq, filterbank, ensemble=False, method='original', regul='schaefer'):
+    def __init__(self, sfreq, filterbank, ensemble=False, method='original',
+                 regul='schaefer'):
         self.sfreq = sfreq
         self.ensemble = ensemble
         self.filterbank = filterbank
@@ -230,12 +234,13 @@ class TRCA:
                     trains[class_i, fb_i] = eeg_tmp
                 # Find the spatial filter for the corresponding filtered signal
                 # and label
-                if self.method=='original':
+                if self.method == 'original':
                     w_best = trca(eeg_tmp)
-                elif self.method=='riemann':
+                elif self.method == 'riemann':
                     w_best = trca_regul(eeg_tmp, self.regul)
                 else:
-                    raise ValueError(f'Argument "method" should be either "original" or "riemann".')
+                    raise ValueError('Argument "method" should be either '
+                                     '"original" or "riemann".')
 
                 W[fb_i, class_i, :] = w_best  # Store the spatial filter
 

@@ -137,6 +137,7 @@ def bandpass(eeg, sfreq, Wp, Ws):
                  padlen=3 * (max(len(B), len(A)) - 1))
     return y
 
+
 def schaefer_strimmer_cov(X):
     r"""Schaefer-Strimmer covariance estimator.
 
@@ -145,15 +146,15 @@ def schaefer_strimmer_cov(X):
             \hat{\Sigma} = (1 - \gamma)\Sigma_{scm} + \gamma T
     where :math:`T` is the diagonal target matrix:
     .. math::
-            T_{i,j} = \{ \Sigma_{scm}^{ii} \text{if} i = j, 0 \text{otherwise} \}
+            T_{i,j} = \{ \Sigma_{scm}^{ii} \text{if} i = j,
+            0 \text{otherwise} \}
     Note that the optimal :math:`\gamma` is estimate by the authors' method.
 
     Parameters
     ----------
     X: Signal matrix, Nchannels X Nsamples
-    
     Returns
-    ------- 
+    -------
     cov: Schaefer-Strimmer shrinkage covariance matrix, Nchannels X Nchannels
 
     References
@@ -168,11 +169,13 @@ def schaefer_strimmer_cov(X):
 
     # Compute optimal gamma, the weigthing between SCM and srinkage estimator
     R = Ns / (Ns - 1.0) * np.corrcoef(X)
-    var_R = (X_c ** 2).dot((X_c ** 2).T) - 2 * C_scm * X_c.dot(X_c.T) + Ns * C_scm ** 2
-    var_R = Ns/((Ns-1)**3 * np.outer(X.var(axis=1), X.var(axis=1))) * var_R
+    var_R = (X_c ** 2).dot((X_c ** 2).T) - 2 * C_scm * X_c.dot(X_c.T) + \
+        Ns * C_scm ** 2
+    var_R = Ns / ((Ns - 1)**3 * np.outer(X.var(axis=1), X.var(axis=1))) * var_R
     R -= np.diag(np.diag(R))
     var_R -= np.diag(np.diag(var_R))
-    gamma =  max(0, min(1, var_R.sum() / (R**2).sum()))
-    cov = (1. - gamma) * (Ns / (Ns - 1.)) * C_scm + gamma * (Ns / (Ns - 1.)) * np.diag(np.diag(C_scm))
+    gamma = max(0, min(1, var_R.sum() / (R**2).sum()))
+    cov = (1. - gamma) * (Ns / (Ns - 1.)) * C_scm + gamma * (Ns / (Ns - 1.)) *\
+        np.diag(np.diag(C_scm))
 
     return cov
