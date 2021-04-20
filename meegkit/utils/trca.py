@@ -89,8 +89,8 @@ def itr(n, p, t):
     if (p < 0 or 1 < p):
         raise ValueError('Accuracy need to be between 0 and 1.')
     elif (p < 1 / n):
-        raise ValueError('ITR might be incorrect because accuracy < chance')
         itr = 0
+        raise ValueError('ITR might be incorrect because accuracy < chance')
     elif (p == 1):
         itr = np.log2(n) * 60 / t
     else:
@@ -138,7 +138,7 @@ def bandpass(eeg, sfreq, Wp, Ws):
     return y
 
 def schaefer_strimmer_cov(X):
-    """Schaefer-Strimmer covariance estimator
+    r"""Schaefer-Strimmer covariance estimator
     Shrinkage estimator using method from [1]:
     .. math::
             \hat{\Sigma} = (1 - \gamma)\Sigma_{scm} + \gamma T
@@ -146,8 +146,15 @@ def schaefer_strimmer_cov(X):
     .. math::
             T_{i,j} = \{ \Sigma_{scm}^{ii} \text{if} i = j, 0 \text{otherwise} \}
     Note that the optimal :math:`\gamma` is estimate by the authors' method.
-    :param X: Signal matrix, Nchannels X Nsamples
-    :returns: Schaefer-Strimmer shrinkage covariance matrix, Nchannels X Nchannels
+
+     Parameters
+    ----------
+    X: Signal matrix, Nchannels X Nsamples
+    
+    Returns
+    ------- 
+    cov: Schaefer-Strimmer shrinkage covariance matrix, Nchannels X Nchannels
+    
     References
     ----------
     [1] Schafer, J., and K. Strimmer. 2005. A shrinkage approach to
@@ -166,5 +173,6 @@ def schaefer_strimmer_cov(X):
     R -= np.diag(np.diag(R))
     var_R -= np.diag(np.diag(var_R))
     gamma =  max(0, min(1, var_R.sum() / (R**2).sum()))
+    cov = (1. - gamma) * (Ns / (Ns - 1.)) * C_scm + gamma * (Ns / (Ns - 1.)) * np.diag(np.diag(C_scm))
 
-    return (1. - gamma) * (Ns / (Ns - 1.)) * C_scm + gamma * (Ns / (Ns - 1.)) * np.diag(np.diag(C_scm))
+    return cov
