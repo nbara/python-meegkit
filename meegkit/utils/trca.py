@@ -156,6 +156,7 @@ def schaefer_strimmer_cov(X):
     ----------
     X: array, shape=(n_channels, n_samples)
         Signal matrix.
+
     Returns
     -------
     cov: array, shape=(n_channels, n_channels)
