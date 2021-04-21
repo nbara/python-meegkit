@@ -63,7 +63,7 @@ def test_trcacode(ensemble):
     # -----------------------------------------------------------------------------
     # Estimate classification performance with a Leave-One-Block-Out
     # cross-validation approach
-    trca = TRCA(sfreq, filterbank, ensemble)
+    trca = TRCA(sfreq, filterbank, ensemble=ensemble)
     accs = np.zeros(2)
     itrs = np.zeros(2)
     for i in range(2):
@@ -100,6 +100,65 @@ def test_trcacode(ensemble):
     print(f"Mean ITR = {mu:.1f}\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")
     assert mu > 300
 
+
+@pytest.mark.parametrize('method', ['original', 'riemann'])
+def test_trcacodevariation(method):
+    """Test TRCA."""
+    len_gaze_s = 0.5  # data length for target identification [s]
+    len_delay_s = 0.13  # visual latency being considered in the analysis [s]
+    alpha_ci = 0.05   # 100*(1-alpha_ci): confidence interval for accuracy
+    sfreq = 250  # sampling rate [Hz]
+    len_shift_s = 0.5  # duration for gaze shifting [s]
+
+    # Preparing useful variables (DONT'T need to modify)
+    len_gaze_smpl = round_half_up(len_gaze_s * sfreq)  # data length [samples]
+    len_delay_smpl = round_half_up(len_delay_s * sfreq)  # visual latency [samples]
+    len_sel_s = len_gaze_s + len_shift_s  # selection time [s]
+    ci = 100 * (1 - alpha_ci)  # confidence interval
+
+    crop_data = np.arange(len_delay_smpl, len_delay_smpl + len_gaze_smpl)
+
+    ##########################################################################
+    # TRCA classification
+    # -----------------------------------------------------------------------------
+    # Estimate classification performance with a Leave-One-Block-Out
+    # cross-validation approach
+    trca = TRCA(sfreq, filterbank, ensemble=True, method=method)
+    accs = np.zeros(2)
+    itrs = np.zeros(2)
+    for i in range(2):
+
+        # Training stage
+        traindata = eeg.copy()[crop_data]
+
+        # Select all folds except one for training
+        traindata = np.concatenate(
+            (traindata[..., :i * n_trials],
+             traindata[..., (i + 1) * n_trials:]), 2)
+        y_train = np.concatenate(
+            (labels[:i * n_trials], labels[(i + 1) * n_trials:]), 0)
+
+        # Construction of the spatial filter and the reference signals
+        trca.fit(traindata, y_train)
+
+        # Test stage
+        testdata = eeg[crop_data, :, i * n_trials:(i + 1) * n_trials]
+        y_test = labels[i * n_trials:(i + 1) * n_trials]
+        estimated = trca.predict(testdata)
+
+        # Evaluation of the performance for this fold (accuracy and ITR)
+        is_correct = estimated == y_test
+        accs[i] = np.mean(is_correct) * 100
+        itrs[i] = itr(n_targets, np.mean(is_correct), len_sel_s)
+        print(f"Block {i}: accuracy = {accs[i]:.1f}, \tITR = {itrs[i]:.1f}")
+
+    # Mean accuracy and ITR computation
+    mu, _, muci, _ = normfit(accs, alpha_ci)
+    print(f"Mean accuracy = {mu:.1f}%\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")  # noqa
+    assert mu > 75
+    mu, _, muci, _ = normfit(itrs, alpha_ci)
+    print(f"Mean ITR = {mu:.1f}\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")
+    assert mu > 170
 
 if __name__ == '__main__':
     import pytest

@@ -78,6 +78,8 @@ def trca_regul(X, regul):
     """Task-related component analysis.
 
     This function implements a variation of the method described in [1].
+    It inspired by work from A. Barachant on CSP:
+    https://hal.archives-ouvertes.fr/hal-00602686/document.
     It adds some regularization in covariance matrices estimations and
     the computation of riemannian mean for the S matrix
     instead of euclid.

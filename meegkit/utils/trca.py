@@ -141,21 +141,25 @@ def bandpass(eeg, sfreq, Wp, Ws):
 def schaefer_strimmer_cov(X):
     r"""Schaefer-Strimmer covariance estimator.
 
-    Shrinkage estimator using method from [1]:
-    .. math::
-            \hat{\Sigma} = (1 - \gamma)\Sigma_{scm} + \gamma T
+    Shrinkage estimator using method from [1]_:
+
+    .. math:: \hat{\Sigma} = (1 - \gamma)\Sigma_{scm} + \gamma T
+
     where :math:`T` is the diagonal target matrix:
-    .. math::
-            T_{i,j} = \{ \Sigma_{scm}^{ii} \text{if} i = j,
-            0 \text{otherwise} \}
+
+    .. math:: T_{i,j} = \{ \Sigma_{scm}^{ii} \text{if} i = j,
+         0 \text{otherwise} \}
+
     Note that the optimal :math:`\gamma` is estimate by the authors' method.
 
     Parameters
     ----------
-    X: Signal matrix, Nchannels X Nsamples
+    X: array, shape=(n_channels, n_samples)
+        Signal matrix.
     Returns
     -------
-    cov: Schaefer-Strimmer shrinkage covariance matrix, Nchannels X Nchannels
+    cov: array, shape=(n_channels, n_channels)
+        Schaefer-Strimmer shrinkage covariance matrix.
 
     References
     ----------
