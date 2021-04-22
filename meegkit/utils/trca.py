@@ -38,10 +38,14 @@ def normfit(data, ci=0.95):
 
     Returns
     -------
-    m : mean
-    sigma : std deviation
-    [m - h, m + h] : confidence interval of the mean
-    [sigmaCI_lower, sigmaCI_upper] : confidence interval of the std
+    m : float
+        Mean.
+    sigma : float
+        Standard deviation
+    [m - h, m + h] : list
+        Confidence interval of the mean.
+    [sigmaCI_lower, sigmaCI_upper] : list
+        Confidence interval of the std.
     """
     arr = 1.0 * np.array(data)
     num = len(arr)
@@ -141,7 +145,7 @@ def bandpass(eeg, sfreq, Wp, Ws):
 def schaefer_strimmer_cov(X):
     r"""Schaefer-Strimmer covariance estimator.
 
-    Shrinkage estimator using method from [1]_:
+    Shrinkage estimator described in [1]_:
 
     .. math:: \hat{\Sigma} = (1 - \gamma)\Sigma_{scm} + \gamma T
 
@@ -150,37 +154,39 @@ def schaefer_strimmer_cov(X):
     .. math:: T_{i,j} = \{ \Sigma_{scm}^{ii} \text{if} i = j,
          0 \text{otherwise} \}
 
-    Note that the optimal :math:`\gamma` is estimate by the authors' method.
+    Note that the optimal :math:`\gamma` is estimated by the authors' method.
 
     Parameters
     ----------
-    X: array, shape=(n_channels, n_samples)
+    X: array, shape=(n_chans, n_samples)
         Signal matrix.
 
     Returns
     -------
-    cov: array, shape=(n_channels, n_channels)
+    cov: array, shape=(n_chans, n_chans)
         Schaefer-Strimmer shrinkage covariance matrix.
 
     References
     ----------
-    [1] Schafer, J., and K. Strimmer. 2005. A shrinkage approach to
-    large-scale covariance estimation and implications for functional
-    genomics. Statist. Appl. Genet. Mol. Biol. 4:32.
+    .. [1] Schafer, J., and K. Strimmer. 2005. A shrinkage approach to
+       large-scale covariance estimation and implications for functional
+       genomics. Statist. Appl. Genet. Mol. Biol. 4:32.
     """
-    _, Ns = X.shape[0], X.shape[1]
+    ns = X.shape[1]
     C_scm = np.cov(X, ddof=0)
-    X_c = X - np.tile(X.mean(axis=1), [Ns, 1]).T
+    X_c = X - np.tile(X.mean(axis=1), [ns, 1]).T
 
     # Compute optimal gamma, the weigthing between SCM and srinkage estimator
-    R = Ns / (Ns - 1.0) * np.corrcoef(X)
-    var_R = (X_c ** 2).dot((X_c ** 2).T) - 2 * C_scm * X_c.dot(X_c.T) + \
-        Ns * C_scm ** 2
-    var_R = Ns / ((Ns - 1)**3 * np.outer(X.var(axis=1), X.var(axis=1))) * var_R
+    R = ns / (ns - 1.0) * np.corrcoef(X)
+    var_R = (X_c ** 2).dot((X_c ** 2).T) - 2 * C_scm * X_c.dot(X_c.T)
+    var_R += ns * C_scm ** 2
+
+    var_R = ns / ((ns - 1) ** 3 * np.outer(X.var(1), X.var(1))) * var_R
     R -= np.diag(np.diag(R))
     var_R -= np.diag(np.diag(var_R))
-    gamma = max(0, min(1, var_R.sum() / (R**2).sum()))
-    cov = (1. - gamma) * (Ns / (Ns - 1.)) * C_scm + gamma * (Ns / (Ns - 1.)) *\
-        np.diag(np.diag(C_scm))
+    gamma = max(0, min(1, var_R.sum() / (R ** 2).sum()))
+
+    cov = (1. - gamma) * (ns / (ns - 1.)) * C_scm
+    cov += gamma * (ns / (ns - 1.)) * np.diag(np.diag(C_scm))
 
     return cov
