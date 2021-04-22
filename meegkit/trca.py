@@ -213,6 +213,21 @@ def trca(X):
     """
     n_samples, n_chans, n_trials = theshapeof(X)
 
+    # 1. Compute empirical covariance of all data (to be bounded)
+    # -------------------------------------------------------------------------
+    # Concatenate all the trials to have all the data as a sequence
+    UX = np.zeros((n_chans, n_samples * n_trials))
+    for trial in range(n_trials):
+        UX[:, trial * n_samples:(trial + 1) * n_samples] = X[..., trial].T
+
+    # Mean centering
+    UX -= np.mean(UX, 1)[:, None]
+
+    # Covariance
+    Q = UX @ UX.T
+
+    # 2. Compute average empirical covariance between all pairs of trials
+    # -------------------------------------------------------------------------
     S = np.zeros((n_chans, n_chans))
     for trial_i in range(n_trials - 1):
         x1 = np.squeeze(X[..., trial_i])
@@ -231,18 +246,8 @@ def trca(X):
             # sum it
             S = S + x1.T @ x2 + x2.T @ x1
 
-    # Reshape to have all the data as a sequence
-    UX = np.zeros((n_chans, n_samples * n_trials))
-    for trial in range(n_trials):
-        UX[:, trial * n_samples:(trial + 1) * n_samples] = X[..., trial].T
-
-    # Mean centering
-    UX -= np.mean(UX, 1)[:, None]
-
-    # Compute empirical variance of all data (to be bounded)
-    Q = np.dot(UX, UX.T)
-
-    # Compute eigenvalues and vectors
+    # 3. Compute eigenvalues and vectors
+    # -------------------------------------------------------------------------
     lambdas, W = linalg.eig(S, Q, left=True, right=False)
 
     # Select the eigenvector corresponding to the biggest eigenvalue
@@ -284,7 +289,9 @@ def trca_regul(X, method):
     """
     n_samples, n_chans, n_trials = theshapeof(X)
 
-    # Concatenate all the trials
+    # 1. Compute empirical covariance of all data (to be bounded)
+    # -------------------------------------------------------------------------
+    # Concatenate all the trials to have all the data as a sequence
     UX = np.zeros((n_chans, n_samples * n_trials))
     for trial in range(n_trials):
         UX[:, trial * n_samples:(trial + 1) * n_samples] = X[..., trial].T
@@ -296,6 +303,8 @@ def trca_regul(X, method):
     cov = Covariances(estimator=method).fit_transform(UX[np.newaxis, ...])
     Q = np.squeeze(cov)
 
+    # 2. Compute average empirical covariance between all pairs of trials
+    # -------------------------------------------------------------------------
     # Intertrial correlation computation
     data = np.concatenate((X, X), axis=1)
 
@@ -313,7 +322,8 @@ def trca_regul(X, method):
     else:
         S = mean_covariance(S, metric='logeuclid')
 
-    # Compute eigenvalues and vectors
+    # 3. Compute eigenvalues and vectors
+    # -------------------------------------------------------------------------
     lambdas, W = linalg.eig(S, Q, left=True, right=False)
 
     # Select the eigenvector corresponding to the biggest eigenvalue
