@@ -42,15 +42,20 @@ filterbank = [[[6, 90], [4, 100]],  # passband freqs, stopband freqs (Wp, Ws)
 
 
 @pytest.mark.parametrize('ensemble', [True, False])
-def test_trcacode(ensemble):
+@pytest.mark.parametrize('method', ['original', 'riemann'])
+@pytest.mark.parametrize('regularization', ['schaefer', 'scm'])
+def test_trca(ensemble, method, regularization):
     """Test TRCA."""
+    if method == 'original' and regularization == 'schaefer':
+        pytest.skip("regularization only used for riemann version")
+
     len_gaze_s = 0.5  # data length for target identification [s]
     len_delay_s = 0.13  # visual latency being considered in the analysis [s]
     alpha_ci = 0.05   # 100*(1-alpha_ci): confidence interval for accuracy
     sfreq = 250  # sampling rate [Hz]
     len_shift_s = 0.5  # duration for gaze shifting [s]
 
-    # Preparing useful variables (DONT'T need to modify)
+    # useful variables
     len_gaze_smpl = round_half_up(len_gaze_s * sfreq)  # data length [samples]
     len_delay_smpl = round_half_up(len_delay_s * sfreq)  # visual latency [samples]
     len_sel_s = len_gaze_s + len_shift_s  # selection time [s]
@@ -63,7 +68,8 @@ def test_trcacode(ensemble):
     # -----------------------------------------------------------------------------
     # Estimate classification performance with a Leave-One-Block-Out
     # cross-validation approach
-    trca = TRCA(sfreq, filterbank, ensemble)
+    trca = TRCA(sfreq, filterbank, ensemble=ensemble, method=method,
+                estimator=regularization)
     accs = np.zeros(2)
     itrs = np.zeros(2)
     for i in range(2):
@@ -95,10 +101,12 @@ def test_trcacode(ensemble):
     # Mean accuracy and ITR computation
     mu, _, muci, _ = normfit(accs, alpha_ci)
     print(f"Mean accuracy = {mu:.1f}%\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")  # noqa
-    assert mu > 95
+    if method != 'riemann' or (regularization == 'scm' and ensemble):
+        assert mu > 95
     mu, _, muci, _ = normfit(itrs, alpha_ci)
     print(f"Mean ITR = {mu:.1f}\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")
-    assert mu > 300
+    if method != 'riemann' or (regularization == 'scm' and ensemble):
+        assert mu > 300
 
 
 if __name__ == '__main__':
