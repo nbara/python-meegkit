@@ -25,10 +25,12 @@ References:
    Proc. Int. Natl. Acad. Sci. U. S. A, 112(44): E6058-6067, 2015.
 
 """
-# Author: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr>
+# Authors: Giuseppe Ferraro <giuseppe.ferraro@isae-supaero.fr>
+#          Nicolas Barascud <nicolas.barascud@gmail.com>
 import os
 import time
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
 from meegkit.trca import TRCA
@@ -46,13 +48,13 @@ is_ensemble = True  # True = ensemble TRCA method; False = TRCA method
 alpha_ci = 0.05   # 100*(1-alpha_ci): confidence interval for accuracy
 sfreq = 250  # sampling rate [Hz]
 dur_shift = 0.5  # duration for gaze shifting [s]
-list_freqs = np.concatenate(
-    [[x + 8 for x in range(8)],
+list_freqs = np.array(
+    [[x + 8.0 for x in range(8)],
      [x + 8.2 for x in range(8)],
      [x + 8.4 for x in range(8)],
      [x + 8.6 for x in range(8)],
-     [x + 8.8 for x in range(8)]])  # list of stimulus frequencies
-n_targets = len(list_freqs)  # The number of stimuli
+     [x + 8.8 for x in range(8)]]).T  # list of stimulus frequencies
+n_targets = list_freqs.size  # The number of stimuli
 
 # Useful variables (no need to modify)
 dur_gaze_s = round_half_up(dur_gaze * sfreq)  # data length [samples]
@@ -82,7 +84,10 @@ eeg = eeg[crop_data]
 # Estimate classification performance with a Leave-One-Block-Out
 # cross-validation approach.
 #
-# We use the filterbank specification described in [2]_.
+# To get a sense of the filterbank specification in relation to the stimuli
+# we can plot the individual filterbank sub-bands as well as the target
+# frequencies (with their expected harmonics in the EEG spectrum). We use the
+# filterbank specification described in [2]_.
 
 filterbank = [[(6, 90), (4, 100)],  # passband, stopband freqs [(Wp), (Ws)]
               [(14, 90), (10, 100)],
@@ -92,7 +97,33 @@ filterbank = [[(6, 90), (4, 100)],  # passband, stopband freqs [(Wp), (Ws)]
               [(46, 90), (40, 100)],
               [(54, 90), (48, 100)]]
 
-# Performing the TRCA-based SSVEP detection algorithm
+f, ax = plt.subplots(1, figsize=(7, 4))
+for i, band in enumerate(filterbank):
+    ax.axvspan(ymin=i / len(filterbank) + .02,
+               ymax=(i + 1) / len(filterbank) - .02,
+               xmin=filterbank[i][1][0], xmax=filterbank[i][1][1],
+               alpha=0.2, facecolor=f'C{i}')
+    ax.axvspan(ymin=i / len(filterbank) + .02,
+               ymax=(i + 1) / len(filterbank) - .02,
+               xmin=filterbank[i][0][0], xmax=filterbank[i][0][1],
+               alpha=0.5, label=f'sub-band{i}', facecolor=f'C{i}')
+
+for f in list_freqs.flat:
+    colors = np.ones((9, 4))
+    colors[:, :3] = np.linspace(0, .5, 9)[:, None]
+    ax.scatter(f * np.arange(1, 10), [f] * 9, c=colors, s=8, zorder=100)
+
+ax.set_ylabel('Stimulus frequency (Hz)')
+ax.set_xlabel('EEG response frequency (Hz)')
+ax.set_xlim([0, 102])
+ax.set_xticks(np.arange(0, 100, 10))
+ax.grid(True, ls=':', axis='x')
+ax.legend(bbox_to_anchor=(1.05, .5), fontsize='small')
+plt.tight_layout()
+plt.show()
+
+###############################################################################
+# Now perform the TRCA-based SSVEP detection algorithm
 trca = TRCA(sfreq, filterbank, is_ensemble)
 
 print('Results of the ensemble TRCA-based method:\n')
