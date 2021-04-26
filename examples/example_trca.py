@@ -1,6 +1,6 @@
 """
-Task-related component analysis (TRCA)-based SSVEP detection
-============================================================
+Task-related component analysis for SSVEP detection
+===================================================
 
 Sample code for the task-related component analysis (TRCA)-based steady
 -state visual evoked potential (SSVEP) detection method [1]_. The filter
