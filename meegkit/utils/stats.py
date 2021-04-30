@@ -33,7 +33,7 @@ def robust_mean(X, axis=0, percentile=[5, 95]):
     return m
 
 
-def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
+def rolling_corr(X, y, window=None, sfreq=1, step=1, axis=0):
     """Calculate rolling correlation between some data and a reference signal.
 
     Parameters
@@ -44,7 +44,7 @@ def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
         Reference signal.
     window : int
         Number of timepoints for to include for each correlation calculation.
-    fs: int
+    sfreq: int
         Sampling frequency (default=1).
     step : int
         If > 1, only compute correlations every `step` samples.
@@ -83,7 +83,7 @@ def rolling_corr(X, y, window=None, fs=1, step=1, axis=0):
         corr = corr.squeeze(-1)
 
     # Times relative to end of window
-    t_corr = (timebins + window) / float(fs)
+    t_corr = (timebins + window) / float(sfreq)
 
     assert len(t_corr) == corr.shape[0]
 
@@ -225,8 +225,8 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
     Internal reliability of the ERN and Pe as a function of increasing trial
     numbers can be quantified with Cronbach's alpha:
 
-    $$\alpha = \frac{K}{K-1} \left(1-\frac{\sum_{i=1}^K
-    \sigma^2_{Y_i}}{ \sigma^2_X}\right)$$
+        $$\alpha = \frac{K}{K-1} \left(1-\frac{\sum_{i=1}^K
+          \sigma^2_{Y_i}}{ \sigma^2_X}\right)$$
 
     Hinton, Brownlow, McMurray, and Cozens (2004) have suggested that
     Cronbach's alpha exceeding .90 indicates excellent internal reliability,
@@ -283,6 +283,8 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
 
 def snr_spectrum(X, freqs, n_avg=1, n_harm=1, skipbins=1):
     """Compute Signal-to-Noise-corrected spectrum.
+
+    The implementation tries to replicate examples in [1; 2; 3]_.
 
     Parameters
     ----------

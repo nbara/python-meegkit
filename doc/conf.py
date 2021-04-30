@@ -12,10 +12,6 @@
 #
 import os
 import sys
-from numpydoc import docscrape  # noqa
-import sphinx_gallery  # noqa
-import sphinx_bootstrap_theme  # noqa
-
 import matplotlib
 matplotlib.use('agg')
 
@@ -27,9 +23,10 @@ import meegkit # noqa
 
 # -- Project information -----------------------------------------------------
 
-project = 'MEEGkit'
-copyright = '2020, Nicolas Barascud'
+project = f'MEEGkit v{meegkit.__version__}'
+copyright = '2021, Nicolas Barascud'
 author = 'Nicolas Barascud'
+release = meegkit.__version__
 version = meegkit.__version__
 
 # -- General configuration ---------------------------------------------------
@@ -42,7 +39,9 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
     'numpydoc',
+    'jupyter_sphinx',
     'sphinx_gallery.gen_gallery',
+    'sphinxemoji.sphinxemoji',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -75,10 +74,8 @@ master_doc = "index"
 
 # -- Options for HTML output -------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-#
-html_theme = 'bootstrap'
+# The theme to use for HTML and HTML Help pages
+html_theme = 'pydata_sphinx_theme'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -87,62 +84,33 @@ html_static_path = ['_static']
 
 
 html_theme_options = {
-    # Tab name for entire site. (Default: "Site")
-    'navbar_site_name': "MEEGkit documentation",
-
-    # Render the next and previous page links in navbar. (Default: true)
-    'navbar_sidebarrel': False,
-
-    # Links in the navbar
-    'navbar_links': [
-        ("Examples", "auto_examples/index"),
-        ("GitHub", "https://github.com/nbara/python-meegkit", True)
+    "show_toc_level": 1,
+    "external_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/nbara/python-meegkit",
+        }
     ],
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/nbara/python-meegkit",
+            "icon": "fab fa-github-square",
+        },
+        {
+            "name": "Twitter",
+            "url": "https://twitter.com/lebababa",
+            "icon": "fab fa-twitter-square",
+        },
+    ],
+    "use_edit_page_button": True,
+}
 
-    # Render the current pages TOC in the navbar. (Default: true)
-    'navbar_pagenav': True,
-
-    # Tab name for the current pages TOC. (Default: "Page")
-    'navbar_pagenav_name': "Page",
-
-    # Global TOC depth for "site" navbar tab. (Default: 1)
-    # Switching to -1 shows all levels.
-    'globaltoc_depth': 2,
-
-    # Include hidden TOCs in Site navbar?
-    #
-    # Note: If this is "false", you cannot have mixed ``:hidden:`` and
-    # non-hidden ``toctree`` directives in the same page, or else the build
-    # will break.
-    #
-    # Values: "true" (default) or "false"
-    'globaltoc_includehidden': "true",
-
-    # HTML navbar class (Default: "navbar") to attach to <div> element.
-    # For black navbar, do "navbar navbar-inverse"
-    'navbar_class': "navbar navbar-inverse",
-
-    # Fix navigation bar to top of page?
-    # Values: "true" (default) or "false"
-    'navbar_fixed_top': "true",
-
-    # Location of link to source.
-    # Options are "nav" (default), "footer" or anything else to exclude.
-    'source_link_position': "nav",
-
-    # Bootswatch (http://bootswatch.com/) theme.
-    #
-    # Options are nothing (default) or the name of a valid theme
-    # such as "cosmo" or "sandstone".
-    #
-    # Currently, the supported themes are:
-    # - Bootstrap 2: https://bootswatch.com/2
-    # - Bootstrap 3: https://bootswatch.com/3
-    'bootswatch_theme': "united",
-
-    # Choose Bootstrap version.
-    # Values: "3" (default) or "2" (in quotes)
-    'bootstrap_version': "3",
+html_context = {
+    "github_user": "nbara",
+    "github_repo": "python-meegkit",
+    "github_version": "master",
+    "doc_path": "doc",
 }
 
 # -- Options for Sphinx-gallery HTML ------------------------------------------
@@ -153,4 +121,5 @@ sphinx_gallery_conf = {
     'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
     'filename_pattern': '/example_',
     'ignore_pattern': 'config.py',
+    'run_stale_examples': False,
 }

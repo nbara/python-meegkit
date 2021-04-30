@@ -25,7 +25,6 @@ clean:
 	-rm -rf _build/*
 	-rm -rf _source/*
 	-rm -rf generated
-	-rm -rf auto_examples/*
 	-rm -rf *.stc
 	-rm -rf *.fif
 	-rm -rf *.nii.gz

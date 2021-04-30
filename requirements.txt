@@ -3,11 +3,7 @@ scipy
 matplotlib
 scikit-learn
 pandas
-sphinx
-pillow
-sphinx-gallery
 joblib
-numpydoc
 flake8
 pytest
 pytest-cov
@@ -16,4 +12,4 @@ codespell
 pydocstyle
 tqdm
 statsmodels
-git+git://github.com/ErikBjare/pyRiemann.git@1ecaa372b7c432f13e82685b2541ee48424a11c9#egg=pyriemann
+git+git://github.com/alexandrebarachant/pyRiemann

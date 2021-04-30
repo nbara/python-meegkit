@@ -11,7 +11,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from meegkit.asr import ASR
-from meegkit.utils.asr import yulewalk_filter
 from meegkit.utils.matrix import sliding_window
 
 # THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
