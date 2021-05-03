@@ -32,6 +32,20 @@ pip install .
 
 *Note* : Use developer mode with the `-e` flag (`pip install -e .`) to be able to modify the sources even after install.
 
+### Advanced installation instructions
+
+Some ASR variants require additional dependencies such as `pymanopt`. To install meegkit with these optional packages, use:
+
+```bash
+pip install -e '.[dev]'
+```
+
+or:
+
+```bash
+pip install git+https://github.com/nbara/python-meegkit.git#egg=meegkit[dev]
+```
+
 ## References
 
 ### 1. CCA, STAR, SNS, DSS, ZapLine, and robust detrending

@@ -12,8 +12,7 @@ python:
 install:
   - sudo apt-get update
   - pip install -r requirements.txt
-  - pip install -e .
-  - pip install git+https://github.com/pymanopt/pymanopt
+  - pip install -e ".[dev]"
 script:
   - mkdir docs
   - cd doc
