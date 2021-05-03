@@ -7,7 +7,7 @@ setup(
     description='M/EEG denoising in Python',
     url='http://github.com/nbara/python-meegkit/',
     author='N Barascud',
-    author_email='nicolas.barascud@ens.fr',
+    author_email='nicolas.barascud@gmail.com',
     license='UNLICENSED',
     version='0.1.1',
     packages=find_packages(exclude=['doc', 'tests']),
