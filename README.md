@@ -1,7 +1,7 @@
 # MEEGkit
 
 [![unit-tests](https://github.com/nbara/python-meegkit/workflows/unit-tests/badge.svg?style=flat)](https://github.com/nbara/python-meegkit/actions?workflow=unit-tests)
-[![Travis](https://img.shields.io/travis/nbara/python-meegkit.svg?label=documentation&logo=travis)](https://travis-ci.org/nbara/python-meegkit)
+[![documentation](https://img.shields.io/travis/nbara/python-meegkit.svg?label=documentation&logo=travis)](https://www.travis-ci.com/github/nbara/python-meegkit)
 [![codecov](https://codecov.io/gh/nbara/python-meegkit/branch/master/graph/badge.svg)](https://codecov.io/gh/nbara/python-meegkit)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
 [![twitter](https://img.shields.io/twitter/follow/lebababa?label=Twitter&style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
@@ -90,4 +90,23 @@ If you use this, you should cite the following article:
 ```sql
 [1] Cohen, M. X., & Gulbinaite, R. (2017). Rhythmic entrainment source separation: Optimizing analyses
     of neural responses to rhythmic sensory stimulation. Neuroimage, 147, 43-56.
+```
+
+### 4. Task-Related Component Analysis (TRCA)
+
+This code is based on the [Matlab implementation from Masaki Nakanishi](https://github.com/mnakanishi/TRCA-SSVEP), and was adapted to python by [Giuseppe Ferraro](mailto:giuseppe.ferraro@isae-supaero.fr)
+
+If you use this, you should cite the following articles:
+
+```sql
+[1] M. Nakanishi, Y. Wang, X. Chen, Y.-T. Wang, X. Gao, and T.-P. Jung,
+    "Enhancing detection of SSVEPs for a high-speed brain speller using
+    task-related component analysis", IEEE Trans. Biomed. Eng, 65(1): 104-112,
+    2018.
+[2] X. Chen, Y. Wang, S. Gao, T. -P. Jung and X. Gao, "Filter bank
+    canonical correlation analysis for implementing a high-speed SSVEP-based
+    brain-computer interface", J. Neural Eng., 12: 046008, 2015.
+[3] X. Chen, Y. Wang, M. Nakanishi, X. Gao, T. -P. Jung, S. Gao,
+    "High-speed spelling with a noninvasive brain-computer interface",
+    Proc. Int. Natl. Acad. Sci. U. S. A, 112(44): E6058-6067, 2015.
 ```

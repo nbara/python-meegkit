@@ -13,13 +13,11 @@ install:
   - sudo apt-get update
   - pip install -r requirements.txt
   - pip install -e .
-  - pip install sphinx-gallery
-  - pip install numpydoc
-  - pip install sphinx_bootstrap_theme
   - pip install git+https://github.com/pymanopt/pymanopt
 script:
   - mkdir docs
   - cd doc
+  - pip install -r requirements.txt
   # - sphinx-autogen *.rst
   - make html
   - touch _build/html/.nojekyll

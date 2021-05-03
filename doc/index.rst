@@ -1,23 +1,37 @@
-.. MEEGkit documentation master file, created by
+.. ``meegkit`` documentation master file, created by
    sphinx-quickstart on Fri Jan 10 12:31:49 2020.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to MEEGkit
-==================
+|:brain:| ``meegkit``: EEG and MEG denoising in Python
+======================================================
 
-The code of the project is on Github: `MEEGkit <https://github.com/nbara/python-meegkit>`_
+Introduction
+------------
 
+``meegkit`` is a collection of EEG and MEG denoising techniques for
+**Python 3.6+**. Please feel free to contribute, or suggest new analyses. Keep
+in mind that this is mostly development code, and as such is likely to change
+without any notice. Also, while most of the methods have been fairly robustly
+tested, bugs can (and should!) be expected.
 
-Contents
---------
+The source code of the project is hosted on Github at the following address:
+https://github.com/nbara/python-meegkit
 
-:py:mod:`meegkit`:
+To get started, follow the installation instructions `in the README <https://github.com/nbara/python-meegkit#installation>`_.
+
+Available modules
+-----------------
+
+Here is a list of the methods and techniques available in ``meegkit``:
 
 .. currentmodule:: meegkit
 
+.. toctree::
+   :maxdepth: 1
+
 .. autosummary::
-   :toctree: modules/
+   :caption: meegkit
 
    ~meegkit.asr
    ~meegkit.cca
@@ -26,18 +40,22 @@ Contents
    ~meegkit.ress
    ~meegkit.sns
    ~meegkit.star
+   ~meegkit.trca
    ~meegkit.tspca
    ~meegkit.utils
+
 
 Examples gallery
 ----------------
 
-A gallery of examples is available at the following address:
+A number of example scripts and notebooks are available:
+
 
 .. toctree::
    :maxdepth: 2
 
    auto_examples/index
+
 
 Indices and tables
 ------------------
