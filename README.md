@@ -37,13 +37,13 @@ pip install .
 Some ASR variants require additional dependencies such as `pymanopt`. To install meegkit with these optional packages, use:
 
 ```bash
-pip install -e '.[dev]'
+pip install -e '.[extra]'
 ```
 
 or:
 
 ```bash
-pip install git+https://github.com/nbara/python-meegkit.git#egg=meegkit[dev]
+pip install git+https://github.com/nbara/python-meegkit.git#egg=meegkit[extra]
 ```
 
 ## References

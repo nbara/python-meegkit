@@ -22,12 +22,10 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
+    - name: Install meegkit and dependencies
       run: |
         python -m pip install --upgrade pip
-    - name: Install meegkit
-      run: |
-        pip install -e ".[dev]""
+        pip install -e ".[extra]"
     - name: Lint with flake8
       run: |
         make pep
