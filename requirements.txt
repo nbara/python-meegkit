@@ -13,4 +13,3 @@ pydocstyle
 tqdm
 statsmodels
 pyriemann @ git+https://github.com/alexandrebarachant/pyRiemann
-pymanopt @ git+https://github.com/pymanopt/pymanopt
