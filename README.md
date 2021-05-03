@@ -24,9 +24,10 @@ This package can be installed easily using `pip+git`:
 pip install git+https://github.com/nbara/python-meegkit.git
 ```
 
-Or you can clone this repository and run the following command inside the `python-meegkit` directory:
+Or you can clone this repository and run the following commands inside the `python-meegkit` directory:
 
 ```bash
+pip install -r requirements.txt
 pip install .
 ```
 
