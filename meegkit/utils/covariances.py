@@ -1,9 +1,5 @@
 """Covariance calculation."""
 import numpy as np
-import pymanopt
-from pymanopt import Problem
-from pymanopt.manifolds import Grassmann
-from pymanopt.solvers import TrustRegions
 from scipy import linalg
 
 from .base import mldivide
@@ -445,6 +441,11 @@ def nonlinear_eigenspace(L, k, alpha=1):
        Analysis and Applications, 36(2), 752-774, 2015.
 
     """
+    import pymanopt
+    from pymanopt import Problem
+    from pymanopt.manifolds import Grassmann
+    from pymanopt.solvers import TrustRegions
+
     n = L.shape[0]
     assert L.shape[1] == n, 'L must be square.'
 

@@ -24,13 +24,28 @@ This package can be installed easily using `pip+git`:
 pip install git+https://github.com/nbara/python-meegkit.git
 ```
 
-Or you can clone this repository and run the following command inside the `python-meegkit` directory:
+Or you can clone this repository and run the following commands inside the `python-meegkit` directory:
 
 ```bash
+pip install -r requirements.txt
 pip install .
 ```
 
 *Note* : Use developer mode with the `-e` flag (`pip install -e .`) to be able to modify the sources even after install.
+
+### Advanced installation instructions
+
+Some ASR variants require additional dependencies such as `pymanopt`. To install meegkit with these optional packages, use:
+
+```bash
+pip install -e '.[extra]'
+```
+
+or:
+
+```bash
+pip install git+https://github.com/nbara/python-meegkit.git#egg=meegkit[extra]
+```
 
 ## References
 
