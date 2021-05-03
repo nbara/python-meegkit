@@ -298,3 +298,39 @@ def _plot_detrend(x, y, w):
     ax2.set_ylabel('ch. weights')
     ax2.set_xlabel('samples')
     plt.show()
+
+
+def create_masked_weight(x, events, tmin, tmax, sfreq):
+
+    """Create a weight matrix (n_channels * n_times) with masked
+    periods (value of zero) in order to mask the trials of interest during
+    detrending
+    https://www.sciencedirect.com/science/article/pii/S0165027021000157.
+
+    Parameters
+    ----------
+    x : ndarray, shape=(n_times, n_channels)
+        Raw data matrix.
+    events : ndarray, shape=(n_events)
+        Time samples of the events
+    tmin : float
+        Start time before event (in seconds)
+    tmax : float
+        End time after event (in seconds)
+    sfreq : float
+        The sampling frequency of the data x
+    Returns
+    -------
+    weights : ndarray, shape=(n_times, n_channels)
+        Weight for each channel and each time sample (zero is masked)
+
+    """
+
+    if len(x.shape) != 2:
+        raise ValueError('The shape of x has to be (n_times * n_channels)')
+
+    weights = np.ones(x.shape)
+    for event in events:
+        weights[:, event + tmin * sfreq: event + tmax * sfreq + 1] = 0
+
+    return weights
