@@ -283,9 +283,9 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
         is 0.05 (very clean output) to 0.3 (very lax cleaning of only coarse
         artifacts) (default=0.2).
     zthresholds : 2-tuple
-        The minimum and maximum standard deviations within which the power of a
-        channel must lie (relative to a robust estimate of the clean EEG power
-        distribution in the channel) for it to be considered "not bad".
+        The minimum and maximum standard deviations within which the power of
+        a channel must lie (relative to a robust estimate of the clean EEG
+        power distribution in the channel) for it to be considered "not bad".
         (default=[-3.5, 5]).
 
     The following are detail parameters that usually do not have to be tuned.
@@ -293,40 +293,22 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     adapting these to your data.
 
     win_len : float
-        Window length that is used to check the data for artifact content. This
-        is ideally as long as the expected time scale of the artifacts but not
-        shorter than half a cycle of the high-pass filter that was used.
-        Default: 1.
+        Window length that is used to check the data for artifact content.
+        This is ideally as long as the expected time scale of the artifacts
+        but not shorter than half a cycle of the high-pass filter that was
+        used. Default: 1.
     win_overlap : float
         Window overlap fraction. The fraction of two successive windows that
-        overlaps. Higher overlap ensures that fewer artifact portions are going
-        to be missed, but is slower (default=0.66).
-    max_dropout_fraction : float
-        Maximum fraction that can have dropouts. This is the maximum fraction
-        of time windows that may have arbitrarily low amplitude (e.g., due to
-        the sensors being unplugged) (default=0.1).
+        overlaps. Higher overlap ensures that fewer artifact portions are
+        going to be missed, but is slower (default=0.66).
     min_clean_fraction : float
         Minimum fraction that needs to be clean. This is the minimum fraction
         of time windows that need to contain essentially uncontaminated EEG.
         (default=0.25)
-
-    The following are expert-level parameters that you should not tune unless
-    you fully understand how the method works.
-
-    truncate_quant :
-        Truncated Gaussian quantile. Quantile range [upper,lower] of the
-        truncated Gaussian distribution that shall be fit to the EEG contents.
-        (default=[0.022, 0.6])
-    step_sizes :
-        Grid search stepping. Step size of the grid search, in quantiles;
-        separately for [lower,upper] edge of the truncated Gaussian. The lower
-        edge has finer stepping because the clean data density is assumed to be
-        lower there, so small changes in quantile amount to large changes in
-        data space (default=[0.01 0.01]).
-    shape_range :
-        Shape parameter range. Search range for the shape parameter of the
-        generalized Gaussian distribution used to fit clean EEG (default:
-        1.7:0.15:3.5).
+    max_dropout_fraction : float
+        Maximum fraction that can have dropouts. This is the maximum fraction
+        of time windows that may have arbitrarily low amplitude (e.g., due to
+        the sensors being unplugged) (default=0.1).
 
     Returns
     -------
@@ -338,26 +320,31 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     """
     assert 0 < max_bad_chans < 1, "max_bad_chans must be a fraction !"
 
+    # set internal variables
     truncate_quant = [0.0220, 0.6000]
     step_sizes = [0.01, 0.01]
-    shape_range = np.linspace(1.7, 3.5, 13)
+    shape_range = np.arange(1.7, 3.5, 0.15)
     max_bad_chans = np.round(X.shape[0] * max_bad_chans)
 
+    # set data indices
     [nc, ns] = X.shape
     N = int(win_len * sfreq)
-    offsets = np.int_(np.arange(0, ns - N, np.round(N * (1 - win_overlap))))
+    offsets = np.round(np.arange(0, ns - N, (N * (1 - win_overlap))))
+    offsets = offsets.astype(int)
     logging.debug('[ASR] Determining channel-wise rejection thresholds')
 
     wz = np.zeros((nc, len(offsets)))
     for ichan in range(nc):
-        x = X[ichan, :] ** 2
-        Y = []
-        for o in offsets:
-            Y.append(np.sqrt(np.sum(x[o:o + N]) / N))
 
+        # compute root mean squared amplitude
+        x = X[ichan, :] ** 2
+        Y = np.array([np.sqrt(np.sum(x[o:o + N]) / N) for o in offsets])
+
+        # fit a distribution to the clean EEG part
         mu, sig, alpha, beta = fit_eeg_distribution(
             Y, min_clean_fraction, max_dropout_fraction, truncate_quant,
             step_sizes, shape_range)
+        # calculate z scores
         wz[ichan] = (Y - mu) / sig
 
     # sort z scores into quantiles
@@ -366,17 +353,19 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
 
     # determine which windows to remove
     if np.max(zthresholds) > 0:
-        mask1 = swz[-(np.int(max_bad_chans) + 1), :] > np.max(zthresholds)
+        mask1 = swz[-(int(max_bad_chans) + 1), :] > np.max(zthresholds)
     if np.min(zthresholds) < 0:
-        mask2 = (swz[1 + np.int(max_bad_chans - 1), :] < np.min(zthresholds))
+        mask2 = (swz[1 + int(max_bad_chans - 1), :] < np.min(zthresholds))
 
     bad_by_mad = mad(wz, c=1, axis=0) < .1
     bad_by_std = np.std(wz, axis=0) < .1
     mask3 = np.logical_or(bad_by_mad, bad_by_std)
 
+    # combine the three masks
     remove_mask = np.logical_or.reduce((mask1, mask2, mask3))
     removed_wins = np.where(remove_mask)
 
+    # reconstruct the samples to remove
     sample_maskidx = []
     for i in range(len(removed_wins[0])):
         if i == 0:
@@ -389,12 +378,15 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
                           offsets[removed_wins[0][i]] + N)
             ))
 
+    # delete the bad chunks from the data
     sample_mask2remove = np.unique(sample_maskidx)
-    clean = np.delete(X, sample_mask2remove, 1)
-    sample_mask = np.ones((1, ns), dtype=bool)
-
     if sample_mask2remove.size:
+        clean = np.delete(X, sample_mask2remove, 1)
+        sample_mask = np.ones((1, ns), dtype=bool)
         sample_mask[0, sample_mask2remove] = False
+    else:
+        clean = X
+        sample_mask = np.ones((1, ns), dtype=bool)
 
     if show:
         import matplotlib.pyplot as plt
@@ -453,13 +445,9 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         or more).
     sfreq : float
         Sampling rate of the data, in Hz.
-
-    The following are optional parameters (the key parameter of the method is
-    the ``cutoff``):
-
     cutoff: float
-        Standard deviation cutoff for rejection. X portions whose variance
-        is larger than this threshold relative to the calibration data are
+        Standard deviation cutoff for rejection. X portions whose variance is
+        larger than this threshold relative to the calibration data are
         considered missing data and will be removed. The most aggressive value
         that can be used without losing too much EEG is 2.5. A quite
         conservative value would be 5 (default=5).
@@ -484,7 +472,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         Minimum fraction of windows that need to be clean, used for threshold
         estimation (default=0.25).
     method : {'euclid', 'riemann'}
-        Metric to compute the covariance matric average.
+        Metric to compute the covariance matrix average.
 
     Returns
     -------
@@ -496,7 +484,11 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     """
     logging.debug('[ASR] Calibrating...')
 
+    # set number of channels and number of samples
     [nc, ns] = X.shape
+
+    # filter the data
+    X, _zf = yulewalk_filter(X, sfreq, ab=None)
 
     # window length for calculating thresholds
     N = int(np.round(win_len * sfreq))
@@ -516,12 +508,13 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     V = Vtmp[:, np.argsort(D)]
 
     # get the threshold matrix T
-    x = np.abs(np.dot(V, X))
-    offsets = np.int_(np.arange(0, ns - N, np.round(N * (1 - win_overlap))))
+    x = np.abs(np.dot(V.T, X))
+    offsets = np.arange(0, ns - N, np.round(N * (1 - win_overlap))).astype(int)
 
+    # go through all the channels and fit the EEG distribution
     mu = np.zeros(nc)
     sig = np.zeros(nc)
-    for ichan in range(nc):
+    for ichan in reversed(range(nc)):
         rms = x[ichan, :] ** 2
         Y = []
         for o in offsets:
