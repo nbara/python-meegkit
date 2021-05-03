@@ -12,4 +12,5 @@ codespell
 pydocstyle
 tqdm
 statsmodels
-git+git://github.com/alexandrebarachant/pyRiemann
+pyriemann @ git+https://github.com/alexandrebarachant/pyRiemann
+pymanopt[dev] @ git+https://github.com/pymanopt/pymanopt
