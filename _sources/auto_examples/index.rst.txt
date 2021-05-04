@@ -1,0 +1,233 @@
+:orphan:
+
+
+
+.. _sphx_glr_auto_examples:
+
+Examples gallery
+================
+
+Below is a list of example scripts showing basic usage for most methods in
+MEEGkit.
+
+The examples can be browsed directly on `Github <https://github.com/nbara/python-meegkit/tree/master/examples>`_.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to subtract the impulse response from a filter to reduce ringing artifac...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_dering_thumb.png
+     :alt: Ringing artifact reduction example
+
+     :ref:`sphx_glr_auto_examples_example_dering.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_dering
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example is similar to test_nt_star.m in Noisetools. Results are equivalent (within numeric...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_star_thumb.png
+     :alt: Sparse time artifact removal on simulated data
+
+     :ref:`sphx_glr_auto_examples_example_star.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_star
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find the linear combinations of multichannel data that maximize repeatability over trials.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_dss_thumb.png
+     :alt: DSS example
+
+     :ref:`sphx_glr_auto_examples_example_dss.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_dss
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Denoise data using Artifact Subspace Reconstruction.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_asr_thumb.png
+     :alt: ASR example
+
+     :ref:`sphx_glr_auto_examples_example_asr.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_asr
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Some toy examples to showcase usage for meegkit.detrend module.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_detrend_thumb.png
+     :alt: Robust detrending examples
+
+     :ref:`sphx_glr_auto_examples_example_detrend.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_detrend
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how one can effectively combine STAR and DSS to recover signal components wh...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_star_dss_thumb.png
+     :alt: Example demonstrating STAR + DSS
+
+     :ref:`sphx_glr_auto_examples_example_star_dss.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_star_dss
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find a set of components which are shared between different datasets.">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_mcca_thumb.png
+     :alt: Example multiway canonical correlation analysis (mCCA)
+
+     :ref:`sphx_glr_auto_examples_example_mcca.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_mcca
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find the linear combinations of multichannel data that maximize the signal-to-noise ratio of th...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_ress_thumb.png
+     :alt: Rhythmic Entrainment Source Separation (RESS) example
+
+     :ref:`sphx_glr_auto_examples_example_ress.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_ress
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Sample code for the task-related component analysis (TRCA)-based steady -state visual evoked po...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_example_trca_thumb.png
+     :alt: Task-related component analysis for SSVEP detection
+
+     :ref:`sphx_glr_auto_examples_example_trca.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/example_trca
+.. raw:: html
+
+    <div class="sphx-glr-clear"></div>
+
+
+
+.. only :: html
+
+ .. container:: sphx-glr-footer
+    :class: sphx-glr-footer-gallery
+
+
+  .. container:: sphx-glr-download sphx-glr-download-python
+
+    :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+
+
+
+  .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+    :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_

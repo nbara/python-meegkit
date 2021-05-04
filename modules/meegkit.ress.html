@@ -1,0 +1,279 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meegkit.ress &#8212; MEEGkit v0.1.1 0.1.1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-rendered-html.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">MEEGkit v0.1.1</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../auto_examples/index.html">
+  Examples gallery
+ </a>
+</li>
+
+    
+    <li class="nav-item">
+        <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">GitHub<i class="fas fa-external-link-alt"></i></a>
+    </li>
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/nbara/python-meegkit" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/lebababa" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/nbara/python-meegkit/edit/master/doc/modules/meegkit.ress.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-meegkit.ress">
+<span id="meegkit-ress"></span><h1>meegkit.ress<a class="headerlink" href="#module-meegkit.ress" title="Permalink to this headline">¶</a></h1>
+<p>Rhythmic Entrainment Source Separation.</p>
+<p class="rubric">Functions</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.ress.RESS" title="meegkit.ress.RESS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RESS</span></code></a>(X, sfreq, peak_freq[, neig_freq, …])</p></td>
+<td><p>Rhythmic Entrainment Source Separation.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt id="meegkit.ress.RESS">
+<code class="sig-prename descclassname"><span class="pre">meegkit.ress.</span></code><code class="sig-name descname"><span class="pre">RESS</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfreq</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_freq</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neig_freq</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_width</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neig_width</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">float</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_keep</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">int</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_maps</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">bool</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.ress.RESS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rhythmic Entrainment Source Separation.</p>
+<p>As described in <a class="reference internal" href="#re40631eb5971-1" id="id1">[1]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_chans</em><em>, </em><em>n_trials</em><em>)</em>) – Data to denoise.</p></li>
+<li><p><strong>sfreq</strong> (<em>int</em>) – Sampling frequency.</p></li>
+<li><p><strong>peak_freq</strong> (<em>float</em>) – Peak frequency.</p></li>
+<li><p><strong>neig_freq</strong> (<em>float</em>) – Distance of neighbouring frequencies away from peak frequency, +/- in
+Hz (default=1).</p></li>
+<li><p><strong>peak_width</strong> (<em>float</em>) – FWHM of the peak frequency (default=.5).</p></li>
+<li><p><strong>neig_width</strong> (<em>float</em>) – FWHM of the neighboring frequencies (default=1).</p></li>
+<li><p><strong>n_keep</strong> (<em>int</em>) – Number of components to keep (default=1). -1 keeps all components.</p></li>
+<li><p><strong>return_maps</strong> (<em>bool</em>) – If True, also output mixing (to_ress) and unmixing matrices
+(from_ress), used to transform the data into RESS component space and
+back into sensor space, respectively.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>out</strong> (<em>array, shape=(n_samples, n_keep, n_trials)</em>) – RESS time series.</p></li>
+<li><p><strong>from_ress</strong> (<em>array, shape=(n_components, n_channels)</em>) – Unmixing matrix (projects to sensor space).</p></li>
+<li><p><strong>to_ress</strong> (<em>array, shape=(n_channels, n_components)</em>) – Mixing matrix (projects to component space).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>To project the RESS components back into sensor space, one can proceed as
+follows:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># First apply RESS</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">meegkit.utils</span> <span class="kn">import</span> <span class="n">matmul3d</span>  <span class="c1"># handles 3D matrix multiplication</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="p">,</span> <span class="n">fromRESS</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">ress</span><span class="o">.</span><span class="n">RESS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sfreq</span><span class="p">,</span> <span class="n">peak_freq</span><span class="p">,</span> <span class="n">return_maps</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Then matrix multiply each trial by the unmixing matrix:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">proj</span> <span class="o">=</span> <span class="n">matmul3d</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="n">fromRESS</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To transform a new observation into RESS component space (e.g. in the
+context of a cross-validation, with separate train/test sets):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Start by applying RESS to the train set:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">out</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">toRESS</span> <span class="o">=</span> <span class="n">ress</span><span class="o">.</span><span class="n">RESS</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sfreq</span><span class="p">,</span> <span class="n">peak_freq</span><span class="p">,</span> <span class="n">return_maps</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Then multiply your test data by the toRESS:</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">new_comp</span> <span class="o">=</span> <span class="n">new_data</span> <span class="o">@</span> <span class="n">toRESS</span>
+</pre></div>
+</div>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="re40631eb5971-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Cohen, M. X., &amp; Gulbinaite, R. (2017). Rhythmic entrainment source
+separation: Optimizing analyses of neural responses to rhythmic sensory
+stimulation. Neuroimage, 147, 43-56.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Nicolas Barascud.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

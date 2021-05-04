@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meegkit.detrend &#8212; MEEGkit v0.1.1 0.1.1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-rendered-html.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">MEEGkit v0.1.1</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../auto_examples/index.html">
+  Examples gallery
+ </a>
+</li>
+
+    
+    <li class="nav-item">
+        <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">GitHub<i class="fas fa-external-link-alt"></i></a>
+    </li>
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/nbara/python-meegkit" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/lebababa" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/nbara/python-meegkit/edit/master/doc/modules/meegkit.detrend.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-meegkit.detrend">
+<span id="meegkit-detrend"></span><h1>meegkit.detrend<a class="headerlink" href="#module-meegkit.detrend" title="Permalink to this headline">¶</a></h1>
+<p>Robust detrending.</p>
+<p class="rubric">Functions</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.detrend.detrend" title="meegkit.detrend.detrend"><code class="xref py py-obj docutils literal notranslate"><span class="pre">detrend</span></code></a>(x, order[, w, basis, threshold, …])</p></td>
+<td><p>Robustly remove trend.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.detrend.reduce_ringing" title="meegkit.detrend.reduce_ringing"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reduce_ringing</span></code></a>(X, samples[, order, …])</p></td>
+<td><p>Subtract filter impulse response from signal at given samples.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.detrend.regress" title="meegkit.detrend.regress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">regress</span></code></a>(x, r[, w, threshold, return_mean])</p></td>
+<td><p>Weighted regression.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt id="meegkit.detrend.detrend">
+<code class="sig-prename descclassname"><span class="pre">meegkit.detrend.</span></code><code class="sig-name descname"><span class="pre">detrend</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">basis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'polynomials'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.detrend.detrend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Robustly remove trend.</p>
+<p>The data are fit to the basis using weighted least squares. The weight is
+updated by setting samples for which the residual is greater than ‘thresh’
+times its std to zero, and the fit is repeated at most ‘niter’-1 times.</p>
+<p>The choice of order (and basis) determines what complexity of the trend
+that can be removed.  It may be useful to first detrend with a low order
+to avoid fitting outliers, and then increase the order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_channels</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Raw data matrix.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – Order of polynomial or number of sin/cosine pairs</p></li>
+<li><p><strong>w</strong> (<em>weights</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>[</em><em>, </em><em>n_channels</em><em>]</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Sample weights for the regression. If a single channel is provided, the
+same weights are applied to all channels.</p></li>
+<li><p><strong>basis</strong> (<em>{'polynomials'</em><em>, </em><em>'sinusoids'} | ndarray</em>) – Basis for regression.</p></li>
+<li><p><strong>threshold</strong> (<em>int</em>) – Threshold for outliers, in number of standard deviations (default=3).</p></li>
+<li><p><strong>niter</strong> (<em>int</em>) – Number of iterations (default=5).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>y</strong> (<em>array, shape=(n_times, n_channels[, n_trials])</em>) – Detrended data.</p></li>
+<li><p><strong>w</strong> (<em>array, shape=(n_times[, n_channels][, n_trials])</em>) – Updated weights.</p></li>
+<li><p><strong>r</strong> (<em>array, shape=(n_times * ntrials, order)</em>) – Basis matrix used.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Fit a linear trend, ignoring samples &gt; 3*sd from it, and remove it:
+&gt;&gt; y = detrend(x, 1)</p>
+<p>Fit/remove polynomial (order=5) with initial weighting w, threshold = 4*sd:
+&gt;&gt; y = detrend(x, 5, w, ‘polynomial’, 4)</p>
+<p>Fit/remove linear then 3rd order polynomial trend:
+&gt;&gt; [y, w]= detrend(x, 1)
+&gt;&gt; [yy, ww] = detrend(y, 3)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.detrend.reduce_ringing">
+<code class="sig-prename descclassname"><span class="pre">meegkit.detrend.</span></code><code class="sig-name descname"><span class="pre">reduce_ringing</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.detrend.reduce_ringing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subtract filter impulse response from signal at given samples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Data containing ringing artifacts.</p></li>
+<li><p><strong>samples</strong> (<em>list of ints</em>) – Sample indices where to find ringing artifacts.</p></li>
+<li><p><strong>order</strong> (<em>int</em>) – Order of polynomial trend (default=10).</p></li>
+<li><p><strong>= 100</strong> (<em>n_samples</em>) – Number of samples over which to estimate impulse response
+(default=100).</p></li>
+<li><p><strong>extra</strong> (<em>int</em>) – Samples before stimulus to anchor trend (default=50).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Threshold for robust detrending (default=3).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>y</strong> – Clean data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>ndarray, shape=(n_times, n_chans[, n_trials])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.detrend.regress">
+<code class="sig-prename descclassname"><span class="pre">meegkit.detrend.</span></code><code class="sig-name descname"><span class="pre">regress</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.detrend.regress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Weighted regression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>)</em>) – Data.</p></li>
+<li><p><strong>r</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>)</em>) – Regressor.</p></li>
+<li><p><strong>w</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>)</em>) – Weight to apply to <cite>x</cite>. <cite>w</cite> is either a matrix of same size as <cite>x</cite>, or
+a column vector to be applied to each column of <cite>x</cite>.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – PCA threshold (default=1e-7). Dimensions of x with eigenvalue lower
+than this value will be discarded.</p></li>
+<li><p><strong>return_mean</strong> (<em>bool</em>) – If True, also return the signal mean prior to regression.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>b</strong> (<em>array, shape=(n_chans, n_chans)</em>) – Regression matrix (apply to r to approximate x).</p></li>
+<li><p><strong>z</strong> (<em>array, shape=(n_times, n_chans)</em>) – Regression (r &#64; b).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Nicolas Barascud.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

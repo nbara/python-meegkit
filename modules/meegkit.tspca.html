@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meegkit.tspca &#8212; MEEGkit v0.1.1 0.1.1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-rendered-html.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">MEEGkit v0.1.1</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../auto_examples/index.html">
+  Examples gallery
+ </a>
+</li>
+
+    
+    <li class="nav-item">
+        <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">GitHub<i class="fas fa-external-link-alt"></i></a>
+    </li>
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/nbara/python-meegkit" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/lebababa" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/nbara/python-meegkit/edit/master/doc/modules/meegkit.tspca.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-meegkit.tspca">
+<span id="meegkit-tspca"></span><h1>meegkit.tspca<a class="headerlink" href="#module-meegkit.tspca" title="Permalink to this headline">¶</a></h1>
+<p>Time-shift PCA.</p>
+<p class="rubric">Functions</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.tspca.tspca" title="meegkit.tspca.tspca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tspca</span></code></a>(X[, shifts, keep, threshold, weights, …])</p></td>
+<td><p>Time-shift PCA.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.tspca.tsr" title="meegkit.tspca.tsr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tsr</span></code></a>(X, R[, shifts, wX, wR, keep, thresh])</p></td>
+<td><p>Time-shift regression.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt id="meegkit.tspca.tspca">
+<code class="sig-prename descclassname"><span class="pre">meegkit.tspca.</span></code><code class="sig-name descname"><span class="pre">tspca</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">demean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.tspca.tspca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time-shift PCA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Data array.</p></li>
+<li><p><strong>shifts</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_shifts</em><em>,</em><em>)</em>) – Array of shifts to apply.</p></li>
+<li><p><strong>keep</strong> (<em>int</em>) – Number of components (shifted regressor PCs) to keep (default=all).</p></li>
+<li><p><strong>threshold</strong> – Discard PCs with eigenvalues below this (default=1e-6).</p></li>
+<li><p><strong>weights</strong> (<em>array</em>) – Sample weights.</p></li>
+<li><p><strong>demean</strong> (<em>bool</em>) – If True, Epochs are centered before comuting PCA (default=0).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>comps</strong> (<em>array</em>) – Principal components array.</p></li>
+<li><p><strong>V</strong> (<em>array, shape=(n_chans, n_comps)</em>) – PCA weights.</p></li>
+<li><p><strong>idx</strong> (<em>array</em>) – <cite>X[idx]</cite> maps to principal comps.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.tspca.tsr">
+<code class="sig-prename descclassname"><span class="pre">meegkit.tspca.</span></code><code class="sig-name descname"><span class="pre">tsr</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wX</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wR</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.tspca.tsr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Time-shift regression.</p>
+<p>The basic idea is to project the signal <cite>X</cite> on a basis formed by the
+orthogonalized time-shifted <cite>R</cite>, and remove the projection. Supposing <cite>R</cite>
+gives a good observation of the noise that contaminates <cite>X</cite>, the noise is
+removed. By allowing time shifts, the algorithm finds the optimal FIR
+filter to apply to <cite>R</cite> so as to compensate for any convolutional mismatch
+between <cite>X</cite> and <cite>R</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Data to denoise.</p></li>
+<li><p><strong>R</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_comps</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Reference data.</p></li>
+<li><p><strong>shifts</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_shifts</em><em>,</em><em>)</em>) – Array of shifts to apply to R (default=[0]).</p></li>
+<li><p><strong>wX</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>1</em><em>, </em><em>n_trials</em><em>)</em>) – Weights to apply to <cite>X</cite>.</p></li>
+<li><p><strong>wR</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>1</em><em>, </em><em>n_trials</em><em>)</em>) – Weights to apply to <cite>R</cite>.</p></li>
+<li><p><strong>keep</strong> (<em>int | None</em>) – Number of shifted-R PCs to retain (default=all).</p></li>
+<li><p><strong>thresh</strong> (<em>float</em>) – Ignore shifted-R PCs smaller than thresh (default=1e-12).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>y</strong> (<em>array</em>) – Denoised data.</p></li>
+<li><p><strong>idx</strong> (<em>array</em>) – X[idx] is aligned with <cite>y</cite>.</p></li>
+<li><p><strong>mean</strong> (<em>array</em>) – Channel means (removed by TSR).</p></li>
+<li><p><strong>weights</strong> (<em>array</em>) – Weights applied by TSR.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Nicolas Barascud.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

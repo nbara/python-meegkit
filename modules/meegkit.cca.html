@@ -1,0 +1,402 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meegkit.cca &#8212; MEEGkit v0.1.1 0.1.1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-rendered-html.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">MEEGkit v0.1.1</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../auto_examples/index.html">
+  Examples gallery
+ </a>
+</li>
+
+    
+    <li class="nav-item">
+        <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">GitHub<i class="fas fa-external-link-alt"></i></a>
+    </li>
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/nbara/python-meegkit" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/lebababa" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/nbara/python-meegkit/edit/master/doc/modules/meegkit.cca.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-meegkit.cca">
+<span id="meegkit-cca"></span><h1>meegkit.cca<a class="headerlink" href="#module-meegkit.cca" title="Permalink to this headline">¶</a></h1>
+<p>Canonical Correlation Analysis.</p>
+<p class="rubric">Functions</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.cca.cca_crossvalidate" title="meegkit.cca.cca_crossvalidate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cca_crossvalidate</span></code></a>(xx, yy[, shifts, sfreq, …])</p></td>
+<td><p>CCA with cross-validation.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.cca.mcca" title="meegkit.cca.mcca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mcca</span></code></a>(C, n_channels[, n_keep])</p></td>
+<td><p>Multiway canonical correlation analysis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.cca.nt_cca" title="meegkit.cca.nt_cca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">nt_cca</span></code></a>([X, Y, lags, C, m, thresh, sfreq])</p></td>
+<td><p>Compute CCA from covariance.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.cca.whiten" title="meegkit.cca.whiten"><code class="xref py py-obj docutils literal notranslate"><span class="pre">whiten</span></code></a>(C[, fudge])</p></td>
+<td><p>Whiten covariance matrix C of X.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.cca.whiten_nt" title="meegkit.cca.whiten_nt"><code class="xref py py-obj docutils literal notranslate"><span class="pre">whiten_nt</span></code></a>(C[, thresh, keep])</p></td>
+<td><p>Covariance whitening function from noisetools.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.cca.whiten_svd" title="meegkit.cca.whiten_svd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">whiten_svd</span></code></a>(X)</p></td>
+<td><p>SVD whitening.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.cca.whiten_zca" title="meegkit.cca.whiten_zca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">whiten_zca</span></code></a>(C[, thresh])</p></td>
+<td><p>Compute ZCA whitening matrix (aka Mahalanobis whitening).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt id="meegkit.cca.cca_crossvalidate">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">cca_crossvalidate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shifts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfreq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">surrogate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.cca_crossvalidate" title="Permalink to this definition">¶</a></dt>
+<dd><p>CCA with cross-validation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>xx</strong> (<em>list of arrays</em>) – If a list is provided, each element should have shape=(n_times,
+n_chans). If array, it should be 3D of shape=(n_times, n_chans,
+n_trials).</p></li>
+<li><p><strong>yy</strong> (<em>list of arrays</em>) – If a list is provided, each element should have shape=(n_times,
+n_chans). If array, it should be 3D of shape=(n_times, n_chans,
+n_trials).</p></li>
+<li><p><strong>shifts</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_shifts</em><em>,</em><em>)</em>) – Array of shifts to apply to <cite>y</cite> relative to <cite>x</cite> (can be negative).</p></li>
+<li><p><strong>surrogate</strong> (<em>bool</em>) – If True, estimate SD of correlation over non-matching pairs.</p></li>
+<li><p><strong>plot</strong> (<em>bool</em>) – Produce some plots.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>AA, BB</strong> (<em>arrays</em>) – Cell arrays of transform matrices.</p></li>
+<li><p><strong>RR</strong> (<em>array, shape=(n_comps, n_shifts, n_trials)</em>) – Correlations (2D).</p></li>
+<li><p><strong>SD</strong> (<em>array</em>) – Standard deviation of correlation over non-matching pairs (2D).</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.cca.mcca">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">mcca</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.mcca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multiway canonical correlation analysis.</p>
+<p>As described in <a class="reference internal" href="#r339a06b80d19-1" id="id1">[1]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_channels * n_datasets</em><em>, </em><em>n_channels * n_datasets</em><em>)</em>) – Covariance matrix of aggregated data sets.</p></li>
+<li><p><strong>n_channels</strong> (<em>int</em>) – Number of channels of each data set.</p></li>
+<li><p><strong>n_keep</strong> (<em>int</em>) – Number of components to keep (for orthogonal transforms).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>A</strong> (<em>array, shape=(n_channels * n_datasets, n_channels * n_datasets)</em>) – Transform matrix.</p></li>
+<li><p><strong>scores</strong> (<em>array, shape=(n_comps,)</em>) – Commonality score (ranges from 1 to N^2).</p></li>
+<li><p><strong>AA</strong> (<em>list of arrays, shapes = (n_channels, n_channels * n_datasets)</em>) – Subject-specific MCCA transform matrices.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="r339a06b80d19-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>de Cheveigne, A., Di Liberto, G. M., Arzounian, D., Wong, D.,
+Hjortkjaer, J., Fuglsang, S. A., &amp; Parra, L. C. (2018). Multiway
+Canonical Correlation Analysis of Brain Signals. bioRxiv, 344960.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.cca.nt_cca">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">nt_cca</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfreq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.nt_cca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute CCA from covariance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>arrays</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Data.</p></li>
+<li><p><strong>Y</strong> (<em>arrays</em><em>, </em><em>shape=</em><em>(</em><em>n_times</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Data.</p></li>
+<li><p><strong>lags</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_lags</em><em>,</em><em>)</em>) – Array of lags. A positive lag means Y delayed relative to X. If
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">sfreq</span></code> is &gt; 1, lags are interpreted as times in seconds.</p></li>
+<li><p><strong>C</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_chans</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_lags</em><em>]</em><em>)</em>) – Covariance matrix of [X, Y]. C can be 3D, which case CCA is derived
+independently from each page.</p></li>
+<li><p><strong>m</strong> (<em>int</em>) – Number of channels of X.</p></li>
+<li><p><strong>thresh</strong> (<em>float</em>) – Discard principal components below this value.</p></li>
+<li><p><strong>sfreq</strong> (<em>float</em>) – Sampling frequency. If not 1, lags are assumed to be given in seconds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>A</strong> (<em>array, shape=(n_chans_X, min(n_chans_X, n_chans_Y))</em>) – Transform matrix mapping <cite>X</cite> to canonical space, where <cite>n_comps</cite> is
+equal to <cite>min(n_chans_X, n_chans_Y)</cite>.</p></li>
+<li><p><strong>B</strong> (<em>array,  shape=(n_chans_Y, n_comps)</em>) – Transform matrix mapping <cite>Y</cite> to canonical space, where <cite>n_comps</cite> is
+equal to <cite>min(n_chans_X, n_chans_Y)</cite>.</p></li>
+<li><p><strong>R</strong> (<em>array, shape=(n_comps, n_lags)</em>) – Correlation scores.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Usage 1: CCA of X, Y
+&gt;&gt; [A, B, R] = nt_cca(X, Y)  # noqa</p>
+<p>Usage 2: CCA of X, Y for each value of lags.
+&gt;&gt; [A, B, R] = nt_cca(X, Y, lags)  # noqa</p>
+<p>A positive lag indicates that Y is delayed relative to X.</p>
+<p>Usage 3: CCA from covariance matrix
+&gt;&gt; C = [X, Y].T * [X, Y]  # noqa
+&gt;&gt; [A, B, R] = nt_cca([], [], [], C, X.shape[1])  # noqa</p>
+<p>Use the third form to handle multiple files or large data (covariance C can
+be calculated chunk-by-chunk).</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Means of X and Y are NOT removed.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>A, B are scaled so that (X * A)^2 and (Y * B)^2 are identity
+matrices (differs from sklearn).</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.cca.whiten">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">whiten</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fudge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-18</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.whiten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whiten covariance matrix C of X.</p>
+<p>If X has shape=(observations, components), X_white = np.dot(X, W).</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://stackoverflow.com/questions/6574782/how-to-whiten-matrix-in-pca">https://stackoverflow.com/questions/6574782/how-to-whiten-matrix-in-pca</a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.cca.whiten_nt">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">whiten_nt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.whiten_nt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Covariance whitening function from noisetools.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> (<em>array</em>) – Covariance matrix.</p></li>
+<li><p><strong>thresh</strong> (<em>float</em>) – PCA threshold.</p></li>
+<li><p><strong>keep</strong> (<em>bool</em>) – If True, infrathreshold components are set to zero. If False (default),
+infrathreshold components are truncated.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.cca.whiten_svd">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">whiten_svd</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.whiten_svd" title="Permalink to this definition">¶</a></dt>
+<dd><p>SVD whitening.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.cca.whiten_zca">
+<code class="sig-prename descclassname"><span class="pre">meegkit.cca.</span></code><code class="sig-name descname"><span class="pre">whiten_zca</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.cca.whiten_zca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute ZCA whitening matrix (aka Mahalanobis whitening).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> (<em>array</em>) – Covariance matrix.</p></li>
+<li><p><strong>thresh</strong> (<em>float</em>) – Whitening constant, it prevents division by zero.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>ZCA</strong> – ZCA matrix, to be multiplied with data.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape (n_chans, n_chans)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Nicolas Barascud.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>

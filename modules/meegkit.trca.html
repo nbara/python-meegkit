@@ -1,0 +1,447 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>meegkit.trca &#8212; MEEGkit v0.1.1 0.1.1 documentation</title>
+    
+  <link href="../_static/css/theme.css" rel="stylesheet" />
+  <link href="../_static/css/index.c5995385ac14fb8791e8eb36b4908be2.css" rel="stylesheet" />
+
+    
+  <link rel="stylesheet"
+    href="../_static/vendor/fontawesome/5.13.0/css/all.min.css">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-solid-900.woff2">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+    href="../_static/vendor/fontawesome/5.13.0/webfonts/fa-brands-400.woff2">
+
+    
+      
+
+    
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-binder.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-dataframe.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/gallery-rendered-html.css" />
+    
+  <link rel="preload" as="script" href="../_static/js/index.1c5a1a01449ed65a7b51.js">
+
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://unpkg.com/@jupyter-widgets/html-manager@^0.20.0/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="docsearch:language" content="en" />
+    
+  </head>
+  <body data-spy="scroll" data-target="#bd-toc-nav" data-offset="80">
+    
+    <div class="container-fluid" id="banner"></div>
+
+    
+    <nav class="navbar navbar-light navbar-expand-lg bg-light fixed-top bd-navbar" id="navbar-main"><div class="container-xl">
+
+  <div id="navbar-start">
+    
+    
+<a class="navbar-brand" href="../index.html">
+<p class="title">MEEGkit v0.1.1</p>
+</a>
+
+    
+  </div>
+
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-collapsible" aria-controls="navbar-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  
+  <div id="navbar-collapsible" class="col-lg-9 collapse navbar-collapse">
+    <div id="navbar-center" class="mr-auto">
+      
+      <div class="navbar-center-item">
+        <ul id="navbar-main-elements" class="navbar-nav">
+    <li class="toctree-l1 nav-item">
+ <a class="reference internal nav-link" href="../auto_examples/index.html">
+  Examples gallery
+ </a>
+</li>
+
+    
+    <li class="nav-item">
+        <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">GitHub<i class="fas fa-external-link-alt"></i></a>
+    </li>
+    
+</ul>
+      </div>
+      
+    </div>
+
+    <div id="navbar-end">
+      
+      <div class="navbar-end-item">
+        <ul id="navbar-icon-links" class="navbar-nav" aria-label="Icon Links">
+        <li class="nav-item">
+          <a class="nav-link" href="https://github.com/nbara/python-meegkit" rel="noopener" target="_blank" title="GitHub">
+            <span><i class="fab fa-github-square"></i></span>
+            <label class="sr-only">GitHub</label>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="https://twitter.com/lebababa" rel="noopener" target="_blank" title="Twitter">
+            <span><i class="fab fa-twitter-square"></i></span>
+            <label class="sr-only">Twitter</label>
+          </a>
+        </li>
+      </ul>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    </nav>
+    
+
+    <div class="container-xl">
+      <div class="row">
+          
+            
+            <!-- Only show if we have sidebars configured, else just a small margin  -->
+            <div class="col-12 col-md-3 bd-sidebar"><form class="bd-search d-flex align-items-center" action="../search.html" method="get">
+  <i class="icon fas fa-search"></i>
+  <input type="search" class="form-control" name="q" id="search-input" placeholder="Search the docs ..." aria-label="Search the docs ..." autocomplete="off" >
+</form><nav class="bd-links" id="bd-docs-nav" aria-label="Main navigation">
+  <div class="bd-toc-item active">
+    
+  </div>
+</nav>
+            </div>
+            
+          
+
+          
+          <div class="d-none d-xl-block col-xl-2 bd-toc">
+            
+              
+              <div class="toc-item">
+                
+
+<nav id="bd-toc-nav">
+    
+</nav>
+              </div>
+              
+              <div class="toc-item">
+                
+
+<div class="tocsection editthispage">
+    <a href="https://github.com/nbara/python-meegkit/edit/master/doc/modules/meegkit.trca.rst">
+        <i class="fas fa-pencil-alt"></i> Edit this page
+    </a>
+</div>
+
+              </div>
+              
+            
+          </div>
+          
+
+          
+          
+            
+          
+          <main class="col-12 col-md-9 col-xl-7 py-md-5 pl-md-5 pr-md-4 bd-content" role="main">
+              
+              <div>
+                
+  <div class="section" id="module-meegkit.trca">
+<span id="meegkit-trca"></span><h1>meegkit.trca<a class="headerlink" href="#module-meegkit.trca" title="Permalink to this headline">¶</a></h1>
+<p>Task-Related Component Analysis.</p>
+<p class="rubric">Functions</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.trca.trca" title="meegkit.trca.trca"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trca</span></code></a>(X)</p></td>
+<td><p>Task-related component analysis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.trca.TRCA" title="meegkit.trca.TRCA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TRCA</span></code></a>(sfreq, filterbank[, ensemble, method, …])</p></td>
+<td><p>Task-Related Component Analysis (TRCA).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt id="meegkit.trca.TRCA">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">meegkit.trca.</span></code><code class="sig-name descname"><span class="pre">TRCA</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sfreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filterbank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'original'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scm'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.trca.TRCA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Task-Related Component Analysis (TRCA).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sfreq</strong> (<em>float</em>) – Sampling rate.</p></li>
+<li><p><strong>filterbank</strong> (<em>list</em><em>[</em><em>[</em><em>2-tuple</em><em>, </em><em>2-tuple</em><em>]</em><em>]</em>) – <p>Filterbank frequencies. Each list element is itself a list of passband
+<cite>Wp</cite> and stopband <cite>Ws</cite> edges frequencies <cite>[Wp, Ws]</cite>. For example, this
+creates 3 bands, starting at 6, 14, and 22 hz respectively:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[[(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">100</span><span class="p">)],</span>
+ <span class="p">[(</span><span class="mi">14</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">)],</span>
+ <span class="p">[(</span><span class="mi">22</span><span class="p">,</span> <span class="mi">90</span><span class="p">),</span> <span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">100</span><span class="p">)]]</span>
+</pre></div>
+</div>
+<p>See <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.signal.cheb1ord()</span></code> for more information on how to
+specify the <cite>Wp</cite> and <cite>Ws</cite>.</p>
+</p></li>
+<li><p><strong>ensemble</strong> (<em>bool</em>) – If True, perform the ensemble TRCA analysis (default=False).</p></li>
+<li><p><strong>method</strong> (<em>str in {'original'| 'riemann'}</em>) – Use original implementation from <a class="reference internal" href="#r8b8fe2856e72-1" id="id1">[1]</a> or a variation that uses
+regularization and the geodesic mean <a class="reference internal" href="#r8b8fe2856e72-2" id="id2">[2]</a>.</p></li>
+<li><p><strong>regularization</strong> (<em>str in {'schaefer' | 'lwf' | 'oas' | 'scm'}</em>) – Regularization estimator used for covariance estimation with the
+<cite>riemann</cite> method. Consider ‘schaefer’, ‘lwf’, ‘oas’. ‘scm’ does not add
+regularization and is almost equivalent to the original implementation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="meegkit.trca.TRCA.traindata">
+<code class="sig-name descname"><span class="pre">traindata</span></code><a class="headerlink" href="#meegkit.trca.TRCA.traindata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reference (training) data decomposed into sub-band components by the
+filter bank analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape=(n_bands, n_chans, n_trials)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="meegkit.trca.TRCA.y_train">
+<code class="sig-name descname"><span class="pre">y_train</span></code><a class="headerlink" href="#meegkit.trca.TRCA.y_train" title="Permalink to this definition">¶</a></dt>
+<dd><p>Labels associated with the train data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape=(n_trials)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="meegkit.trca.TRCA.coef_">
+<code class="sig-name descname"><span class="pre">coef_</span></code><a class="headerlink" href="#meegkit.trca.TRCA.coef_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Weight coefficients for electrodes which can be used as a spatial
+filter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array, shape=(n_chans, n_chans)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="meegkit.trca.TRCA.classes">
+<code class="sig-name descname"><span class="pre">classes</span></code><a class="headerlink" href="#meegkit.trca.TRCA.classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="meegkit.trca.TRCA.n_bands">
+<code class="sig-name descname"><span class="pre">n_bands</span></code><a class="headerlink" href="#meegkit.trca.TRCA.n_bands" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of sub-bands.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="r8b8fe2856e72-1"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>M. Nakanishi, Y. Wang, X. Chen, Y. -T. Wang, X. Gao, and T.-P. Jung,
+“Enhancing detection of SSVEPs for a high-speed brain speller using
+task-related component analysis”, IEEE Trans. Biomed. Eng,
+65(1):104-112, 2018.</p>
+</dd>
+<dt class="label" id="r8b8fe2856e72-2"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>Barachant, A., Bonnet, S., Congedo, M., &amp; Jutten, C. (2010,
+October). Common spatial pattern revisited by Riemannian geometry. In
+2010 IEEE International Workshop on Multimedia Signal Processing (pp.
+472-476). IEEE.</p>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable table autosummary">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.trca.TRCA.fit" title="meegkit.trca.TRCA.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X, y)</p></td>
+<td><p>Training stage of the TRCA-based SSVEP detection.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.trca.TRCA.predict" title="meegkit.trca.TRCA.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a>(X)</p></td>
+<td><p>Test phase of the TRCA-based SSVEP detection.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt id="meegkit.trca.TRCA.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sfreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filterbank</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'original'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'scm'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.trca.TRCA.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize self.  See help(type(self)) for accurate signature.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="meegkit.trca.TRCA.fit">
+<code class="sig-name descname"><span class="pre">fit</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.trca.TRCA.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Training stage of the TRCA-based SSVEP detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Training EEG data.</p></li>
+<li><p><strong>y</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>trials</em><em>,</em><em>)</em>) – True label corresponding to each trial of the data array.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="meegkit.trca.TRCA.predict">
+<code class="sig-name descname"><span class="pre">predict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.trca.TRCA.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test phase of the TRCA-based SSVEP detection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Test data.</p></li>
+<li><p><strong>model</strong> (<em>dict</em>) – Fitted model to be used in testing phase.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>pred</strong> – The target estimated by the method.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>np.array, shape (trials)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.trca.trca">
+<code class="sig-prename descclassname"><span class="pre">meegkit.trca.</span></code><code class="sig-name descname"><span class="pre">trca</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.trca.trca" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task-related component analysis.</p>
+<p>This function implements the method described in <a class="reference internal" href="#rbfbbff8ee1c1-1" id="id3">[1]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Training data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>W</strong> – Weight coefficients for electrodes which can be used as a spatial
+filter.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape=(n_chans,)</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="rbfbbff8ee1c1-1"><span class="brackets"><a class="fn-backref" href="#id3">1</a></span></dt>
+<dd><p>M. Nakanishi, Y. Wang, X. Chen, Y. -T. Wang, X. Gao, and T.-P. Jung,
+“Enhancing detection of SSVEPs for a high-speed brain speller using
+task-related component analysis”, IEEE Trans. Biomed. Eng,
+65(1):104-112, 2018.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="meegkit.trca.trca_regul">
+<code class="sig-prename descclassname"><span class="pre">meegkit.trca.</span></code><code class="sig-name descname"><span class="pre">trca_regul</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.trca.trca_regul" title="Permalink to this definition">¶</a></dt>
+<dd><p>Task-related component analysis.</p>
+<p>This function implements a variation of the method described in <a class="reference internal" href="#r3fd0dcc1f929-1" id="id4">[1]</a>. It is
+inspired by a riemannian geometry approach to CSP <a class="reference internal" href="#r3fd0dcc1f929-2" id="id5">[2]</a>. It adds
+regularization to the covariance matrices and uses the riemannian mean for
+the inter-trial covariance matrix <cite>S</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>array</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_chans</em><em>[</em><em>, </em><em>n_trials</em><em>]</em><em>)</em>) – Training data.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>W</strong> – Weight coefficients for electrodes which can be used as a spatial
+filter.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array, shape=(n_chans,)</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<dl class="citation">
+<dt class="label" id="r3fd0dcc1f929-1"><span class="brackets"><a class="fn-backref" href="#id4">1</a></span></dt>
+<dd><p>M. Nakanishi, Y. Wang, X. Chen, Y. -T. Wang, X. Gao, and T.-P. Jung,
+“Enhancing detection of SSVEPs for a high-speed brain speller using
+task-related component analysis”, IEEE Trans. Biomed. Eng,
+65(1):104-112, 2018.</p>
+</dd>
+<dt class="label" id="r3fd0dcc1f929-2"><span class="brackets"><a class="fn-backref" href="#id5">2</a></span></dt>
+<dd><p>Barachant, A., Bonnet, S., Congedo, M., &amp; Jutten, C. (2010,
+October). Common spatial pattern revisited by Riemannian geometry. In
+2010 IEEE International Workshop on Multimedia Signal Processing (pp.
+472-476). IEEE.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+              </div>
+              
+              
+              <div class='prev-next-bottom'>
+                
+
+              </div>
+              
+          </main>
+          
+
+      </div>
+    </div>
+  
+  <script src="../_static/js/index.1c5a1a01449ed65a7b51.js"></script>
+
+  <footer class="footer mt-5 mt-md-0">
+  <div class="container">
+    
+    <div class="footer-item">
+      <p class="copyright">
+    &copy; Copyright 2021, Nicolas Barascud.<br/>
+</p>
+    </div>
+    
+    <div class="footer-item">
+      <p class="sphinx-version">
+Created using <a href="http://sphinx-doc.org/">Sphinx</a> 3.5.4.<br/>
+</p>
+    </div>
+    
+  </div>
+</footer>
+  </body>
+</html>
