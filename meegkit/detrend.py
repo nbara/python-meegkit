@@ -300,10 +300,10 @@ def _plot_detrend(x, y, w):
 
 
 def create_masked_weight(x, events, tmin, tmax, sfreq):
-
     """Create a weight matrix (n_channels * n_times) with masked
     periods (value of zero) in order to mask the trials of interest during
-    detrending
+    detrending.
+
     https://www.sciencedirect.com/science/article/pii/S0165027021000157.
 
     Parameters
@@ -322,9 +322,7 @@ def create_masked_weight(x, events, tmin, tmax, sfreq):
     -------
     weights : ndarray, shape=(n_times, n_channels)
         Weight for each channel and each time sample (zero is masked)
-
     """
-
     if len(x.shape) != 2:
         raise ValueError('The shape of x has to be (n_times * n_channels)')
 
