@@ -269,7 +269,7 @@ def yulewalk(order, F, M):
     _, Ss = 2 * np.real(signal.freqz(Qh, A, worN=n, whole=True))
 
     hh = np.fft.ifft(
-        np.exp(np.fft.fft(Rwindow * np.fft.ifft(np.log(Ss, dtype=np.complex))))
+        np.exp(np.fft.fft(Rwindow * np.fft.ifft(np.log(Ss, dtype=complex))))
     )
     B = np.real(numf(hh[0:nr], A, nb))
 
