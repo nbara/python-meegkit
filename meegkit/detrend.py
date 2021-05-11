@@ -300,7 +300,9 @@ def _plot_detrend(x, y, w):
 
 
 def create_masked_weight(x, events, tmin, tmax, sfreq):
-    """Create a weight matrix (n_channels * n_times) with masked
+    """Output a weight matrix for trial-masked detrending.
+
+    Create a weight matrix (n_channels * n_times) with masked
     periods (value of zero) in order to mask the trials of interest during
     detrending.
 
