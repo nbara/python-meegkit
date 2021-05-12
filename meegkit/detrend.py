@@ -302,34 +302,40 @@ def _plot_detrend(x, y, w):
 def create_masked_weight(x, events, tmin, tmax, sfreq):
     """Output a weight matrix for trial-masked detrending.
 
-    Create a weight matrix (n_times * n_channels) with masked
+    Creates a  (n_times, n_channels) weight matrix with masked
     periods (value of zero) in order to mask the trials of interest during
-    detrending.
-
-    https://www.sciencedirect.com/science/article/pii/S0165027021000157.
+    detrending [1]_.
 
     Parameters
     ----------
     x : ndarray, shape=(n_times, n_channels)
         Raw data matrix.
     events : ndarray, shape=(n_events)
-        Time samples of the events
+        Time samples of the events.
     tmin : float
-        Start time before event (in seconds)
+        Start time before event (in seconds).
     tmax : float
-        End time after event (in seconds)
+        End time after event (in seconds).
     sfreq : float
-        The sampling frequency of the data x
+        The sampling frequency of the data.
+
     Returns
     -------
     weights : ndarray, shape=(n_times, n_channels)
-        Weight for each channel and each time sample (zero is masked)
+        Weight for each channel and each time sample (zero is masked).
+
+    References
+    ----------
+    .. [1] van Driel, J., Olivers, C. N., & Fahrenfort, J. J. (2021). High-pass
+       filtering artifacts in multivariate classification of neural time series
+       data. Journal of Neuroscience Methods, 352, 109080.
+
     """
-    if len(x.shape) != 2:
-        raise ValueError('The shape of x has to be (n_times * n_channels)')
+    if x.ndim != 2:
+        raise ValueError('The shape of x must be (n_times, n_channels)')
 
     weights = np.ones(x.shape)
-    for event in events:
-        weights[int(event + tmin * sfreq): int(event + tmax * sfreq + 1),
-                :] = 0
+    for e in events:
+        weights[int(e + tmin * sfreq): int(e + tmax * sfreq + 1), :] = 0
+
     return weights
