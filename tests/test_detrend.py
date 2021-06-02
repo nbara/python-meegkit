@@ -1,7 +1,7 @@
 """Test robust detrending."""
 import numpy as np
 
-from meegkit.detrend import regress, detrend, reduce_ringing
+from meegkit.detrend import regress, detrend, reduce_ringing, create_masked_weight
 
 from scipy.signal import butter, lfilter
 
@@ -88,6 +88,16 @@ def test_detrend(show=False):
     x = np.random.randn(1000, 2)
     x += 2 * np.sin(2 * np.pi * np.arange(1000) / 200)[:, None]
     y, _, _ = detrend(x, 5, basis='sinusoids', show=True)
+
+    # trial-masked detrending
+    trend = np.linspace(0, 100, 1000)[:, None]
+    data = 3 * np.random.randn(*trend.shape)
+    data[:100, :] = 100
+    x = trend + data
+    events = np.arange(30, 970, 40)
+    tmin, tmax, sfreq = -0.2, 0.3, 20
+    w = create_masked_weight(x, events, tmin, tmax, sfreq)
+    y, _, _ = detrend(x, 1, w, basis='polynomials', show=show)
 
 
 def test_ringing():
