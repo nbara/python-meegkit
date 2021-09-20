@@ -363,25 +363,21 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
 
     # combine the three masks
     remove_mask = np.logical_or.reduce((mask1, mask2, mask3))
-    removed_wins = np.where(remove_mask)
+    removed_wins = np.where(remove_mask)[0]
 
     # reconstruct the samples to remove
     sample_maskidx = []
-    for i in range(len(removed_wins[0])):
+    for i, win in enumerate(removed_wins):
         if i == 0:
-            sample_maskidx = np.arange(
-                offsets[removed_wins[0][i]], offsets[removed_wins[0][i]] + N)
+            sample_maskidx = np.arange(offsets[win], offsets[win] + N)
         else:
-            sample_maskidx = np.vstack((
-                sample_maskidx,
-                np.arange(offsets[removed_wins[0][i]],
-                          offsets[removed_wins[0][i]] + N)
-            ))
+            sample_maskidx = np.r_[(sample_maskidx,
+                                    np.arange(offsets[win], offsets[win] + N))]
 
     # delete the bad chunks from the data
     sample_mask2remove = np.unique(sample_maskidx)
     if sample_mask2remove.size:
-        clean = np.delete(X, sample_mask2remove, 1)
+        clean = np.delete(X, sample_mask2remove, axis=1)
         sample_mask = np.ones((1, ns), dtype=bool)
         sample_mask[0, sample_mask2remove] = False
     else:

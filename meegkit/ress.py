@@ -7,7 +7,7 @@ from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
          peak_width: float = .5, neig_width: float = 1, n_keep: int = 1,
-         return_maps: bool = False):
+         gamma: float = 0.01, return_maps: bool = False):
     """Rhythmic Entrainment Source Separation.
 
     As described in [1]_.
@@ -29,6 +29,10 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
         FWHM of the neighboring frequencies (default=1).
     n_keep : int
         Number of components to keep (default=1). -1 keeps all components.
+    gamma : float
+        Regularization coefficient, between 0 and 1 (default=0.01, which
+        corresponds to 1 % regularization and helps reduce numerical problems
+        for noisy or reduced-rank matrices [2]_).
     return_maps : bool
         If True, also output mixing (to_ress) and unmixing matrices
         (from_ress), used to transform the data into RESS component space and
@@ -67,6 +71,9 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     .. [1] Cohen, M. X., & Gulbinaite, R. (2017). Rhythmic entrainment source
        separation: Optimizing analyses of neural responses to rhythmic sensory
        stimulation. Neuroimage, 147, 43-56.
+    .. [2] Cohen, M. X. (2021). A tutorial on generalized eigendecomposition
+       for source separation in multichannel electrophysiology.
+       ArXiv:2104.12356 [Eess, q-Bio].
 
     """
     n_samples, n_chans, n_trials = theshapeof(X)
@@ -82,8 +89,12 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
                              fwhm=neig_width, n_harm=1))
     c1, _ = tscov(gaussfilt(X, sfreq, peak_freq, fwhm=peak_width, n_harm=1))
 
+    # add 1% regularization to avoid numerical precision problems in the GED
+    c0 = (c01 + c02) / 2
+    c0 = c0 * (1 - gamma) + gamma * np.trace(c0) / len(c0) * np.eye(len(c0))
+
     # perform generalized eigendecomposition
-    d, to_ress = linalg.eig(c1, (c01 + c02) / 2)
+    d, to_ress = linalg.eigh(c1, c0)
     d = d.real
     to_ress = to_ress.real
 

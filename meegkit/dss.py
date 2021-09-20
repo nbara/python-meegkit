@@ -21,7 +21,7 @@ def dss1(X, weights=None, keep1=None, keep2=1e-12):
     keep1: int
         Number of PCs to retain in function:`dss0` (default=all).
     keep2: float
-        Ignore PCs smaller than keep2 in function:`dss0` (default=10^-12).
+        Ignore PCs smaller than keep2 in function:`dss0` (default=1e-12).
 
     Returns
     -------
@@ -35,7 +35,7 @@ def dss1(X, weights=None, keep1=None, keep2=1e-12):
         Power per component (averaged).
 
     """
-    n_samples, n_chans, n_trials = theshapeof(X)
+    n_trials = theshapeof(X)[-1]
 
     # if demean: # remove weighted mean
     #   X = demean(X, weights)
