@@ -21,7 +21,7 @@ def dss1(X, weights=None, keep1=None, keep2=1e-12):
     keep1: int
         Number of PCs to retain in function:`dss0` (default=all).
     keep2: float
-        Ignore PCs smaller than keep2 in function:`dss0` (default=10^-12).
+        Ignore PCs smaller than keep2 in function:`dss0` (default=1e-12).
 
     Returns
     -------
