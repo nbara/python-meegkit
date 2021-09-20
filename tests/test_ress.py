@@ -155,5 +155,5 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
 
 if __name__ == '__main__':
     import pytest
-    # pytest.main([__file__])
-    test_ress(20, 16, 1, 1, 1, show=False)
+    pytest.main([__file__])
+    # test_ress(20, 16, 1, 1, 1, show=False)
