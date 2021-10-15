@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Barascud"
+  given-names: "Nicolas"
+  orcid: "https://orcid.org/0000-0003-1495-561X"
+title: "MEEGkit"
+version: 0.1.1
+date-released: 2021-10-15
+url: "https://github.com/nbara/python-meegkit"
