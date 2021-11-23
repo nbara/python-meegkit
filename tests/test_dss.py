@@ -174,8 +174,52 @@ def test_dss_line(nkeep):
     out, _ = dss.dss_line(s, fline, sr, nremove=1)
 
 
+def test_dss_line_iter():
+    """Test line noise removal."""
+    sr = 200
+    fline = 20
+    nsamples = 10000
+    nchans = 10
+    x = np.random.randn(nsamples, nchans)
+    artifact = np.sin(np.arange(nsamples) / sr * 2 * np.pi * fline)[:, None]
+    artifact[artifact < 0] = 0
+    artifact = artifact ** 3
+    s = x + 10 * artifact
+
+    # def _plot(x):
+    #     f, ax = plt.subplots(1, 2, sharey=True)
+    #     f, Pxx = signal.welch(x, sr, nperseg=1024, axis=0,
+    #                           return_onesided=True)
+    #     ax[1].semilogy(f, Pxx)
+    #     f, Pxx = signal.welch(s, sr, nperseg=1024, axis=0,
+    #                           return_onesided=True)
+    #     ax[0].semilogy(f, Pxx)
+    #     ax[0].set_xlabel('frequency [Hz]')
+    #     ax[1].set_xlabel('frequency [Hz]')
+    #     ax[0].set_ylabel('PSD [V**2/Hz]')
+    #     ax[0].set_title('before')
+    #     ax[1].set_title('after')
+    #     plt.show()
+
+    # 2D case, n_outputs == 1
+    out, _ = dss.dss_line_iter(s, fline, sr, show=True)
+    # _plot(out)
+
+    # # Test n_outputs > 1
+    # out, _ = dss.dss_line_iter(s, fline, sr)
+
+    # # Test n_trials > 1
+    # x = np.random.randn(nsamples, nchans, 4)
+    # artifact = np.sin(
+    #     np.arange(nsamples) / sr * 2 * np.pi * fline)[:, None, None]
+    # artifact[artifact < 0] = 0
+    # artifact = artifact ** 3
+    # s = x + 10 * artifact
+    # out, _ = dss.dss_line_iter(s, fline, sr)
+
 if __name__ == '__main__':
     pytest.main([__file__])
     # create_data(SNR=5, show=True)
     # test_dss1(True)
     # test_dss_line(None)
+    # test_dss_line_iter()
