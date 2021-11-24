@@ -10,8 +10,8 @@ from meegkit.utils import multishift, tscov
 def test_cca():
     """Test CCA."""
     # Compare results with Matlab
-    # x = np.random.randn(1000, 11)
-    # y = np.random.randn(1000, 9)
+    # x = rng.randn(1000, 11)
+    # y = rng.randn(1000, 9)
     # x = demean(x).squeeze()
     # y = demean(y).squeeze()
     mat = loadmat('./tests/data/ccadata.mat')
@@ -47,16 +47,16 @@ def test_cca():
 def test_cca2():
     """Simulate correlations."""
     # import matplotlib.pyplot as plt
-
-    x = np.random.randn(10000, 20)
-    y = np.random.randn(10000, 8)
+    rng = np.random.RandomState(2022)
+    x = rng.randn(10000, 20)
+    y = rng.randn(10000, 8)
     y[:, :2] = x[:, :2]
     # perfectly correlated
-    y[:, 2:4] = x[:, 2:4] + np.random.randn(10000, 2)
+    y[:, 2:4] = x[:, 2:4] + rng.randn(10000, 2)
     #  1/2 correlated
-    y[:, 4:6] = x[:, 4:6] + np.random.randn(10000, 2) * 3
+    y[:, 4:6] = x[:, 4:6] + rng.randn(10000, 2) * 3
     #  1/4 correlated
-    y[:, 6:8] = np.random.randn(10000, 2)
+    y[:, 6:8] = rng.randn(10000, 2)
     # uncorrelated
     [A, B, R] = nt_cca(x, y)
 
@@ -100,10 +100,11 @@ def test_canoncorr():
 
 def test_correlated():
     """Test x & y perfectly correlated."""
-    x = np.random.randn(1000, 10)
-    y = np.random.randn(1000, 10)
+    rng = np.random.RandomState(2022)
+    x = rng.randn(1000, 10)
+    y = rng.randn(1000, 10)
 
-    y = x[:, np.random.permutation(10)]  # +0.000001*y;
+    y = x[:, rng.permutation(10)]  # +0.000001*y;
 
     [A1, B1, R1] = nt_cca(x, y)
 
@@ -140,8 +141,9 @@ def test_cca_lags():
 
 def test_cca_crossvalidate():
     """Test CCA with crossvalidation."""
-    # x = np.random.randn(1000, 11)
-    # y = np.random.randn(1000, 9)
+    rng = np.random.RandomState(2023)
+    # x = rng.randn(1000, 11)
+    # y = rng.randn(1000, 9)
     # xx = [x, x, x]
     # yy = [x[:, :9], y, y]
 
@@ -157,8 +159,8 @@ def test_cca_crossvalidate():
 
     # Create data where 1st comps should be uncorrelated, and 2nd and 3rd comps
     # are very correlated
-    x = np.random.randn(1000, 10)
-    y = np.random.randn(1000, 10)
+    x = rng.randn(1000, 10)
+    y = rng.randn(1000, 10)
     xx = [x, x, x]
     yy = [y, x, x]
     A, B, R = cca_crossvalidate(xx, yy)
@@ -168,17 +170,18 @@ def test_cca_crossvalidate():
 
 def test_cca_crossvalidate_shifts():
     """Test CCA crossvalidation with shifts."""
+    rng = np.random.RandomState(2021)
     n_times, n_trials = 10000, 2
-    x = np.random.randn(n_times, 20, n_trials)
-    y = np.random.randn(n_times, 8, n_trials)
+    x = rng.randn(n_times, 20, n_trials)
+    y = rng.randn(n_times, 8, n_trials)
     # perfectly correlated
     y[:, :2, :] = x[:, :2, :]
     # 1/2 correlated
-    y[:, 2:4, :] = x[:, 2:4, :] + np.random.randn(n_times, 2, n_trials)
+    y[:, 2:4, :] = x[:, 2:4, :] + rng.randn(n_times, 2, n_trials)
     # 1/4 correlated
-    y[:, 4:6, :] = x[:, 4:6, :] + np.random.randn(n_times, 2, n_trials) * 3
+    y[:, 4:6, :] = x[:, 4:6, :] + rng.randn(n_times, 2, n_trials) * 3
     # uncorrelated
-    y[:, 6:8, :] = np.random.randn(n_times, 2, n_trials)
+    y[:, 6:8, :] = rng.randn(n_times, 2, n_trials)
 
     xx = multishift(x, -np.arange(1, 4), reshape=True, solution='valid')
     yy = multishift(y, -np.arange(1, 4), reshape=True, solution='valid')
@@ -219,15 +222,14 @@ def test_cca_crossvalidate_shifts2():
 
 def test_mcca(show=False):
     """Test multiway CCA."""
-    np.random.seed(9)
-
+    rng = np.random.RandomState(2021)
     # We create 3 uncorrelated data sets. There should be no common structure
     # between them.
 
     # Build data
-    x1 = np.random.randn(10000, 10)
-    x2 = np.random.randn(10000, 10)
-    x3 = np.random.randn(10000, 10)
+    x1 = rng.randn(10000, 10)
+    x2 = rng.randn(10000, 10)
+    x3 = rng.randn(10000, 10)
     x = np.hstack((x1, x2, x3))
     C = np.dot(x.T, x)
 
@@ -263,10 +265,10 @@ def test_mcca(show=False):
     # Now Create 3 data sets with some shared parts.
 
     # Build data
-    x1 = np.random.randn(10000, 5)
-    x2 = np.random.randn(10000, 5)
-    x3 = np.random.randn(10000, 5)
-    x4 = np.random.randn(10000, 5)
+    x1 = rng.randn(10000, 5)
+    x2 = rng.randn(10000, 5)
+    x3 = rng.randn(10000, 5)
+    x4 = rng.randn(10000, 5)
     x = np.hstack((x2, x1, x3, x1, x4, x1))
     C = np.dot(x.T, x)
 
@@ -299,7 +301,7 @@ def test_mcca(show=False):
     # cross-correlation plot).
 
     # Build data
-    x1 = np.random.randn(10000, 10)
+    x1 = rng.randn(10000, 10)
     x = np.hstack((x1, x1, x1))
     C = np.dot(x.T, x)
 

@@ -39,7 +39,7 @@ def mldivide(A, B):
     try:
         # Note: we must use overwrite_a=False in order to be able to
         # use the fall-back solution below in case a LinAlgError is raised
-        return linalg.solve(A, B, sym_pos=True, overwrite_a=False)
+        return linalg.solve(A, B, assume_a='pos', overwrite_a=False)
     except linalg.LinAlgError:
         # Singular matrix in solving dual problem. Using least-squares
         # solution instead.
