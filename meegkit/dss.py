@@ -234,38 +234,38 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
 
 
 def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
-                  nfft=512, max_iterations=100, show=False, prefix="dss_iter"):
+                  nfft=512, show=False, prefix="dss_iter", n_iter_max=100):
     """Remove power line artifact iteratively.
 
     Parameters
     ----------
-    data: data, shape=(n_samples, n_chans, n_trials)
+    data : data, shape=(n_samples, n_chans, n_trials)
         Input data.
-    fline: float
+    fline : float
         Line frequency.
-    sfreq:  float
+    sfreq : float
         Sampling frequency.
-    win_sz: float
+    win_sz : float
         Half of the width of the window around the target frequency that is
         used to fit the polynomial (default=10).
-    spot_sz: float
+    spot_sz : float
         Half of the width of the window around the target frequency that is
         used to remove the peak and interpolate (default=2.5).
-    nfft: int
+    nfft : int
         FFT size for the internal PSD calculation (default=512).
-    max_iterations: int
-        Maximum amount iterations.
-    viz: bool
+    show: bool
         Produce a visual output of each iteration (default=False).
-    prefix: str
+    prefix : str
         Path and first part of the visualisation output file
         "{prefix}_{iteration number}.png" (default="dss_iter").
+    n_iter_max : int
+        Maximum number of iterations (default=100).
 
     Returns
     -------
-    data: array, shape=(n_samples, n_chans, n_trials)
+    data : array, shape=(n_samples, n_chans, n_trials)
         Denoised data.
-    iterations: int
+    iterations : int
         Number of iterations.
     """
 
@@ -274,9 +274,6 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         nans, ix = np.isnan(array), lambda x: x.nonzero()[0]
         array[nans] = np.interp(ix(nans), ix(~nans), array[~nans])
         return array
-
-    iterations = 0
-    aggr_resid = []
 
     freq_rn = [fline - win_sz, fline + win_sz]
     freq_sp = [fline - spot_sz, fline + spot_sz]
@@ -299,8 +296,9 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     p = np.poly1d(pf)
     clean_fit_line = p(freq_used)
 
-    while True:
-        iterations += 1
+    aggr_resid = []
+    iterations = 0
+    while iterations < n_iter_max:
         data, _ = dss_line(data, fline, sfreq, nremove=1)
         freq, psd = welch(data, fs=sfreq, nfft=nfft, axis=0)
         if psd.ndim == 3:
@@ -340,16 +338,20 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             ax.flat[2].scatter(residuals[tf_ix], freq_used[tf_ix], c=color)
             ax.flat[2].set_title("Residuals")
 
-            ax.flat[3].scatter(np.arange(iterations), aggr_resid)
+            ax.flat[3].plot(np.arange(iterations + 1), aggr_resid, marker='o')
             ax.flat[3].set_title("Iterations")
 
             f.set_tight_layout(True)
             plt.savefig(f"{prefix}_{iterations:03}.png")
             plt.close("all")
 
-        if mean_score <= 0 or iterations > max_iterations:
+        if mean_score <= 0:
             break
 
         iterations += 1
+
+    if iterations == n_iter_max:
+        raise RuntimeError('Could not converge. Consider increasing the '
+                           'maximum number of iterations')
 
     return data, iterations
