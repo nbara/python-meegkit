@@ -234,7 +234,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
 
 
 def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
-                  nfft=512, show=False, prefix="dss_iter"):
+                  nfft=512, max_iterations=100, show=False, prefix="dss_iter"):
     """Remove power line artifact iteratively.
 
     Parameters
@@ -253,6 +253,8 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         used to remove the peak and interpolate (default=2.5).
     nfft: int
         FFT size for the internal PSD calculation (default=512).
+    max_iterations: int
+        Maximum amount iterations.
     viz: bool
         Produce a visual output of each iteration (default=False).
     prefix: str
@@ -345,7 +347,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             plt.savefig(f"{prefix}_{iterations:03}.png")
             plt.close("all")
 
-        if mean_score <= 0:
+        if mean_score <= 0 or iterations > max_iterations:
             break
 
         iterations += 1
