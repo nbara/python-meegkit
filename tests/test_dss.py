@@ -176,6 +176,10 @@ def test_dss_line(nkeep):
 
 def test_dss_line_iter():
     """Test line noise removal."""
+
+    # data = np.load("data/dss_line_iter_test_data.npy") 
+    # # time x channel x trial sf=200 fline=50
+
     sr = 200
     fline = 20
     nsamples = 10000
