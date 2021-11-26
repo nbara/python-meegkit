@@ -120,25 +120,26 @@ def test_dss_line(nkeep):
 def test_dss_line_iter():
     """Test line noise removal."""
 
-    # data = np.load("data/dss_line_iter_test_data.npy") 
+    # data = np.load("data/dss_line_iter_test_data.npy")
     # # time x channel x trial sf=200 fline=50
 
     sr = 200
     fline = 25
     n_samples = 9000
     n_chans = 10
-    x, _ = create_line_data(n_samples, n_chans=n_chans, n_trials=1,
-                            noise_dim=10, SNR=2, fline=fline / sr)
 
     # 2D case, n_outputs == 1
+    x, _ = create_line_data(n_samples, n_chans=n_chans, n_trials=1,
+                            noise_dim=10, SNR=2, fline=fline / sr)
+    x = x[..., 0]
 
     # RuntimeError when max iterations has been reached
     with pytest.raises(RuntimeError):
-        out, _ = dss.dss_line_iter(x[..., 0], fline + 1, sr,
+        out, _ = dss.dss_line_iter(x, fline + 1, sr,
                                    show=False, n_iter_max=2)
 
     with TemporaryDirectory() as tmpdir:
-        out, _ = dss.dss_line_iter(x[..., 0], fline + .5, sr,
+        out, _ = dss.dss_line_iter(x, fline + .5, sr,
                                    prefix=os.path.join(tmpdir, 'dss_iter_'),
                                    show=True)
 
@@ -159,12 +160,14 @@ def test_dss_line_iter():
 
     _plot(x, out)
 
-    # # Test n_outputs > 1 TODO
     # # Test n_trials > 1 TODO
+    x, _ = create_line_data(n_samples, n_chans=n_chans, n_trials=2,
+                            noise_dim=10, SNR=2, fline=fline / sr)
+    out, _ = dss.dss_line_iter(x, fline, sr, show=False)
 
 if __name__ == '__main__':
     # pytest.main([__file__])
     # create_data(SNR=5, show=True)
     # test_dss1(True)
-    test_dss_line(None)
-    # test_dss_line_iter()
+    # test_dss_line(None)
+    test_dss_line_iter()

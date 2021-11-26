@@ -1,4 +1,7 @@
 """Denoising source separation."""
+# Authors:  Nicolas Barascud <nicolas.barascud@gmail.com>
+#           Maciej Szul <maciej.szul@isc.cnrs.fr>
+
 import numpy as np
 from scipy import linalg
 from scipy.signal import welch
@@ -237,6 +240,9 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
                   nfft=512, show=False, prefix="dss_iter", n_iter_max=100):
     """Remove power line artifact iteratively.
 
+    This method applies dss_line() until the artifact has been smoothed out
+    from the spectrum.
+
     Parameters
     ----------
     data : data, shape=(n_samples, n_chans, n_trials)
@@ -246,11 +252,11 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     sfreq : float
         Sampling frequency.
     win_sz : float
-        Half of the width of the window around the target frequency that is
-        used to fit the polynomial (default=10).
+        Half of the width of the window around the target frequency used to fit
+        the polynomial (default=10).
     spot_sz : float
-        Half of the width of the window around the target frequency that is
-        used to remove the peak and interpolate (default=2.5).
+        Half of the width of the window around the target frequency used to
+        remove the peak and interpolate (default=2.5).
     nfft : int
         FFT size for the internal PSD calculation (default=512).
     show: bool
@@ -299,7 +305,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     aggr_resid = []
     iterations = 0
     while iterations < n_iter_max:
-        data, _ = dss_line(data, fline, sfreq, nremove=1)
+        data, _ = dss_line(data, fline, sfreq, nfft=nfft, nremove=1)
         freq, psd = welch(data, fs=sfreq, nfft=nfft, axis=0)
         if psd.ndim == 3:
             mean_psd = np.mean(psd, axis=(1, 2))[freq_rn_ix]
