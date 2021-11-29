@@ -13,3 +13,4 @@ from .sig import (gaussfilt, hilbert_envelope, slope_sum, smooth,
                   spectral_envelope, teager_kaiser)
 from .stats import (bootstrap_ci, bootstrap_snr, cronbach, rms, robust_mean,
                     rolling_corr, snr_spectrum)
+from .testing import create_line_data
