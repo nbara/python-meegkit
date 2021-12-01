@@ -103,6 +103,10 @@ def test_dss_line(nkeep):
     out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep)
     _plot(out)
 
+    # Test blocksize
+    out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep, blocksize=1000)
+    _plot(out)
+
     # Test n_outputs > 1
     out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep, nremove=2)
     # _plot(out)
@@ -165,9 +169,36 @@ def test_dss_line_iter():
                             noise_dim=10, SNR=2, fline=fline / sr)
     out, _ = dss.dss_line_iter(x, fline, sr, show=False)
 
+
+def profile_dss_line(nkeep):
+    """Test line noise removal."""
+    import cProfile
+    import io
+    from pstats import SortKey, Stats
+
+    sr = 200
+    fline = 20
+    nsamples = 1000000
+    nchans = 16
+    s = create_line_data(n_samples=3 * nsamples, n_chans=nchans,
+                         n_trials=1, fline=fline / sr, SNR=2)[0][..., 0]
+
+    # 2D case, n_outputs == 1
+
+    pr = cProfile.Profile()
+    pr.enable()
+    out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep)
+    pr.disable()
+    s = io.StringIO()
+    sortby = SortKey.CUMULATIVE
+    ps = Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
+
 if __name__ == '__main__':
-    # pytest.main([__file__])
+    pytest.main([__file__])
     # create_data(SNR=5, show=True)
     # test_dss1(True)
-    # test_dss_line(None)
-    test_dss_line_iter()
+    # test_dss_line(2)
+    # test_dss_line_iter()
+    # profile_dss_line(None)

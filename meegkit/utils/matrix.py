@@ -5,7 +5,7 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
 
-def sliding_window(data, window, step=1, padded=False, axis=-1, copy=True):
+def sliding_window(data, window, step=1, axis=-1, copy=True):
     """Calculate a sliding window over a signal.
 
     Parameters
@@ -30,8 +30,8 @@ def sliding_window(data, window, step=1, padded=False, axis=-1, copy=True):
 
     Notes
     -----
-    - Be wary of setting `copy` to `False` as undesired sideffects with the
-      output values may occur.
+    Be wary of setting `copy` to `False` as undesired side effects with the
+    output values may occur.
 
     Examples
     --------
@@ -622,9 +622,14 @@ def matmul3d(X, mixin):
         Projection.
 
     """
-    assert X.ndim == 3, 'data must be of shape (n_samples, n_chans, n_trials)'
     assert mixin.ndim == 2, 'mixing matrix must be 2D'
-    return np.einsum('sct,ck->skt', X, mixin)
+
+    if X.ndim == 2:
+        return X @ mixin
+    elif X.ndim == 3:
+        return np.einsum('sct,ck->skt', X, mixin)
+    else:
+        raise RuntimeError('X must be (n_samples, n_chans, n_trials)')
 
 
 def _check_shifts(shifts, allow_floats=False):
