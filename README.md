@@ -7,7 +7,7 @@
 [![DOI](https://zenodo.org/badge/117451752.svg)](https://zenodo.org/badge/latestdoi/117451752)
 [![twitter](https://img.shields.io/twitter/follow/lebababa?label=Twitter&style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
 
-Denoising tools for M/EEG processing in Python 3.6+.
+Denoising tools for M/EEG processing in Python 3.7+.
 
 > **Disclaimer:** The project mostly consists of development code, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the future. Comments and suggestions are welcome.
 
