@@ -192,18 +192,17 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
     if X.shape[0] < nfft:
         print('Reducing nfft to {}'.format(X.shape[0]))
         nfft = X.shape[0]
-    n_samples, n_chans, n_trials = theshapeof(X)
+    n_samples, n_chans, _ = theshapeof(X)
     if blocksize is None:
         blocksize = n_samples
 
     # Recentre data
-    X = demean(X)
+    X = demean(X, inplace=True)
 
     # Cancel line_frequency and harmonics + light lowpass
     X_filt = smooth(X, sfreq / fline)
 
-    # Subtract clean data from original data. The result is the artifact plus
-    # some residual biological signal
+    # X - X_filt results in the artifact plus some residual biological signal
     X_noise = X - X_filt
 
     # Reduce dimensionality to avoid overfitting
@@ -226,9 +225,8 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
             X_block = X_block.transpose(1, 2, 0)
 
         # bias data
-        X_bias = gaussfilt(X_block, sfreq, fline, fwhm=1, n_harm=n_harm)
         c0 += tscov(X_block)[0]
-        c1 += tscov(X_bias)[0]
+        c1 += tscov(gaussfilt(X_block, sfreq, fline, fwhm=1, n_harm=n_harm))[0]
 
     # DSS to isolate line components from residual
     todss, _, pwr0, pwr1 = dss0(c0, c1)
@@ -248,12 +246,12 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
 
     # reconstruct clean signal
     y = X_filt + X_res
-    artifact = X - y
 
     # Power of components
     p = wpwr(X - y)[0] / wpwr(X)[0]
     print('Power of components removed by DSS: {:.2f}'.format(p))
-    return y, artifact
+    # return the reconstructed clean signal, and the artifact
+    return y, X - y
 
 
 def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,

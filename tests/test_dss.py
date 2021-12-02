@@ -39,10 +39,10 @@ def test_dss0(n_bad_chans):
                     atol=1e-6)  # use abs as DSS component might be flipped
 
 
-def test_dss1(show=False):
+def test_dss1(show=True):
     """Test DSS1 (evoked)."""
     n_samples = 300
-    data, source = create_line_data(n_samples=n_samples)
+    data, source = create_line_data(n_samples=n_samples, fline=.01)
 
     todss, _, pwr0, pwr1 = dss.dss1(data, weights=None, )
     z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
@@ -179,11 +179,9 @@ def profile_dss_line(nkeep):
     sr = 200
     fline = 20
     nsamples = 1000000
-    nchans = 16
+    nchans = 99
     s = create_line_data(n_samples=3 * nsamples, n_chans=nchans,
                          n_trials=1, fline=fline / sr, SNR=2)[0][..., 0]
-
-    # 2D case, n_outputs == 1
 
     pr = cProfile.Profile()
     pr.enable()

@@ -158,8 +158,8 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     wR = weights
 
     # remove weighted means
-    X, mean1 = demean(X, wX, return_mean=True)
-    R = demean(R, wR)
+    X, mean1 = demean(X, wX, return_mean=True, inplace=True)
+    R = demean(R, wR, inplace=True)
 
     # equalize power of R channels, the equalize power of the R PCs
     # if R.shape[1] > 1:
@@ -182,11 +182,9 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     y = np.zeros((n_samples_X, n_chans_X, n_trials_X))
     for t in np.arange(n_trials_X):
         r = multishift(R[..., t], shifts, reshape=True)
-        z = r @ regression
-        y[..., t] = X[:z.shape[0], :, t] - z
+        y[..., t] = X[:z.shape[0], :, t] - (r @ regression)
 
-    y, mean2 = demean(y, wX, return_mean=True)
-
+    y, mean2 = demean(y, wX, return_mean=True, inplace=True)
     idx = np.arange(offset1, initial_samples - offset2)
     mean_total = mean1 + mean2
     weights = wR

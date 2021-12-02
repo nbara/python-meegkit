@@ -11,7 +11,7 @@ def test_regress():
     # Simple regression example, no weights
     # fit random walk
     y = np.cumsum(np.random.randn(1000, 1), axis=0)
-    x = np.arange(1000)[:, None]
+    x = np.arange(1000.)[:, None]
     x = np.hstack([x, x ** 2, x ** 3])
     [b, z] = regress(y, x)
 
