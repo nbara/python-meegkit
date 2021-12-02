@@ -39,10 +39,10 @@ def test_dss0(n_bad_chans):
                     atol=1e-6)  # use abs as DSS component might be flipped
 
 
-def test_dss1(show=False):
+def test_dss1(show=True):
     """Test DSS1 (evoked)."""
     n_samples = 300
-    data, source = create_line_data(n_samples=n_samples)
+    data, source = create_line_data(n_samples=n_samples, fline=.01)
 
     todss, _, pwr0, pwr1 = dss.dss1(data, weights=None, )
     z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
@@ -101,6 +101,10 @@ def test_dss_line(nkeep):
 
     # 2D case, n_outputs == 1
     out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep)
+    _plot(out)
+
+    # Test blocksize
+    out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep, blocksize=1000)
     _plot(out)
 
     # Test n_outputs > 1
@@ -165,9 +169,34 @@ def test_dss_line_iter():
                             noise_dim=10, SNR=2, fline=fline / sr)
     out, _ = dss.dss_line_iter(x, fline, sr, show=False)
 
+
+def profile_dss_line(nkeep):
+    """Test line noise removal."""
+    import cProfile
+    import io
+    from pstats import SortKey, Stats
+
+    sr = 200
+    fline = 20
+    nsamples = 1000000
+    nchans = 99
+    s = create_line_data(n_samples=3 * nsamples, n_chans=nchans,
+                         n_trials=1, fline=fline / sr, SNR=2)[0][..., 0]
+
+    pr = cProfile.Profile()
+    pr.enable()
+    out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep)
+    pr.disable()
+    s = io.StringIO()
+    sortby = SortKey.CUMULATIVE
+    ps = Stats(pr, stream=s).sort_stats(sortby)
+    ps.print_stats()
+    print(s.getvalue())
+
 if __name__ == '__main__':
-    # pytest.main([__file__])
+    pytest.main([__file__])
     # create_data(SNR=5, show=True)
     # test_dss1(True)
-    # test_dss_line(None)
-    test_dss_line_iter()
+    # test_dss_line(2)
+    # test_dss_line_iter()
+    # profile_dss_line(None)

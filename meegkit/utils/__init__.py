@@ -7,8 +7,8 @@ from .covariances import (block_covariance, convmtx, cov_lags,
 from .denoise import (demean, find_outlier_samples, find_outlier_trials,
                       mean_over_trials, wpwr)
 from .matrix import (fold, matmul3d, multishift, multismooth, normcol,
-                     relshift, shift, shiftnd, theshapeof, unfold, unsqueeze,
-                     widen_mask)
+                     relshift, shift, shiftnd, sliding_window, theshapeof,
+                     unfold, unsqueeze, widen_mask)
 from .sig import (gaussfilt, hilbert_envelope, slope_sum, smooth,
                   spectral_envelope, teager_kaiser)
 from .stats import (bootstrap_ci, bootstrap_snr, cronbach, rms, robust_mean,

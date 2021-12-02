@@ -5,7 +5,7 @@ import numpy as np
 from numpy.lib.stride_tricks import as_strided
 
 
-def sliding_window(data, window, step=1, padded=False, axis=-1, copy=True):
+def sliding_window(data, window, step=1, axis=-1, copy=True):
     """Calculate a sliding window over a signal.
 
     Parameters
@@ -30,8 +30,8 @@ def sliding_window(data, window, step=1, padded=False, axis=-1, copy=True):
 
     Notes
     -----
-    - Be wary of setting `copy` to `False` as undesired sideffects with the
-      output values may occur.
+    Be wary of setting `copy` to `False` as undesired side effects with the
+    output values may occur.
 
     Examples
     --------
@@ -495,17 +495,18 @@ def unsqueeze(X):
 
 
 def fold(X, epoch_size):
-    """Fold 2D X into 3D."""
+    """Fold 2D (n_times, n_channels) X into 3D (n_times, n_chans, n_trials)."""
     if X.ndim == 1:
         X = X[:, np.newaxis]
     if X.ndim > 2:
         raise AttributeError('X must be 2D at most')
 
-    n_chans = X.shape[0] // epoch_size
+    nt = X.shape[0] // epoch_size
+    nc = X.shape[1]
     if X.shape[0] / epoch_size >= 1:
-        X = np.transpose(np.reshape(X, (epoch_size, n_chans, X.shape[1]),
-                                    order="F").copy(), [0, 2, 1])
-    return X
+        return X.reshape((epoch_size, nt, nc), order="F").transpose([0, 2, 1])
+    else:
+        return X
 
 
 def unfold(X):
@@ -622,9 +623,14 @@ def matmul3d(X, mixin):
         Projection.
 
     """
-    assert X.ndim == 3, 'data must be of shape (n_samples, n_chans, n_trials)'
     assert mixin.ndim == 2, 'mixing matrix must be 2D'
-    return np.einsum('sct,ck->skt', X, mixin)
+
+    if X.ndim == 2:
+        return X @ mixin
+    elif X.ndim == 3:
+        return np.einsum('sct,ck->skt', X, mixin)
+    else:
+        raise RuntimeError('X must be (n_samples, n_chans, n_trials)')
 
 
 def _check_shifts(shifts, allow_floats=False):

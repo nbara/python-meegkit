@@ -200,7 +200,7 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
                     xx = demean(x[:, i], wc) * wc
 
                     # remove channel-specific-weighted mean from regressor
-                    r = demean(r, wc)
+                    r = demean(r, wc, inplace=True)
                     rr = r * wc
                     V, _ = pca(rr.T @ rr, thresh=threshold)
                     rr = rr.dot(V)
@@ -282,12 +282,14 @@ def _plot_detrend(x, y, w):
     f = plt.figure()
     gs = GridSpec(4, 1, figure=f)
     ax1 = f.add_subplot(gs[:3, 0])
-    plt.plot(x, label='original', color='C0')
-    plt.plot(y, label='detrended', color='C1')
+    lines = ax1.plot(x, label='original', color='C0')
+    plt.setp(lines[1:], label="_")
+    lines = ax1.plot(y, label='detrended', color='C1')
+    plt.setp(lines[1:], label="_")
     ax1.set_xlim(0, n_times)
     ax1.set_xticklabels('')
     ax1.set_title('Robust detrending')
-    ax1.legend()
+    ax1.legend(fontsize='smaller')
 
     ax2 = f.add_subplot(gs[3, 0])
     ax2.pcolormesh(w.T, cmap='Greys')

@@ -1,14 +1,15 @@
 """Denoising source separation."""
 # Authors:  Nicolas Barascud <nicolas.barascud@gmail.com>
 #           Maciej Szul <maciej.szul@isc.cnrs.fr>
-
 import numpy as np
 from scipy import linalg
 from scipy.signal import welch
 
 from .tspca import tsr
-from .utils import (demean, gaussfilt, mean_over_trials, pca, smooth,
+from .utils import (demean, gaussfilt, matmul3d, mean_over_trials, pca, smooth,
                     theshapeof, tscov, wpwr)
+
+from numpy.lib.stride_tricks import sliding_window_view
 
 
 def dss1(X, weights=None, keep1=None, keep2=1e-12):
@@ -134,7 +135,8 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     return todss, fromdss, pwr0, pwr1
 
 
-def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
+def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
+             show=False):
     """Apply DSS to remove power line artifacts.
 
     Implements the ZapLine algorithm described in [1]_.
@@ -153,6 +155,11 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
         FFT size (default=1024).
     nkeep : int
         Number of components to keep in DSS (default=None).
+    blocksize : int
+        If not None (default), covariance is computed on blocks of
+        ``blocksize`` samples. This may improve performance for large datasets.
+    show: bool
+        If True, show DSS results (default=False).
 
     Returns
     -------
@@ -183,30 +190,45 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
 
     """
     if X.shape[0] < nfft:
-        print('reducing nfft to {}'.format(X.shape[0]))
+        print('Reducing nfft to {}'.format(X.shape[0]))
         nfft = X.shape[0]
-    n_samples, n_chans, n_trials = theshapeof(X)
-    X = demean(X)
+    n_samples, n_chans, _ = theshapeof(X)
+    if blocksize is None:
+        blocksize = n_samples
 
-    # cancels line_frequency and harmonics, light lowpass
-    xx = smooth(X, sfreq / fline)
+    # Recentre data
+    X = demean(X, inplace=True)
 
-    # residual (X=xx+xxx), contains line and some high frequency power
-    xxx = X - xx
+    # Cancel line_frequency and harmonics + light lowpass
+    X_filt = smooth(X, sfreq / fline)
 
-    # reduce dimensionality to avoid overfitting
+    # X - X_filt results in the artifact plus some residual biological signal
+    X_noise = X - X_filt
+
+    # Reduce dimensionality to avoid overfitting
     if nkeep is not None:
-        xxx_cov = tscov(xxx)[0]
-        V, _ = pca(xxx_cov, nkeep)
-        xxxx = xxx @ V
+        cov_X_res = tscov(X_noise)[0]
+        V, _ = pca(cov_X_res, nkeep)
+        X_noise_pca = X_noise @ V
     else:
-        xxxx = xxx.copy()
+        X_noise_pca = X_noise.copy()
+        nkeep = n_chans
 
-    # DSS to isolate line components from residual:
+    # Compute blockwise covariances of raw and biased data
     n_harm = np.floor((sfreq / 2) / fline).astype(int)
-    c0, _ = tscov(xxxx)
-    c1, _ = tscov(gaussfilt(xxxx, sfreq, fline, 1, n_harm=n_harm))
+    c0 = np.zeros((nkeep, nkeep))
+    c1 = np.zeros((nkeep, nkeep))
+    for X_block in sliding_window_view(X_noise_pca, (blocksize, nkeep),
+                                       axis=(0, 1))[::blocksize, 0]:
+        # if n_trials>1, reshape to (n_samples, nkeep, n_trials)
+        if X_block.ndim == 3:
+            X_block = X_block.transpose(1, 2, 0)
 
+        # bias data
+        c0 += tscov(X_block)[0]
+        c1 += tscov(gaussfilt(X_block, sfreq, fline, fwhm=1, n_harm=n_harm))[0]
+
+    # DSS to isolate line components from residual
     todss, _, pwr0, pwr1 = dss0(c0, c1)
 
     if show:
@@ -217,23 +239,19 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, show=False):
         plt.title('DSS to enhance line frequencies')
         plt.show()
 
+    # Remove line components from X_noise
     idx_remove = np.arange(nremove)
-    if X.ndim == 3:
-        for t in range(n_trials):  # line-dominated components
-            xxxx[..., t] = xxxx[..., t] @ todss[:, idx_remove]
-    elif X.ndim == 2:
-        xxxx = xxxx @ todss[:, idx_remove]
-
-    xxx, _, _, _ = tsr(xxx, xxxx)  # project them out
+    X_artifact = matmul3d(X_noise_pca, todss[:, idx_remove])
+    X_res = tsr(X_noise, X_artifact)[0]  # project them out
 
     # reconstruct clean signal
-    y = xx + xxx
-    artifact = X - y
+    y = X_filt + X_res
 
     # Power of components
     p = wpwr(X - y)[0] / wpwr(X)[0]
     print('Power of components removed by DSS: {:.2f}'.format(p))
-    return y, artifact
+    # return the reconstructed clean signal, and the artifact
+    return y, X - y
 
 
 def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,

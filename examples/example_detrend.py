@@ -32,7 +32,7 @@ np.random.seed(9)
 # -----------------------------------------------------------------------------
 # We first try to fit a simple random walk process.
 x = np.cumsum(np.random.randn(1000, 1), axis=0)
-r = np.arange(1000)[:, None]
+r = np.arange(1000.)[:, None]
 r = np.hstack([r, r ** 2, r ** 3])
 b, y = regress(x, r)
 
