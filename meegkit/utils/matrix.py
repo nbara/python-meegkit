@@ -503,8 +503,9 @@ def fold(X, epoch_size):
 
     n_chans = X.shape[0] // epoch_size
     if X.shape[0] / epoch_size >= 1:
-        X = np.transpose(np.reshape(X, (epoch_size, n_chans, X.shape[1]),
-                                    order="F").copy(), [0, 2, 1])
+        X = np.reshape(X, (epoch_size, X.shape[1], n_chans), order="F")
+        #X = np.transpose(np.reshape(X, (epoch_size, n_chans, X.shape[1]),
+        #                            order="F").copy(), [0, 2, 1])
     return X
 
 

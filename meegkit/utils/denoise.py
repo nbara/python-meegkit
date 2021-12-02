@@ -7,7 +7,7 @@ from matplotlib import gridspec
 from .matrix import fold, theshapeof, unfold, _check_weights
 
 
-def demean(X, weights=None, return_mean=False):
+def demean(X, weights=None, return_mean=False, inplace=False):
     """Remove weighted mean over rows (samples).
 
     Parameters
@@ -15,6 +15,9 @@ def demean(X, weights=None, return_mean=False):
     X : array, shape=(n_samples, n_channels[, n_trials])
         Data.
     weights : array, shape=(n_samples)
+    return_mean : bool, optional
+    inplace : bool, optional
+              Save the resulting array in X, or in a new array  
 
     Returns
     -------
@@ -43,9 +46,15 @@ def demean(X, weights=None, return_mean=False):
             raise ValueError('Weight array should have either the same ' +
                              'number of columns as X array, or 1 column.')
 
-        demeaned_X = X - mn
     else:
         mn = np.mean(X, axis=0, keepdims=True)
+
+    # return new array or remove the mean in X itself
+    if inplace:
+        np.subtract(X, mn, out=X)
+        # create alias, so that rest of script can run with the same variable
+        demeaned_X = X
+    else:
         demeaned_X = X - mn
 
     if n_trials > 1 or ndims == 3:
