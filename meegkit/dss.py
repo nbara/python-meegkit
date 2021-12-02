@@ -192,7 +192,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
     if X.shape[0] < nfft:
         print('Reducing nfft to {}'.format(X.shape[0]))
         nfft = X.shape[0]
-    n_samples, n_chans, n_trials = theshapeof(X)
+    n_samples, n_chans, _ = theshapeof(X)
     if blocksize is None:
         blocksize = n_samples
 
@@ -203,13 +203,15 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
     X_filt = smooth(X, sfreq / fline)
 
     # X - X_filt results in the artifact plus some residual biological signal
+    X_noise = X - X_filt
+
     # Reduce dimensionality to avoid overfitting
     if nkeep is not None:
-        cov_X_res = tscov(X - X_filt)[0]
+        cov_X_res = tscov(X_noise)[0]
         V, _ = pca(cov_X_res, nkeep)
-        X_noise_pca = (X - X_filt) @ V
+        X_noise_pca = X_noise @ V
     else:
-        X_noise_pca = (X - X_filt).copy()
+        X_noise_pca = X_noise.copy()
         nkeep = n_chans
 
     # Compute blockwise covariances of raw and biased data
@@ -240,7 +242,8 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
     # Remove line components from X_noise
     idx_remove = np.arange(nremove)
     X_artifact = matmul3d(X_noise_pca, todss[:, idx_remove])
-    X_res = tsr(X - X_filt, X_artifact)[0]  # project them out
+    X_res = tsr(X_noise, X_artifact)[0]  # project them out
+
     # reconstruct clean signal
     y = X_filt + X_res
 

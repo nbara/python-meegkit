@@ -15,13 +15,14 @@ def demean(X, weights=None, return_mean=False, inplace=False):
     X : array, shape=(n_samples, n_channels[, n_trials])
         Data.
     weights : array, shape=(n_samples)
-    return_mean : bool, optional
-    inplace : bool, optional
-              Save the resulting array in X, or in a new array
+    return_mean : bool
+        If True, also return signal mean (default=False).
+    inplace : bool
+        If True, save the resulting array in X (default=False).
 
     Returns
     -------
-    demeaned_X : array, shape=(n_samples, n_channels[, n_trials])
+    X : array, shape=(n_samples, n_channels[, n_trials])
         Centered data.
     mn : array
         Mean value.
@@ -29,6 +30,9 @@ def demean(X, weights=None, return_mean=False, inplace=False):
     """
     weights = _check_weights(weights, X)
     ndims = X.ndim
+
+    if not inplace:
+        X = X.copy()
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
 
@@ -49,21 +53,17 @@ def demean(X, weights=None, return_mean=False, inplace=False):
     else:
         mn = np.mean(X, axis=0, keepdims=True)
 
-    # return new array or remove the mean in X itself
-    if inplace:
-        np.subtract(X, mn, out=X)
-        # create alias, so that rest of script can run with the same variable
-        demeaned_X = X
-    else:
-        demeaned_X = X - mn
+    # Remove mean (no copy)
+    X -= mn
+    # np.subtract(X, mn, out=X)
 
     if n_trials > 1 or ndims == 3:
-        demeaned_X = fold(demeaned_X, n_samples)
+        X = fold(X, n_samples)
 
     if return_mean:
-        return demeaned_X, mn  # the_mean.shape=(1, the_mean.shape[0])
+        return X, mn  # the_mean.shape=(1, the_mean.shape[0])
     else:
-        return demeaned_X
+        return X
 
 
 def mean_over_trials(X, weights=None):

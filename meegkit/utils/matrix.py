@@ -495,17 +495,18 @@ def unsqueeze(X):
 
 
 def fold(X, epoch_size):
-    """Fold 2D X into 3D."""
+    """Fold 2D (n_times, n_channels) X into 3D (n_times, n_chans, n_trials)."""
     if X.ndim == 1:
         X = X[:, np.newaxis]
     if X.ndim > 2:
         raise AttributeError('X must be 2D at most')
 
-    n_chans = X.shape[0] // epoch_size
+    nt = X.shape[0] // epoch_size
+    nc = X.shape[1]
     if X.shape[0] / epoch_size >= 1:
-        X = np.transpose(np.reshape(X, (epoch_size, n_chans, X.shape[1]),
-                                    order="F").copy(), [0, 2, 1])
-    return X, Y
+        return X.reshape((epoch_size, nt, nc), order="F").transpose([0, 2, 1])
+    else:
+        return X
 
 
 def unfold(X):
