@@ -201,7 +201,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
 
     # Cancel line_frequency and harmonics + light lowpass
     X_filt = smooth(X, sfreq / fline)
-  
+
     # X - X_filt results in the artifact plus some residual biological signal
     # Reduce dimensionality to avoid overfitting
     if nkeep is not None:
@@ -211,7 +211,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
     else:
         X_noise_pca = (X - X_filt).copy()
         nkeep = n_chans
-        
+
     # Compute blockwise covariances of raw and biased data
     n_harm = np.floor((sfreq / 2) / fline).astype(int)
     c0 = np.zeros((nkeep, nkeep))
@@ -225,7 +225,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
         # bias data
         c0 += tscov(X_block)[0]
         c1 += tscov(gaussfilt(X_block, sfreq, fline, fwhm=1, n_harm=n_harm))[0]
-    
+
     # DSS to isolate line components from residual
     todss, _, pwr0, pwr1 = dss0(c0, c1)
 

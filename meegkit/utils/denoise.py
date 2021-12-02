@@ -17,7 +17,7 @@ def demean(X, weights=None, return_mean=False, inplace=False):
     weights : array, shape=(n_samples)
     return_mean : bool, optional
     inplace : bool, optional
-              Save the resulting array in X, or in a new array  
+              Save the resulting array in X, or in a new array
 
     Returns
     -------
