@@ -444,7 +444,7 @@ def nonlinear_eigenspace(L, k, alpha=1):
     import pymanopt
     from pymanopt import Problem
     from pymanopt.manifolds import Grassmann
-    from pymanopt.solvers import TrustRegions
+    from pymanopt.optimizers import TrustRegions
 
     n = L.shape[0]
     assert L.shape[1] == n, 'L must be square.'
@@ -454,10 +454,10 @@ def nonlinear_eigenspace(L, k, alpha=1):
     manifold._dimension = 1  # hack
 
     # A solver that involves the hessian (check if correct TODO)
-    solver = TrustRegions()
+    solver = TrustRegions(verbosity=0)
 
     # Cost function evaluation
-    @pymanopt.function.Callable
+    @pymanopt.function.numpy(manifold)
     def cost(X):
         rhoX = np.sum(X ** 2, 1, keepdims=True)  # diag(X*X')
         val = 0.5 * np.trace(X.T @ (L * X)) + \
@@ -465,7 +465,7 @@ def nonlinear_eigenspace(L, k, alpha=1):
         return val
 
     # Euclidean gradient evaluation
-    @pymanopt.function.Callable
+    @pymanopt.function.numpy(manifold)
     def egrad(X):
         rhoX = np.sum(X ** 2, 1, keepdims=True)  # diag(X*X')
         g = L @ X + alpha * np.diagflat(mldivide(L, rhoX)) @ X
@@ -473,7 +473,7 @@ def nonlinear_eigenspace(L, k, alpha=1):
 
     # Euclidean Hessian evaluation
     # Note: Manopt automatically converts it to the Riemannian counterpart.
-    @pymanopt.function.Callable
+    @pymanopt.function.numpy(manifold)
     def ehess(X, U):
         rhoX = np.sum(X ** 2, 1, keepdims=True)  # np.diag(X * X')
         rhoXdot = 2 * np.sum(X.dot(U), 1)
@@ -493,8 +493,8 @@ def nonlinear_eigenspace(L, k, alpha=1):
     # Call manoptsolve to automatically call an appropriate solver.
     # Note: it calls the trust regions solver as we have all the required
     # ingredients, namely, gradient and Hessian, information.
-    problem = Problem(manifold=manifold, cost=cost, egrad=egrad, ehess=ehess,
-                      verbosity=0)
-    Xsol = solver.solve(problem, U0)
+    problem = Problem(manifold=manifold, cost=cost, euclidean_gradient=egrad,
+                      euclidean_hessian=ehess)
+    Xsol = solver.run(problem, initial_point=U0)
 
-    return S0, Xsol
+    return S0, Xsol.point
