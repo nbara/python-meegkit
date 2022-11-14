@@ -14,7 +14,7 @@ setup(
     author='Nicolas Barascud',
     author_email='nicolas.barascud@gmail.com',
     license='BSD (3-clause)',
-    version='0.1.2',
+    version='0.1.3',
     packages=find_packages(exclude=['doc', 'tests']),
     project_urls={
         "Documentation": "https://nbara.github.io/python-meegkit/",
