@@ -24,20 +24,5 @@ setup(
     platforms="any",
     python_requires=">=3.7",
     install_requires=["numpy", "scipy", "scikit-learn", "joblib", "pandas",
-                      "matplotlib", "tqdm", "pyriemann"],
-    extras_require={
-        "docs": [
-            "sphinx",
-            "sphinx-gallery",
-            "sphinx-bootstrap_theme",
-            "sphinx-copybutton",
-            "sphinxemoji",
-            "numpydoc",
-            "pydata-sphinx-theme",
-            "pillow",
-            "jupyter-sphinx",
-        ],
-        "tests": ["pytest", "pytest-cov", "codecov", "codespell", "flake8",
-                  "pydocstyle"],
-    },
+                      "matplotlib", "tqdm", "pyriemann", "statsmodels"],
     zip_safe=False)

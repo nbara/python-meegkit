@@ -12,7 +12,7 @@ python:
 install:
   - sudo apt-get update
   - pip install -r requirements.txt
-  - pip install -e ".[extra]"
+  - pip install -e ".[docs]"
 script:
   - mkdir docs
   - cd doc
