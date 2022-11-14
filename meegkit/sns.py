@@ -7,7 +7,7 @@ from .utils.matrix import _check_weights
 
 
 def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
-    """Sensor Noise Suppresion.
+    """Sensor Noise Suppression.
 
     This algorithm will replace the data from each channel by its regression on
     the subspace formed by the other channels. The underlying assumptions are
@@ -62,7 +62,7 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
 
 
 def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
-    """Sensor Noise Suppresion from data covariance.
+    """Sensor Noise Suppression from data covariance.
 
     Parameters
     ----------
@@ -130,7 +130,7 @@ def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
 
 
 def sns1(X, n_neighbors=None, skip=0):
-    """Sensor Noise Suppresion 1.
+    """Sensor Noise Suppression 1.
 
     This version of SNS first regresses out major shared components.
     """

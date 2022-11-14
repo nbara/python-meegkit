@@ -6,10 +6,10 @@
 [![twitter](https://img.shields.io/twitter/follow/lebababa?label=Twitter&style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
 
 # MEEGkit
+
 Denoising tools for M/EEG processing in Python 3.7+.
 
 ![meegkit-ERP](https://user-images.githubusercontent.com/10333715/176754293-eaa35071-94f8-40dd-a487-9f8103c92571.png)
-
 
 > **Disclaimer:** The project mostly consists of development code, although some modules and functions are already working. Bugs and performance problems are to be expected, so use at your own risk. More tests and improvements will be added in the future. Comments and suggestions are welcome.
 
@@ -21,10 +21,10 @@ This code can also be tested directly from your browser using [Binder](https://m
 
 ## Installation
 
-This package can be installed easily using `pip+git`:
+This package can be installed easily using `pip`:
 
 ```bash
-pip install git+https://github.com/nbara/python-meegkit.git
+pip install meegkit
 ```
 
 Or you can clone this repository and run the following commands inside the `python-meegkit` directory:
@@ -47,8 +47,10 @@ pip install -e '.[extra]'
 or:
 
 ```bash
-pip install git+https://github.com/nbara/python-meegkit.git#egg=meegkit[extra]
+pip install meegkit[extra]
 ```
+
+Other available options are `[docs]` (which installs dependencies required to build the documentation), or `[tests]` (which install dependencies to run unit tests).
 
 ## References
 

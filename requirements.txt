@@ -4,12 +4,6 @@ matplotlib
 scikit-learn
 pandas
 joblib
-flake8
-pytest
-pytest-cov
-codecov
-codespell
-pydocstyle
 tqdm
 statsmodels
 pyriemann>=0.2.7

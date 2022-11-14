@@ -412,7 +412,7 @@ def polystab(a):
     b = a[ind[0][0]] * np.poly(v)
 
     # Return only real coefficients if input was real:
-    if not(np.sum(np.imag(a))):
+    if not np.sum(np.imag(a)):
         b = np.real(b)
 
     return b
