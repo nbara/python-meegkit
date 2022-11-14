@@ -23,8 +23,8 @@ import meegkit # noqa
 
 # -- Project information -----------------------------------------------------
 
-project = f'MEEGkit v{meegkit.__version__}'
-copyright = '2021, Nicolas Barascud'
+project = 'MEEGkit'
+copyright = '2022, Nicolas Barascud'
 author = 'Nicolas Barascud'
 release = meegkit.__version__
 version = meegkit.__version__
