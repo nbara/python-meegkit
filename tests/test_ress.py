@@ -6,7 +6,7 @@ import scipy.signal as ss
 from scipy.linalg import pinv
 
 from meegkit import ress
-from meegkit.utils import matmul3d, snr_spectrum
+from meegkit.utils import fold, matmul3d, snr_spectrum, unfold
 
 rng = np.random.default_rng(9)
 
