@@ -1,21 +1,20 @@
 """Rhythmic Entrainment Source Separation."""
+import functools
+import warnings
+
 import numpy as np
 from scipy import linalg
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.covariance import EmpiricalCovariance
 
-from .utils import demean, gaussfilt, mrdivide, theshapeof, tscov
 
-
-def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
-         peak_width: float = .5, neig_width: float = 1, n_keep: int = 1,
-         gamma: float = 0.01, return_maps: bool = False):
+class RESS(TransformerMixin, BaseEstimator):
     """Rhythmic Entrainment Source Separation.
 
     As described in [1]_.
 
     Parameters
     ----------
-    X: array, shape=(n_samples, n_chans, n_trials)
-        Data to denoise.
     sfreq : int
         Sampling frequency.
     peak_freq : float
@@ -33,38 +32,6 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
         Regularization coefficient, between 0 and 1 (default=0.01, which
         corresponds to 1 % regularization and helps reduce numerical problems
         for noisy or reduced-rank matrices [2]_).
-    return_maps : bool
-        If True, also output mixing (to_ress) and unmixing matrices
-        (from_ress), used to transform the data into RESS component space and
-        back into sensor space, respectively.
-
-    Returns
-    -------
-    out : array, shape=(n_samples, n_keep, n_trials)
-        RESS time series.
-    from_ress : array, shape=(n_components, n_channels)
-        Unmixing matrix (projects to sensor space).
-    to_ress : array, shape=(n_channels, n_components)
-        Mixing matrix (projects to component space).
-
-    Examples
-    --------
-    To project the RESS components back into sensor space, one can proceed as
-    follows:
-
-    >>> # First apply RESS
-    >>> from meegkit.utils import matmul3d  # handles 3D matrix multiplication
-    >>> out, fromRESS, _ = ress.RESS(data, sfreq, peak_freq, return_maps=True)
-    >>> # Then matrix multiply each trial by the unmixing matrix:
-    >>> proj = matmul3d(out, fromRESS)
-
-    To transform a new observation into RESS component space (e.g. in the
-    context of a cross-validation, with separate train/test sets):
-
-    >>> # Start by applying RESS to the train set:
-    >>> out, _, toRESS = ress.RESS(data, sfreq, peak_freq, return_maps=True)
-    >>> # Then multiply your test data by the toRESS:
-    >>> new_comp = new_data @ toRESS
 
     References
     ----------
@@ -74,58 +41,227 @@ def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,
     .. [2] Cohen, M. X. (2021). A tutorial on generalized eigendecomposition
        for source separation in multichannel electrophysiology.
        ArXiv:2104.12356 [Eess, q-Bio].
-
     """
-    n_samples, n_chans, n_trials = theshapeof(X)
-    X = demean(X)
 
-    if n_keep == -1:
-        n_keep = n_chans
+    def __init__(
+        self,
+        sfreq: int,
+        peak_freq: float,
+        neig_freq: float = 1,
+        peak_width: float = 0.5,
+        neig_width: float = 1,
+        n_keep: int = 1,
+        gamma: float = 0.01,
+    ):
 
-    # Covariance of signal and covariance of noise
-    c01, _ = tscov(gaussfilt(X, sfreq, peak_freq + neig_freq,
-                             fwhm=neig_width, n_harm=1))
-    c02, _ = tscov(gaussfilt(X, sfreq, peak_freq - neig_freq,
-                             fwhm=neig_width, n_harm=1))
-    c1, _ = tscov(gaussfilt(X, sfreq, peak_freq, fwhm=peak_width, n_harm=1))
+        self.sfreq = sfreq
+        self.peak_freq = peak_freq
+        self.neig_freq = neig_freq
+        self.peak_width = peak_width
+        self.neig_width = neig_width
+        self.n_keep = n_keep
+        self.gamma = gamma
 
-    # add 1% regularization to avoid numerical precision problems in the GED
-    c0 = (c01 + c02) / 2
-    c0 = c0 * (1 - gamma) + gamma * np.trace(c0) / len(c0) * np.eye(len(c0))
+    def fit(self, X, y=None):
+        """Learn a RESS filter.
 
-    # perform generalized eigendecomposition
-    d, to_ress = linalg.eigh(c1, c0)
-    d = d.real
-    to_ress = to_ress.real
+        X : np.array (n_trials, n_chans, n_samples)
+            Follow MNE format
+        y : (ignored)
+            Ignored parameter.
 
-    # Sort eigenvectors by decreasing eigenvalues
-    idx = np.argsort(d)[::-1]
-    d = d[idx]
-    to_ress = to_ress[:, idx]
+        Returns
+        -------
+        self : object
+            RESS class instance.
+        """
+        if X.ndim == 2:
+            X = X[np.newaxis, :, :]
+            warnings.warn("Fitting the RESS on only one sample !")
 
-    # Truncate weak components
-    # if thresh is not None:
-    #     idx = np.where(d / d.max() > thresh)[0]
-    #     d = d[idx]
-    #     to_ress = to_ress[:, idx]
+        _, n_chans, _ = X.shape
 
-    # Normalize components (yields mixing matrix)
-    to_ress /= np.sqrt(np.sum(to_ress, axis=0) ** 2)
-    to_ress = to_ress[:, np.arange(n_keep)]
+        # Compute mean along epoch + trial and remove it
+        X -= np.mean(X, axis=(0, 2), keepdims=True)
 
-    # Compute unmixing matrix
-    from_ress = mrdivide(c1 @ to_ress, to_ress.T @ c1 @ to_ress).T
-    from_ress = from_ress[:n_keep, :]
+        if self.n_keep == -1:
+            self.n_keep = n_chans
 
-    # idx = np.argmax(np.abs(from_ress[:, 0]))  # find biggest component
-    # from_ress = from_ress * np.sign(from_ress[idx, 0])  # force positive sign
+        # Covariance of  neighboor frequencies (noise)
+        c01 = self._avg_cov(
+            self._gaussfilt(
+                X,
+                self.sfreq,
+                self.peak_freq + self.neig_freq,
+                fwhm=self.neig_width,
+                n_harm=1,
+            )
+        )
+        c02 = self._avg_cov(
+            self._gaussfilt(
+                X,
+                self.sfreq,
+                self.peak_freq - self.neig_freq,
+                fwhm=self.neig_width,
+                n_harm=1,
+            )
+        )
+        # Covariance of the signal
+        c1 = self._avg_cov(
+            self._gaussfilt(
+                X, self.sfreq, self.peak_freq, fwhm=self.peak_width, n_harm=1
+            )
+        )
 
-    # Output `n_keep` RESS component time series
-    out = np.zeros((n_samples, n_keep, n_trials))
-    for t in range(n_trials):
-        out[..., t] = X[:, :, t] @ to_ress
+        # add 1% regularization to avoid numerical precision problems in the GED
+        c0 = (c01 + c02) / 2
+        c0 = c0 * (1 - self.gamma) + self.gamma * np.trace(c0) / len(c0) * np.eye(
+            len(c0)
+        )
 
-    if return_maps:
-        return out, from_ress, to_ress
-    else:
+        # Perform generalized eigendecomposition
+        # It solve a Generalized Eigenvalue Problem:
+        # find a vector `to_ress` that maximize the ratio
+        # c0^{-1} c1 (max c1 and min c0)
+        d, to_ress = linalg.eigh(c1, c0)
+        # Keep only the real part as c1 and c0
+        # are symetric (then PSD) the imaginary
+        # part is only a numerical error
+        d = d.real
+        to_ress = to_ress.real
+
+        # Sort eigenvectors by decreasing eigenvalues
+        # We are looking for the eigenvectors associated
+        # with the larger eigenvalue
+        idx = np.argsort(d)[::-1]
+        d = d[idx]
+        to_ress = to_ress[:, idx]
+
+        # Normalize components (yields mixing matrix)
+        to_ress /= np.sqrt(np.sum(to_ress, axis=0) ** 2)
+        self.to_ress = to_ress[:, np.arange(self.n_keep)]
+
+        # Compute unmixing matrix
+        A = np.matmul(c1, to_ress)
+        B = np.matmul(to_ress.T, np.matmul(c1, to_ress))
+        try:
+            # Note: we must use overwrite_a=False in order to be able to
+            # use the fall-back solution below in case a LinAlgError is raised
+            from_ress = linalg.solve(B.T, A.T, overwrite_a=False)
+        except linalg.LinAlgError:
+            # A or B is not full rank so exact solution is not tractable.
+            #  Using least-squares solution instead.
+            from_ress = linalg.lstsq(B.T, A.T, lapack_driver="gelsy")[0]
+        self.from_ress = from_ress[: self.n_keep, :]
+
+        return self
+
+    def transform(self, X):
+        """Project data using the learned RESS filter."""
+        if X.ndim == 2:
+            out = np.matmul(X, self.to_ress)
+        else:
+            out = np.zeros((X.shape[0], self.n_keep, X.shape[2]))
+            for idx_trial in range(len(X)):
+                out[idx_trial] = np.matmul(X[idx_trial].T, self.to_ress).T
+
         return out
+
+    def fit_transform(self, X, y=None):
+        """Compute RESS filter and apply it on data."""
+        self.fit(X)
+
+        return self.transform(X)
+
+    def inverse_transform(self, X):
+        """Backproject the RESS filtered data to the sensors space."""
+        return np.matmul(X, self.from_ress)
+
+    def _avg_cov(self, X):
+        """Compute average covariance matrix along trials."""
+        X_transpose = X.transpose([0, 2, 1])
+        s = list(X_transpose.shape)
+        combined = functools.reduce(lambda x, y: x * y, s[0: 0 + 1 + 1])
+        X_combined = np.reshape(X_transpose, s[:0] + [combined] + s[0 + 1 + 1:])
+        cov = EmpiricalCovariance().fit(X_combined)
+        return cov.covariance_
+
+    def _gaussfilt(self, data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
+                   show=False):
+        """FIR filter with the window method and a gaussian window.
+
+        Parameters
+        ----------
+        data : ndarray
+            EEG data, shape=(n_samples, n_channels[, ...])
+        srate : int
+            Sampling rate in Hz.
+        f : float
+            Break frequency of filter.
+        fhwm : float
+            Standard deviation of filter, defined as full-width at half-maximum
+            in Hz.
+        n_harm : int
+            Number of harmonics of the frequency to consider.
+        shift : int
+            Amount shift peak frequency by (only useful when considering harmonics,
+            otherwise leave to 0).
+        return_empvals : bool
+            Return empirical values (default: False).
+
+        Returns
+        -------
+        filtdat : ndarray
+            Filtered data.
+        empVals : float
+            The empirical frequency and FWHM.
+
+        References
+        ----------
+        https://ccrma.stanford.edu/~jos/sasp/Window_Method_FIR_Filter.html
+
+        """
+        # input check
+        assert data.shape[1] <= data.shape[2], "n_channels must be less than n_samples"
+        assert (f - fwhm) >= 0, "increase frequency or decrease FWHM"
+        assert fwhm >= 0, "FWHM must be greater than 0"
+
+        # frequencies
+        hz = np.fft.fftfreq(data.shape[2], 1.0 / srate)
+        empVals = np.zeros((2,))
+
+        # compute empirical frequency and standard deviation
+        idx_p = np.searchsorted(hz[hz >= 0], f, "left")
+
+        # create Gaussian
+        fx = np.zeros_like(hz)
+        for i_harm in range(1, n_harm + 1):  # make one gaussian per harmonic
+            s = fwhm * (2 * np.pi - 1) / (4 * np.pi)  # normalized width
+            x = hz.copy()
+            x -= f * i_harm - shift
+            gauss = np.exp(-0.5 * (x / s) ** 2)  # gaussian
+            gauss = gauss / np.max(gauss)  # gain-normalized
+            fx = fx + gauss
+
+        # filter
+        if data.ndim == 2:
+            filtdat = 2 * np.real(
+                np.fft.ifft(np.fft.fft(data, axis=2) * fx[None, :], axis=2)
+            )
+        elif data.ndim == 3:
+            filtdat = 2 * np.real(
+                np.fft.ifft(np.fft.fft(data, axis=2) * fx[None, None, :], axis=2)
+            )
+
+        if return_empvals:
+            empVals[0] = hz[idx_p]
+            # find values closest to .5 after MINUS before the peak
+            empVals[1] = (
+                hz[idx_p - 1 + np.searchsorted(fx[:idx_p], 0.5)]
+                - hz[np.searchsorted(fx[:idx_p + 1], 0.5)]
+            )
+
+        if return_empvals:
+            return filtdat, empVals
+        else:
+            return filtdat

@@ -6,7 +6,7 @@ import scipy.signal as ss
 from scipy.linalg import pinv
 
 from meegkit import ress
-from meegkit.utils import fold, matmul3d, rms, snr_spectrum, unfold
+from meegkit.utils import matmul3d, snr_spectrum
 
 rng = np.random.default_rng(9)
 
@@ -14,12 +14,10 @@ rng = np.random.default_rng(9)
 def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
                 noise_dim=8, SNR=.8, t0=100, show=False):
     """Create synthetic data.
-
     Returns
     -------
     noisy_data: array, shape=(n_times, n_channels, n_trials)
         Simulated data with oscillatory component strting at t0.
-
     """
     # source
     source = np.sin(2 * np.pi * freq * np.arange(n_times - t0) / sfreq)[None].T
@@ -36,8 +34,8 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
     noise = fold(noise, n_times)
 
     # mix signal and noise
-    signal = SNR * signal / rms(signal.flatten())
-    noise = noise / rms(noise.flatten())
+    signal = SNR * signal /  np.sqrt(np.mean(signal ** 2))
+    noise = noise / np.sqrt(np.mean(noise ** 2))
     noisy_data = signal + noise
 
     if show:
@@ -67,14 +65,12 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     data, source = create_data(n_times=n_times, n_trials=n_trials,
                                n_chans=n_chans, freq=target, sfreq=sfreq,
                                show=False)
-
-    out = ress.RESS(
-        data, sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
-        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep
-    )
+    r = ress.RESS(sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
+        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep)
+    out = r.fit_transform(data)
 
     nfft = 500
-    bins, psd = ss.welch(out.squeeze(1), sfreq, window="boxcar",
+    bins, psd = ss.welch(np.squeeze(out), sfreq, window="boxcar",
                          nperseg=nfft / (peak_width * 2),
                          noverlap=0, axis=0, average="mean")
     # psd = np.abs(np.fft.fft(out, nfft, axis=0))
@@ -83,7 +79,7 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     # print(psd.shape)
     # print(bins[:10])
 
-    psd = psd.mean(axis=-1, keepdims=True)  # average over trials
+    psd = psd.mean(axis=0, keepdims=True).T  # average over trials
     snr = snr_spectrum(psd + psd.max() / 20, bins, skipbins=1, n_avg=2)
     # snr = snr.mean(1)
     if show:
@@ -106,14 +102,13 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     assert (snr[(bins <= target - 2) | (bins >= target + 2)] < 2).all()
 
     # test multiple components
-    out, fromress, toress = ress.RESS(
-        data, sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
-        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep,
-        return_maps=True
-    )
+
+    out = r.transform(data)
+    toress = r.to_ress
+    fromress = r.from_ress
 
     proj = matmul3d(out, fromress)
-    assert proj.shape == (n_times, n_chans, n_trials)
+    assert proj.shape == (n_trials, n_chans, n_times)
 
     if show:
         f, ax = plt.subplots(data.shape[1], 2, sharey="col")
@@ -129,14 +124,16 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
         plt.legend()
 
     # 2 comps
-    _ = ress.RESS(
-        data, sfreq=sfreq, peak_freq=target, n_keep=2
-    )
+    r = ress.RESS(
+        sfreq=sfreq, peak_freq=target, n_keep=2
+    ).fit_transform(data)
 
     # All comps
-    out, fromress, toress = ress.RESS(
-        data, sfreq=sfreq, peak_freq=target, n_keep=-1, return_maps=True
-    )
+    r = ress.RESS(sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
+        peak_width=peak_width, neig_width=neig_width, n_keep=-1).fit(data)
+    out = r.transform(data)
+    toress = r.to_ress
+    fromress = r.from_ress
 
     if show:
         # Inspect mixing/unmixing matrices
