@@ -130,6 +130,9 @@ def test_cca_lags():
     lags = np.arange(-10, 11, 1)
     A1, B1, R1 = nt_cca(x, y, lags)
 
+    assert A1.ndim == B1.ndim == 3
+    assert A1.shape[-1] == B1.shape[-1] == lags.size
+
     # import matplotlib.pyplot as plt
     # f, ax1 = plt.subplots(1, 1)
     # ax1.plot(lags, R1.T)

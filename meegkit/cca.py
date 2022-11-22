@@ -94,6 +94,8 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         n_trials).
     shifts : array, shape=(n_shifts,)
         Array of shifts to apply to `y` relative to `x` (can be negative).
+    sfreq : float
+        Sampling frequency. If not 1, lags are assumed to be given in seconds.
     surrogate : bool
         If True, estimate SD of correlation over non-matching pairs.
     plot : bool
@@ -133,8 +135,8 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
 
     # Calculate leave-one-out CCAs
     print('Calculate CCAs...')
-    AA = list()
-    BB = list()
+    AA = []
+    BB = []
     for t in tqdm(np.arange(n_trials)):
         # covariance of all trials except t
         CC = np.sum(C[..., np.arange(n_trials) != t], axis=-1, keepdims=True)
@@ -142,7 +144,7 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
             CC = np.squeeze(CC, 3)
 
         # corresponding CCA
-        [A, B, R] = nt_cca(None, None, None, CC, xx[0].shape[1])
+        A, B, _ = nt_cca(None, None, None, CC, xx[0].shape[1])
         AA.append(A)
         BB.append(B)
         del A, B
@@ -227,17 +229,17 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
         independently from each page.
     m : int
         Number of channels of X.
-    thresh: float
+    thresh : float
         Discard principal components below this value.
     sfreq : float
         Sampling frequency. If not 1, lags are assumed to be given in seconds.
 
     Returns
     -------
-    A : array, shape=(n_chans_X, min(n_chans_X, n_chans_Y))
+    A : array, shape=(n_chans_X, min(n_chans_X, n_chans_Y)[, n_lags])
         Transform matrix mapping `X` to canonical space, where `n_comps` is
         equal to `min(n_chans_X, n_chans_Y)`.
-    B : array,  shape=(n_chans_Y, n_comps)
+    B : array,  shape=(n_chans_Y, n_comps[, n_lags])
         Transform matrix mapping `Y` to canonical space, where `n_comps` is
         equal to `min(n_chans_X, n_chans_Y)`.
     R : array, shape=(n_comps, n_lags)
@@ -246,16 +248,16 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
     Notes
     -----
     Usage 1: CCA of X, Y
-    >> [A, B, R] = nt_cca(X, Y)  # noqa
+    >> A, B, R = nt_cca(X, Y)  # noqa
 
     Usage 2: CCA of X, Y for each value of lags.
-    >> [A, B, R] = nt_cca(X, Y, lags)  # noqa
+    >> A, B, R = nt_cca(X, Y, lags)  # noqa
 
     A positive lag indicates that Y is delayed relative to X.
 
     Usage 3: CCA from covariance matrix
     >> C = [X, Y].T * [X, Y]  # noqa
-    >> [A, B, R] = nt_cca([], [], [], C, X.shape[1])  # noqa
+    >> A, B, R = nt_cca(None, None, None, C=C, m=X.shape[1])  # noqa
 
     Use the third form to handle multiple files or large data (covariance C can
     be calculated chunk-by-chunk).
