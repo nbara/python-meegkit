@@ -14,7 +14,7 @@ import numpy as np
 import scipy.signal as ss
 
 from meegkit import ress
-from meegkit.utils import fold, matmul3d, rms, snr_spectrum, unfold
+from meegkit.utils import fold, matmul3d, snr_spectrum, unfold
 
 # import config
 
@@ -48,8 +48,8 @@ noise = np.dot(
 noise = fold(noise, n_times)
 
 # mix signal and noise
-signal = SNR * signal / rms(signal.flatten())
-noise = noise / rms(noise.flatten())
+signal = SNR * signal /  np.sqrt(np.mean(signal ** 2))
+noise = noise / np.sqrt(np.mean(noise ** 2))
 data = signal + noise
 
 # Plot
@@ -64,16 +64,16 @@ ax[2].legend()
 ###############################################################################
 # Enhance oscillatory activity using RESS
 # -----------------------------------------------------------------------------
-
 # Apply RESS
-out, maps, _ = ress.RESS(data, sfreq=sfreq, peak_freq=target, return_maps=True)
+r = ress.RESS(sfreq=sfreq, peak_freq=target)
+out = r.fit_transform(data)
 
 # Compute PSD
 nfft = 250
 df = sfreq / nfft  # frequency resolution
-bins, psd = ss.welch(out.squeeze(1), sfreq, window="hamming", nperseg=nfft,
-                     noverlap=125, axis=0)
-psd = psd.mean(axis=1, keepdims=True)  # average over trials
+bins, psd = ss.welch(np.squeeze(out), sfreq, window="hamming", nperseg=nfft,
+                     noverlap=125, axis=1)
+psd = psd.mean(axis=0, keepdims=True).T  # average over trials
 snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
 
 f, ax = plt.subplots(1)
@@ -88,12 +88,12 @@ ax.set_xlim([0, 40])
 ###############################################################################
 # Project components back into sensor space to see the effects of RESS on the
 # average SSVEP.
-
-proj = matmul3d(out, maps)
+fromress = r.from_ress
+proj = matmul3d(out, fromress)
 f, ax = plt.subplots(n_chans, 2, sharey="col")
 for c in range(n_chans):
-    ax[c, 0].plot(data[:, c].mean(-1), lw=.5)
-    ax[c, 1].plot(proj[:, c].mean(-1), lw=.5)
+    ax[c, 0].plot(data[:, c].mean(-1), lw=.5, label="data")
+    ax[c, 1].plot(proj[:, c].mean(-1), lw=.5, label="projection")
     ax[c, 0].set_ylabel(f"ch{c}")
     if c < n_chans:
         ax[c, 0].set_xticks([])
@@ -102,3 +102,4 @@ for c in range(n_chans):
 ax[0, 0].set_title("Trial average (before)")
 ax[0, 1].set_title("Trial average (after)")
 plt.show()
+
