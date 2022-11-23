@@ -78,6 +78,21 @@ def test_cca2():
     # plt.show()
 
 
+def test_cca_scaling():
+    """Test CCA with MEG data."""
+    data = np.load('./tests/data/ccadata_meg_2trials.npz')
+    raw = data['arr_0']
+    env = data['arr_1']
+
+    # Test with scaling (unit: fT)
+    A0, B0, R0 = nt_cca(raw * 1e12, env)
+
+    # Test without scaling (unit: T)
+    A1, B1, R1 = nt_cca(raw, env)
+
+    np.testing.assert_almost_equal(R0, R1)
+
+
 def test_canoncorr():
     """Compare with Matlab's canoncorr."""
     x = np.array([[16, 2, 3, 13],
