@@ -85,7 +85,7 @@ def test_cca_scaling():
     env = data['arr_1']
 
     # Test with scaling (unit: fT)
-    A0, B0, R0 = nt_cca(raw * 1e12, env)
+    A0, B0, R0 = nt_cca(raw * 1e15, env)
 
     # Test without scaling (unit: T)
     A1, B1, R1 = nt_cca(raw, env)
