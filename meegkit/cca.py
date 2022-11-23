@@ -383,7 +383,7 @@ def whiten_nt(C, thresh=1e-12, keep=False):
     # break symmetry when x and y perfectly correlated (otherwise cols of x*A
     # and y*B are not orthogonal)
     d = d ** (1 - thresh)
-    d_norm = d  / np.max(d)
+    d_norm = d / np.max(d)
 
     dd = np.zeros_like(d)
     dd[d_norm > thresh] = (1. / d[d_norm > thresh])
