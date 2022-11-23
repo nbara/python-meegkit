@@ -5,7 +5,8 @@ import warnings
 import numpy as np
 from scipy import linalg
 from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.covariance import EmpiricalCovariance
+
+from meegkit.utils import gaussfilt
 
 
 class RESS(TransformerMixin, BaseEstimator):
@@ -32,6 +33,25 @@ class RESS(TransformerMixin, BaseEstimator):
         Regularization coefficient, between 0 and 1 (default=0.01, which
         corresponds to 1 % regularization and helps reduce numerical problems
         for noisy or reduced-rank matrices [2]_).
+    compute_unmixing : bool
+        If True, also computing unmixing matrices (from_ress), used to
+        transform the data back into sensor space.
+
+    Examples
+    --------
+    To project the RESS components back into sensor space, one can proceed as
+    follows:
+    >>> # First create RESS estimator and fit_transform the data
+    >>> r = ress.RESS(sfreq, peak_freq, compute_unmixing=True)
+    >>> out = r.fit_transform(data)
+    >>> # Then matrix multiply each trial by the unmixing matrix:
+    >>> fromRESS = r.from_ress
+    >>> proj = matmul3d(out, fromRESS)
+
+    To transform a new observation into RESS component space (e.g. in the
+    context of a cross-validation, with separate train/test sets) use the
+    `transform` method:
+    >>> new_comp = r.transform(newdata)
 
     References
     ----------
@@ -52,6 +72,7 @@ class RESS(TransformerMixin, BaseEstimator):
         neig_width: float = 1,
         n_keep: int = 1,
         gamma: float = 0.01,
+        compute_unmixing: bool = False
     ):
 
         self.sfreq = sfreq
@@ -61,6 +82,7 @@ class RESS(TransformerMixin, BaseEstimator):
         self.neig_width = neig_width
         self.n_keep = n_keep
         self.gamma = gamma
+        self.compute_unmixing = compute_unmixing
 
     def fit(self, X, y=None):
         """Learn a RESS filter.
@@ -87,9 +109,12 @@ class RESS(TransformerMixin, BaseEstimator):
         if self.n_keep == -1:
             self.n_keep = n_chans
 
+        # Back to Matlab formatting for gaussfilt
+        X = X.transpose([2,1,0])
+
         # Covariance of  neighboor frequencies (noise)
         c01 = self._avg_cov(
-            self._gaussfilt(
+            gaussfilt(
                 X,
                 self.sfreq,
                 self.peak_freq + self.neig_freq,
@@ -98,7 +123,7 @@ class RESS(TransformerMixin, BaseEstimator):
             )
         )
         c02 = self._avg_cov(
-            self._gaussfilt(
+            gaussfilt(
                 X,
                 self.sfreq,
                 self.peak_freq - self.neig_freq,
@@ -108,7 +133,7 @@ class RESS(TransformerMixin, BaseEstimator):
         )
         # Covariance of the signal
         c1 = self._avg_cov(
-            self._gaussfilt(
+            gaussfilt(
                 X, self.sfreq, self.peak_freq, fwhm=self.peak_width, n_harm=1
             )
         )
@@ -141,18 +166,19 @@ class RESS(TransformerMixin, BaseEstimator):
         to_ress /= np.sqrt(np.sum(to_ress, axis=0) ** 2)
         self.to_ress = to_ress[:, np.arange(self.n_keep)]
 
-        # Compute unmixing matrix
-        A = np.matmul(c1, to_ress)
-        B = np.matmul(to_ress.T, np.matmul(c1, to_ress))
-        try:
-            # Note: we must use overwrite_a=False in order to be able to
-            # use the fall-back solution below in case a LinAlgError is raised
-            from_ress = linalg.solve(B.T, A.T, overwrite_a=False)
-        except linalg.LinAlgError:
-            # A or B is not full rank so exact solution is not tractable.
-            #  Using least-squares solution instead.
-            from_ress = linalg.lstsq(B.T, A.T, lapack_driver="gelsy")[0]
-        self.from_ress = from_ress[: self.n_keep, :]
+        if self.compute_unmixing:
+            # Compute unmixing matrix
+            A = np.matmul(c1, to_ress)
+            B = np.matmul(to_ress.T, np.matmul(c1, to_ress))
+            try:
+                # Note: we must use overwrite_a=False in order to be able to
+                # use the fall-back solution below in case a LinAlgError is raised
+                from_ress = linalg.solve(B.T, A.T, overwrite_a=False)
+            except linalg.LinAlgError:
+                # A or B is not full rank so exact solution is not tractable.
+                #  Using least-squares solution instead.
+                from_ress = linalg.lstsq(B.T, A.T, lapack_driver="gelsy")[0]
+            self.from_ress = from_ress[: self.n_keep, :]
 
         return self
 
@@ -186,82 +212,3 @@ class RESS(TransformerMixin, BaseEstimator):
         cov = EmpiricalCovariance().fit(X_combined)
         return cov.covariance_
 
-    def _gaussfilt(self, data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
-                   show=False):
-        """FIR filter with the window method and a gaussian window.
-
-        Parameters
-        ----------
-        data : ndarray
-            EEG data, shape=(n_samples, n_channels[, ...])
-        srate : int
-            Sampling rate in Hz.
-        f : float
-            Break frequency of filter.
-        fhwm : float
-            Standard deviation of filter, defined as full-width at half-maximum
-            in Hz.
-        n_harm : int
-            Number of harmonics of the frequency to consider.
-        shift : int
-            Amount shift peak frequency by (only useful when considering harmonics,
-            otherwise leave to 0).
-        return_empvals : bool
-            Return empirical values (default: False).
-
-        Returns
-        -------
-        filtdat : ndarray
-            Filtered data.
-        empVals : float
-            The empirical frequency and FWHM.
-
-        References
-        ----------
-        https://ccrma.stanford.edu/~jos/sasp/Window_Method_FIR_Filter.html
-
-        """
-        # input check
-        assert data.shape[1] <= data.shape[2], "n_channels must be less than n_samples"
-        assert (f - fwhm) >= 0, "increase frequency or decrease FWHM"
-        assert fwhm >= 0, "FWHM must be greater than 0"
-
-        # frequencies
-        hz = np.fft.fftfreq(data.shape[2], 1.0 / srate)
-        empVals = np.zeros((2,))
-
-        # compute empirical frequency and standard deviation
-        idx_p = np.searchsorted(hz[hz >= 0], f, "left")
-
-        # create Gaussian
-        fx = np.zeros_like(hz)
-        for i_harm in range(1, n_harm + 1):  # make one gaussian per harmonic
-            s = fwhm * (2 * np.pi - 1) / (4 * np.pi)  # normalized width
-            x = hz.copy()
-            x -= f * i_harm - shift
-            gauss = np.exp(-0.5 * (x / s) ** 2)  # gaussian
-            gauss = gauss / np.max(gauss)  # gain-normalized
-            fx = fx + gauss
-
-        # filter
-        if data.ndim == 2:
-            filtdat = 2 * np.real(
-                np.fft.ifft(np.fft.fft(data, axis=2) * fx[None, :], axis=2)
-            )
-        elif data.ndim == 3:
-            filtdat = 2 * np.real(
-                np.fft.ifft(np.fft.fft(data, axis=2) * fx[None, None, :], axis=2)
-            )
-
-        if return_empvals:
-            empVals[0] = hz[idx_p]
-            # find values closest to .5 after MINUS before the peak
-            empVals[1] = (
-                hz[idx_p - 1 + np.searchsorted(fx[:idx_p], 0.5)]
-                - hz[np.searchsorted(fx[:idx_p + 1], 0.5)]
-            )
-
-        if return_empvals:
-            return filtdat, empVals
-        else:
-            return filtdat

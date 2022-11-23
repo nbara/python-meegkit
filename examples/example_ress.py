@@ -65,7 +65,7 @@ ax[2].legend()
 # Enhance oscillatory activity using RESS
 # -----------------------------------------------------------------------------
 # Apply RESS
-r = ress.RESS(sfreq=sfreq, peak_freq=target)
+r = ress.RESS(sfreq=sfreq, peak_freq=target, compute_unmixing=True)
 out = r.fit_transform(data)
 
 # Compute PSD

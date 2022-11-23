@@ -66,7 +66,7 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
                                n_chans=n_chans, freq=target, sfreq=sfreq,
                                show=False)
     r = ress.RESS(sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
-        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep)
+        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep, compute_unmixing=True)
     out = r.fit_transform(data)
 
     nfft = 500
@@ -124,14 +124,14 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
         plt.legend()
 
     # 2 comps
-    r = ress.RESS(
+    _ = ress.RESS(
         sfreq=sfreq, peak_freq=target, n_keep=2
     ).fit_transform(data)
 
     # All comps
     r = ress.RESS(sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
-        peak_width=peak_width, neig_width=neig_width, n_keep=-1).fit(data)
-    out = r.transform(data)
+        peak_width=peak_width, neig_width=neig_width, n_keep=-1, compute_unmixing=True)
+    out = r.fit_transform(data)
     toress = r.to_ress
     fromress = r.from_ress
 
