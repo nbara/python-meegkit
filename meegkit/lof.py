@@ -3,7 +3,6 @@
 # License: BSD-3-Clause
 
 import logging
-import numpy as np
 from sklearn.neighbors import LocalOutlierFactor
 
 
@@ -24,7 +23,7 @@ class LOF():
 
         threshold : float
             Threshold to define outliers.
-            Range for this variable can be between 1.0 and any integer.
+            Theoretical threshold can range anywhere between 1.0 and any integer.
             Default: 1.5
 
             It is recommended to perform a CV (e.g., 10-fold) on training
@@ -69,10 +68,15 @@ class LOF():
 
         if X.ndim == 3: # in case the input data has 3 dimensions (epoched data)
             logging.warning('Expected input data with shape (n_channels, n_samples)')
+            return []
 
         if self.n_neighbors >= X.shape[0]:
             logging.warning('Number of neighbours cannot be greater than the '
                             'number of channels')
+            return []
+
+        if self.threshold < 1.0:
+            logging.warning('Invalid threshold. Try a positive integer >= 1.0')
             return []
 
         clf = LocalOutlierFactor(self.n_neighbors)
