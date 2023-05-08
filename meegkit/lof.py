@@ -7,7 +7,7 @@ from sklearn.neighbors import LocalOutlierFactor
 
 
 class LOF():
-    """ Local Outlier Factor.
+    """Local Outlier Factor.
 
         Local Outlier Factor (LOF) is an automatic, density-based
          outlier detection algorithm based on [1, 2]_.
@@ -53,7 +53,7 @@ class LOF():
         self.threshold = threshold
 
     def predict(self, X):
-        """ Detects and marks bad channels using Local Outlier Factor algorithm.
+        """Detect and mark bad channels using Local Outlier Factor algorithm.
 
         Parameters
         ----------
