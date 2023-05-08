@@ -8,40 +8,40 @@ from sklearn.neighbors import LocalOutlierFactor
 class LOF:
     """Local Outlier Factor.
 
-        Local Outlier Factor (LOF) is an automatic, density-based
-         outlier detection algorithm based on [1, 2]_.
+    Local Outlier Factor (LOF) is an automatic, density-based
+    outlier detection algorithm based on [1, 2]_.
 
-        Parameters
-        ----------
-        n_neighbours : int
-            Number of neighbours defining the local neighbourhood.
+    Parameters
+    ----------
+    n_neighbours : int
+        Number of neighbours defining the local neighbourhood.
 
-        metric: str in {'euclidean', 'nan_euclidean', 'cosine', ...
-                'cityblock', 'manhattan'}
-            Metric to use for distance computation. Default is “euclidean”
+    metric: str in {'euclidean', 'nan_euclidean', 'cosine',
+        'cityblock', 'manhattan'}
+        Metric to use for distance computation. Default is “euclidean”
 
-        threshold : float
-            Threshold to define outliers.
-            Theoretical threshold ranges anywhere between 1.0 and any integer.
-            Default: 1.5
+    threshold : float
+        Threshold to define outliers.
+        Theoretical threshold ranges anywhere between 1.0 and any integer.
+        Default: 1.5
 
-            It is recommended to perform a CV (e.g., 10-fold) on training
-            set to calibrate this parameter for the given M/EEG dataset.
+    It is recommended to perform a CV (e.g., 10-fold) on training
+    set to calibrate this parameter for the given M/EEG dataset.
 
-            See [2] for details.
+    See [2] for details.
 
 
-        References
-        ----------
-        .. [1] Breunig M, Kriegel HP, Ng RT, Sander J.
+    References
+    ----------
+    .. [1] Breunig M, Kriegel HP, Ng RT, Sander J.
         2000. LOF: identifying density-based local outliers.
         SIGMOD Rec. 29, 2, 93–104. https://doi.org/10.1145/335191.335388
-        .. [2] Kumaravel VP, Buiatti M, Parise E, Farella E.
+    .. [2] Kumaravel VP, Buiatti M, Parise E, Farella E.
         2022. Adaptable and Robust EEG Bad Channel Detection Using
         Local Outlier Factor (LOF). Sensors (Basel). 2022 Sep 27;22(19):7314.
         doi: 10.3390/s22197314. PMID: 36236413; PMCID: PMC9571252.
 
-        """
+    """
 
     def __init__(self, n_neighbors=20,  metric='euclidean',
                  threshold=1.5, **kwargs):
@@ -51,7 +51,7 @@ class LOF:
         self.threshold = threshold
 
     def predict(self, X):
-        """Detect and mark bad channels using Local Outlier Factor algorithm.
+        """Detect bad channels using Local Outlier Factor algorithm.
 
         Parameters
         ----------
@@ -63,7 +63,6 @@ class LOF:
         bad_channel_indices : Detected bad channel indices.
 
         """
-
         if X.ndim == 3:  # in case the input data is epoched
             logging.warning('Expected input data with shape '
                             '(n_channels, n_samples)')
