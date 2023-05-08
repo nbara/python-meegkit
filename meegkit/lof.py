@@ -1,12 +1,11 @@
 # Authors: Velu Prabhakar Kumaravel <vkumaravel@fbk.eu>
-#          
 # License: BSD-3-Clause
 
 import logging
 from sklearn.neighbors import LocalOutlierFactor
 
 
-class LOF():
+class LOF:
     """Local Outlier Factor.
 
         Local Outlier Factor (LOF) is an automatic, density-based
@@ -23,7 +22,7 @@ class LOF():
 
         threshold : float
             Threshold to define outliers.
-            Theoretical threshold can range anywhere between 1.0 and any integer.
+            Theoretical threshold ranges anywhere between 1.0 and any integer.
             Default: 1.5
 
             It is recommended to perform a CV (e.g., 10-fold) on training
@@ -34,7 +33,7 @@ class LOF():
 
         References
         ----------
-        .. [1] Markus M. Breunig, Hans-Peter Kriegel, Raymond T. Ng, & Jörg Sander.
+        .. [1] Breunig M, Kriegel HP, Ng RT, Sander J.
         2000. LOF: identifying density-based local outliers.
         SIGMOD Rec. 29, 2, 93–104. https://doi.org/10.1145/335191.335388
         .. [2] Kumaravel VP, Buiatti M, Parise E, Farella E.
@@ -44,9 +43,8 @@ class LOF():
 
         """
 
-    def __init__(self, n_neighbors=20,  metric = 'euclidean',
-                 threshold = 1.5, **kwargs):
-
+    def __init__(self, n_neighbors=20,  metric='euclidean',
+                 threshold=1.5, **kwargs):
 
         self.n_neighbors = n_neighbors
         self.metric = metric
@@ -66,8 +64,9 @@ class LOF():
 
         """
 
-        if X.ndim == 3: # in case the input data has 3 dimensions (epoched data)
-            logging.warning('Expected input data with shape (n_channels, n_samples)')
+        if X.ndim == 3:  # in case the input data is epoched
+            logging.warning('Expected input data with shape '
+                            '(n_channels, n_samples)')
             return []
 
         if self.n_neighbors >= X.shape[0]:
