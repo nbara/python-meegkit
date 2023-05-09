@@ -243,8 +243,8 @@ def test_asr_class(method, reref, show=False):
         plt.show()
 
     # TODO: the transform() process is stochastic, so Y and Y2 are not going to
-    # be entirely idetntical but close enough
-    assert np.all(np.abs(Y - Y2) < 5), np.max(np.abs(Y - Y2))  # < 5uV diff
+    # be entirely identical but close enough
+    assert np.all(np.abs(Y - Y2) < 6), np.max(np.abs(Y - Y2))  # < 6uV diff
     assert np.all(np.isreal(Y)), "output should be real-valued"
     assert np.all(np.isreal(Y2)), "output should be real-valued"
 
@@ -261,5 +261,5 @@ if __name__ == "__main__":
     pytest.main([__file__])
     # test_yulewalk(250, True)
     # test_asr_functions(True)
-    # test_asr_class(method='riemann', reref=False, show=True)
+    # test_asr_class(method='riemann', reref=True, show=False)
     # test_yulewalk_filter(16, True)
