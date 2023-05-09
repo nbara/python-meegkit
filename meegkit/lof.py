@@ -15,27 +15,25 @@ class LOF:
     ----------
     n_neighbours : int
         Number of neighbours defining the local neighbourhood.
-
     metric: str in {'euclidean', 'nan_euclidean', 'cosine',
-        'cityblock', 'manhattan'}
+                    'cityblock', 'manhattan'}
         Metric to use for distance computation. Default is “euclidean”
-
     threshold : float
-        Threshold to define outliers.
-        Theoretical threshold ranges anywhere between 1.0 and any integer.
-        Default: 1.5
+        Threshold to define outliers. Theoretical threshold ranges anywhere
+        between 1.0 and any integer. Default: 1.5
 
-    It is recommended to perform a CV (e.g., 10-fold) on training
-    set to calibrate this parameter for the given M/EEG dataset.
+    Notes
+    -----
+    It is recommended to perform a CV (e.g., 10-fold) on training set to
+    calibrate this parameter for the given M/EEG dataset.
 
     See [2] for details.
-
 
     References
     ----------
     .. [1] Breunig M, Kriegel HP, Ng RT, Sander J.
         2000. LOF: identifying density-based local outliers.
-        SIGMOD Rec. 29, 2, 93–104. https://doi.org/10.1145/335191.335388
+        SIGMOD Rec. 29, 2, 93-104. https://doi.org/10.1145/335191.335388
     .. [2] Kumaravel VP, Buiatti M, Parise E, Farella E.
         2022. Adaptable and Robust EEG Bad Channel Detection Using
         Local Outlier Factor (LOF). Sensors (Basel). 2022 Sep 27;22(19):7314.
