@@ -26,8 +26,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -e .[docs]
-      - name: Running the Sphinx to gh-pages Action
-        uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.1.0
-        with:
-          branch: master
-          dir_docs: doc
+      - name: Build HTML
+        run: |
+          cd doc/
+          make html
+      - name: Run ghp-import
+        run: |
+          ghp-import -n -p -f doc/_build/html
