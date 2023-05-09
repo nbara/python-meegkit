@@ -1,3 +1,4 @@
+"""Local Outlier Factor (LOF)."""
 # Authors: Velu Prabhakar Kumaravel <vkumaravel@fbk.eu>
 # License: BSD-3-Clause
 
