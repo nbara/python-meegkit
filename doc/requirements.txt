@@ -1,9 +1,0 @@
-sphinx
-sphinx-copybutton
-sphinxemoji
-pydata-sphinx-theme
-numpydoc
-matplotlib
-pillow
-sphinx-gallery
-jupyter-sphinx
