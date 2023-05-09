@@ -3,7 +3,7 @@
 [![codecov](https://codecov.io/gh/nbara/python-meegkit/branch/master/graph/badge.svg)](https://codecov.io/gh/nbara/python-meegkit)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
 [![DOI](https://zenodo.org/badge/117451752.svg)](https://zenodo.org/badge/latestdoi/117451752)
-[![twitter](https://img.shields.io/twitter/follow/lebababa?label=Twitter&style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
+[![twitter](https://img.shields.io/twitter/follow/lebababa?style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
 
 # MEEGkit
 
@@ -54,7 +54,7 @@ Other available options are `[docs]` (which installs dependencies required to bu
 
 ## References
 
-### 1. CCA, STAR, SNS, DSS, ZapLine, and robust detrending
+### 1. CCA, STAR, SNS, DSS, ZapLine, and Robust Detrending
 
 This is mostly a translation of Matlab code from the [NoiseTools toolbox](http://audition.ens.fr/adc/NoiseTools/) by Alain de Cheveigné. It builds on an initial python implementation by [Pedro Alcocer](https://github.com/pealco).
 
@@ -83,10 +83,9 @@ If you use this code, you should cite the relevant methods from the original art
     Journal of Neuroscience Methods, 168(1), 195–202. https://doi.org/10.1016/j.jneumeth.2007.09.012
 [10] de Cheveigné, A., & Simon, J. Z. (2007). Denoising based on time-shift PCA.
      Journal of Neuroscience Methods, 165(2), 297–305. https://doi.org/10.1016/j.jneumeth.2007.06.003
-
 ```
 
-### 2. Artifact subspace reconstruction (ASR)
+### 2. Artifact Subspace Reconstruction (ASR)
 
 The base code is inspired from the original [EEGLAB inplementation](https://github.com/sccn/clean_rawdata) [1], while the riemannian variant [2] was adapted from the [rASR toolbox](https://github.com/s4rify/rASRMatlab) by Sarah Blum.
 
@@ -101,7 +100,7 @@ If you use this code, you should cite the relevant methods from the original art
     13, 141.
 ```
 
-### 3. Rhythmic entrainment source separation (RESS)
+### 3. Rhythmic Entrainment Source Separation (RESS)
 
 The code is based on [Matlab code from Mike X. Cohen](https://mikexcohen.com/data/) [1]
 
@@ -129,4 +128,16 @@ If you use this, you should cite the following articles:
 [3] X. Chen, Y. Wang, M. Nakanishi, X. Gao, T. -P. Jung, S. Gao,
     "High-speed spelling with a noninvasive brain-computer interface",
     Proc. Int. Natl. Acad. Sci. U. S. A, 112(44): E6058-6067, 2015.
+```
+
+### 5. Local Outlier Factor (LOF)
+
+If you use this, you should cite the following article:
+
+```sql
+[1] Breunig M, Kriegel HP, Ng RT, Sander J. 2000. LOF: identifying density-based 
+    local outliers. SIGMOD Rec. 29, 2, 93-104. https://doi.org/10.1145/335191.335388
+[2] Kumaravel VP, Buiatti M, Parise E, Farella E. 2022. Adaptable and Robust 
+    EEG Bad Channel Detection Using Local Outlier Factor (LOF). Sensors (Basel). 
+    2022 Sep 27;22(19):7314. https://doi.org/10.3390/s22197314.
 ```
