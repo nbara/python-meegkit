@@ -13,7 +13,7 @@ on:
 jobs:
   sphinx_docs_to_gh-pages:
     runs-on: ubuntu-latest
-    name: Sphinx docs to gh-pages
+    name: deploy to gh-pages
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.10
