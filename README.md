@@ -1,5 +1,5 @@
-[![unit-tests](https://github.com/nbara/python-meegkit/workflows/unit-tests/badge.svg?style=flat)](https://github.com/nbara/python-meegkit/actions?workflow=unit-tests)
-[![documentation](https://img.shields.io/travis/nbara/python-meegkit.svg?label=documentation&logo=travis)](https://www.travis-ci.com/github/nbara/python-meegkit)
+[![tests](https://github.com/nbara/python-meegkit/workflows/tests/badge.svg?style=flat)](https://github.com/nbara/python-meegkit/actions?workflow=tests)
+[![docs](https://github.com/nbara/python-meegkit/workflows/docs/badge.svg?style=flat)](https://github.com/nbara/python-meegkit/actions?workflow=docs)
 [![codecov](https://codecov.io/gh/nbara/python-meegkit/branch/master/graph/badge.svg)](https://codecov.io/gh/nbara/python-meegkit)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
 [![DOI](https://zenodo.org/badge/117451752.svg)](https://zenodo.org/badge/latestdoi/117451752)

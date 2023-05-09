@@ -22,7 +22,7 @@ setup(
         "Tracker": "https://github.com/nbara/python-meegkit/issues/",
     },
     platforms="any",
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     install_requires=["numpy", "scipy", "scikit-learn", "joblib", "pandas",
                       "matplotlib", "tqdm", "pyriemann", "statsmodels"],
     zip_safe=False)
