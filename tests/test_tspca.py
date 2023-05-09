@@ -51,7 +51,8 @@ def test_tspca_sns_dss():  # TODO
     y_tspca_sns_dss = fold(
         np.dot(unfold(y_tspca_sns), todss), y_tspca_sns.shape[0])
 
-    return y_tspca, y_tspca_sns, y_tspca_sns_dss
+    # TODO do something with it
+    assert y_tspca_sns_dss.shape == noisy_data.shape
 
 
 def test_tsr(show=True):
@@ -107,6 +108,7 @@ def test_tsr(show=True):
         plt.show()
 
 if __name__ == '__main__':
-    # import pytest
-    # pytest.main([__file__])
-    test_tsr()
+    import pytest
+    pytest.main([__file__])
+    # test_tspca_sns_dss()
+    # test_tsr()

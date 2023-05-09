@@ -9,8 +9,6 @@ from meegkit.utils.asr import yulewalk, yulewalk_filter
 from meegkit.utils.matrix import sliding_window
 from scipy import signal
 
-np.random.seed(9)
-
 # Data files
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 # file = os.path.join(THIS_FOLDER, 'data', 'eeg_raw.fif')
@@ -175,6 +173,7 @@ def test_asr_functions(show=False, method='riemann'):
 @pytest.mark.parametrize(argnames='reref', argvalues=(False, True))
 def test_asr_class(method, reref, show=False):
     """Test ASR class (simulate online use)."""
+    np.random.default_rng(9)
     raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
     sfreq = 250
     # Train on a clean portion of data
