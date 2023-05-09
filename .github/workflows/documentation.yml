@@ -16,9 +16,7 @@ jobs:
     name: Sphinx docs to gh-pages
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.10
         uses: actions/setup-python@v1
         with:
           python-version: "3.10"
@@ -29,5 +27,5 @@ jobs:
       - name: Running the Sphinx to gh-pages Action
         uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.1.0
         with:
-          branch: main
+          branch: master
           dir_docs: doc
