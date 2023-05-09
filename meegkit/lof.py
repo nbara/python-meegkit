@@ -6,11 +6,11 @@ import logging
 from sklearn.neighbors import LocalOutlierFactor
 
 
-class LOF:
+class LOF():
     """Local Outlier Factor.
 
-    Local Outlier Factor (LOF) is an automatic, density-based
-    outlier detection algorithm based on [1, 2]_.
+    Local Outlier Factor (LOF) is an automatic, density-based outlier detection
+    algorithm based on [1]_ and [2]_.
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ class LOF:
     It is recommended to perform a CV (e.g., 10-fold) on training set to
     calibrate this parameter for the given M/EEG dataset.
 
-    See [2] for details.
+    See [2]_ for details.
 
     References
     ----------
