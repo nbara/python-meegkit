@@ -1,27 +1,30 @@
-name: Deploy GitHub pages
+name: documentation
 
 on:
   push:
     branches:
       - master
-  pull_request:
-    branches:
-      - master
+
+# workflow_dispatch: # Uncomment line to be able to trigger action manually
+
 jobs:
-  build_doc:
+  sphinx_docs_to_gh-pages:
     runs-on: ubuntu-latest
+    name: Sphinx docs to gh-pages
     steps:
-      - uses: actions/checkout@v2
-      - name: Generate HTML docs
-        uses: ammaraskar/sphinx-action@master
+      - uses: actions/checkout@v3
         with:
-          docs-folder: "doc/"
-          pre-build-command: |
-            apt-get update
-            pip install -r requirements.txt
-            pip install -e ".[docs]"
-      - name: Upload generated HTML as artifact
-        uses: actions/upload-artifact@v2
+          fetch-depth: 0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
         with:
-          name: DocHTML
-          path: doc/_build/html/
+          python-version: 3.10
+      - name: Install meegkit and dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -e .[docs]
+      - name: Running the Sphinx to gh-pages Action
+        uses: uibcdf/action-sphinx-docs-to-gh-pages@v1.1.0
+        with:
+          branch: main
+          dir_docs: doc
