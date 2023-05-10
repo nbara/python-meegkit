@@ -20,10 +20,12 @@ documentation = "https://nbara.github.io/python-meegkit/"
 tracker = "https://github.com/nbara/python-meegkit/issues/"
 
 [project.optional-dependencies]
+extra = ["pymanopt"]
 docs = ["sphinx", "sphinx-gallery", "sphinx-bootstrap_theme", "sphinx-copybutton",
-        "sphinxemoji", "numpydoc", "pydata-sphinx-theme", "pillow", "jupyter-sphinx"]
-tests = ["pytest", "pytest-cov", "ruff", "pytest-benchmark", "pytest-timeout",
-         "codespell>=2.2.4", "coverage[toml]", "pre-commit"]
+        "sphinxemoji", "numpydoc", "pydata-sphinx-theme", "pillow", "jupyter-sphinx",
+        "ghp-import", "meegkit[extra]"]
+tests = ["pytest", "pytest-cov", "codecov", "codespell", "flake8", "pydocstyle",
+         "meegkit[extra]"]
 
 ##################################
 #       Package building         #
