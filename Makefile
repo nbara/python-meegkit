@@ -75,12 +75,12 @@ install-requirements:
 	@pip install -q -r requirements.in
 
 install:
-	@echo "Installing nmbci package..."
+	@echo "Installing  package..."
 	@pip install -q --no-deps .
 	@echo "\x1b[1m\x1b[32m * Package successfully installed! \x1b[0m"
 
 install-dev:
-	@echo "Installing nmbci package in editable mode..."
+	@echo "Installing  package in editable mode..."
 	@pip install -q -e ".[docs, tests]" --config-settings editable_mode=compat
 	@echo "\x1b[1m\x1b[32m * Package successfully installed! \x1b[0m"
 
