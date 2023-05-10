@@ -5,7 +5,7 @@
 [![DOI](https://zenodo.org/badge/117451752.svg)](https://zenodo.org/badge/latestdoi/117451752)
 [![twitter](https://img.shields.io/twitter/follow/lebababa?style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
 
-# MEEGkit
+# `MEEGkit`
 
 Denoising tools for M/EEG processing in Python 3.8+.
 

@@ -10,7 +10,7 @@ Introduction
 ------------
 
 ``meegkit`` is a collection of EEG and MEG denoising techniques for
-**Python 3.6+**. Please feel free to contribute, or suggest new analyses. Keep
+**Python 3.8+**. Please feel free to contribute, or suggest new analyses. Keep
 in mind that this is mostly development code, and as such is likely to change
 without any notice. Also, while most of the methods have been fairly robustly
 tested, bugs can (and should!) be expected.
