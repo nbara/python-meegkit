@@ -8,7 +8,7 @@ from .covariances import convmtx
 
 
 def modulation_index(phase, amp, n_bins=18):
-    u"""Compute the Modulation Index (MI) between two signals.
+    """Compute the Modulation Index (MI) between two signals.
 
     MI is a measure of the amount of phase-amplitude coupling. Phase angles are
     expected to be in radians [1]_. MI is derived from the Kullbach-Leibner
@@ -36,7 +36,7 @@ def modulation_index(phase, amp, n_bins=18):
     Examples
     --------
     >> phas = np.random.rand(100, 1) * 2 * np.pi - np.pi
-    >> ampl = np.random.randn(100, 1) * 30 + 100
+    >> ampl = rng.standard_normal((100, 1) * 30 + 100
     >> MI, KL = modulation_index(phas, ampl)
 
     Notes
@@ -78,7 +78,7 @@ def modulation_index(phase, amp, n_bins=18):
     phase = phase.squeeze()
     amp = amp.squeeze()
     if phase.shape != amp.shape or phase.ndims > 1 or amp.ndims:
-        raise AttributeError('Inputs must be 1D vectors of same length.')
+        raise AttributeError("Inputs must be 1D vectors of same length.")
 
     # Convert phase to degrees
     phasedeg = np.degrees(phase)
@@ -111,7 +111,7 @@ def modulation_index(phase, amp, n_bins=18):
     return MI, KL
 
 
-def smooth(x, window_len, window='square', axis=0, align='left'):
+def smooth(x, window_len, window="square", axis=0, align="left"):
     """Smooth a signal using a window with requested size along a given axis.
 
     This method is based on the convolution of a scaled window with the signal.
@@ -160,35 +160,35 @@ def smooth(x, window_len, window='square', axis=0, align='left'):
 
     """
     if x.shape[axis] < window_len:
-        raise ValueError('Input vector needs to be bigger than window size.')
-    if window not in ['square', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError('Unknown window type.')
+        raise ValueError("Input vector needs to be bigger than window size.")
+    if window not in ["square", "hanning", "hamming", "bartlett", "blackman"]:
+        raise ValueError("Unknown window type.")
     if window_len == 0:
-        raise ValueError('Smoothing kernel must be at least 1 sample wide')
+        raise ValueError("Smoothing kernel must be at least 1 sample wide")
     if window_len == 1:
         return x
 
-    def _smooth1d(x, n, align='left'):
+    def _smooth1d(x, n, align="left"):
         if x.ndim != 1:
-            raise ValueError('Smooth only accepts 1D arrays')
+            raise ValueError("Smooth only accepts 1D arrays")
 
         frac, n = np.modf(n)
         n = int(n)
 
-        if window == 'square':  # moving average
-            w = np.ones(n, 'd')
+        if window == "square":  # moving average
+            w = np.ones(n, "d")
             w = np.r_[w, frac]
         else:
-            w = eval('np.' + window + '(n)')
+            w = eval("np." + window + "(n)")
 
-        if align == 'center':
+        if align == "center":
             a = x[n - 1:0:-1]
             b = x[-2:-n - 1:-1]
             s = np.r_[a, x, b]
-            out = np.convolve(w / w.sum(), s, mode='same')
+            out = np.convolve(w / w.sum(), s, mode="same")
             return out[len(a):-len(b)]
 
-        elif align == 'left':
+        elif align == "left":
             out = ss.lfilter(w / w.sum(), 1, x)
             return out
 
@@ -219,7 +219,7 @@ def lowpass_env_filtering(x, cutoff=150., n=1, sfreq=22050):
         Low-pass filtered signal.
 
     """
-    b, a = ss.butter(N=n, Wn=cutoff * 2. / sfreq, btype='lowpass')
+    b, a = ss.butter(N=n, Wn=cutoff * 2. / sfreq, btype="lowpass")
     return ss.lfilter(b, a, x)
 
 
@@ -261,7 +261,7 @@ def spectral_envelope(x, sfreq, lowpass=32):
     """
     x = np.squeeze(x)
     if x.ndim > 1:
-        raise AttributeError('x must be 1D')
+        raise AttributeError("x must be 1D")
     if lowpass is None:
         lowpass = sfreq / 2
 
@@ -272,7 +272,7 @@ def spectral_envelope(x, sfreq, lowpass=32):
     s = np.r_[a, x, b]
 
     # Convolve squared signal with a square window and take cubic root
-    y = np.convolve(s ** 2, np.ones((win,)) / win, mode='same') ** (1 / 3)
+    y = np.convolve(s ** 2, np.ones((win,)) / win, mode="same") ** (1 / 3)
     return y[len(a):-len(b)]
 
 
@@ -314,16 +314,16 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
     """
     # input check
     assert (data.shape[1] <= data.shape[0]
-            ), 'n_channels must be less than n_samples'
-    assert ((f - fwhm) >= 0), 'increase frequency or decrease FWHM'
-    assert (fwhm >= 0), 'FWHM must be greater than 0'
+            ), "n_channels must be less than n_samples"
+    assert ((f - fwhm) >= 0), "increase frequency or decrease FWHM"
+    assert (fwhm >= 0), "FWHM must be greater than 0"
 
     # frequencies
     hz = np.fft.fftfreq(data.shape[0], 1. / srate)
     empVals = np.zeros((2,))
 
     # compute empirical frequency and standard deviation
-    idx_p = np.searchsorted(hz[hz >= 0], f, 'left')
+    idx_p = np.searchsorted(hz[hz >= 0], f, "left")
 
     # create Gaussian
     fx = np.zeros_like(hz)
@@ -363,15 +363,15 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
         # inspect the Gaussian (turned off by default)
         import matplotlib.pyplot as plt
         plt.figure(1)
-        plt.plot(hz, fx, 'o-')
+        plt.plot(hz, fx, "o-")
         plt.xlim([0, None])
 
-        title = 'Requested: {}, {} Hz\nEmpirical: {}, {} Hz'.format(
+        title = "Requested: {}, {} Hz\nEmpirical: {}, {} Hz".format(
             f, fwhm, empVals[0], empVals[1]
         )
         plt.title(title)
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Amplitude gain')
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("Amplitude gain")
         plt.show()
 
     if return_empvals:
@@ -524,7 +524,7 @@ def stmcb(x, u_in=None, q=None, p=None, niter=5, a_in=None):
 
     a = a_in
     N = len(x)
-    for i in range(niter):
+    for _i in range(niter):
         u = lfilter([1], a, x)
         v = lfilter([1], a, u_in)
         C1 = convmtx(u, (p + 1)).T

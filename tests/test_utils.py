@@ -1,16 +1,33 @@
 import numpy as np
-from meegkit.utils import (bootstrap_ci, demean, find_outlier_samples,
-                           find_outlier_trials, fold, mean_over_trials,
-                           multishift, multismooth, relshift, rms, shift,
-                           shiftnd, unfold, widen_mask, cronbach, robust_mean)
 from numpy.testing import assert_almost_equal, assert_equal
+
+from meegkit.utils import (
+    bootstrap_ci,
+    cronbach,
+    demean,
+    find_outlier_samples,
+    find_outlier_trials,
+    fold,
+    mean_over_trials,
+    multishift,
+    multismooth,
+    relshift,
+    rms,
+    robust_mean,
+    shift,
+    shiftnd,
+    unfold,
+    widen_mask,
+)
+
+rng = np.random.default_rng()
 
 
 def _sim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
     """Create synthetic data."""
     # source
     source = np.sin(2 * np.pi * np.linspace(0, .5, n_times - t0))[np.newaxis].T
-    s = source * np.random.randn(1, n_chans)
+    s = source * rng.standard_normal((1, n_chans))
     s = s[:, :, np.newaxis]
     s = np.tile(s, (1, 1, n_trials))
     signal = np.zeros((n_times, n_chans, n_trials))
@@ -18,8 +35,8 @@ def _sim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
 
     # noise
     noise = np.dot(
-        unfold(np.random.randn(n_times, noise_dim, n_trials)),
-        np.random.randn(noise_dim, n_chans))
+        unfold(rng.standard_normal((n_times, noise_dim, n_trials))),
+        rng.standard_normal((noise_dim, n_chans)))
     noise = fold(noise, n_times)
 
     # mix signal and noise
@@ -42,7 +59,7 @@ def test_multishift():
     x = np.ones((4, 4, 3))
     x[..., 1] *= 2
     x[..., 2] *= 3
-    xx = multishift(x, [-1, -2], reshape=True, solution='valid')
+    xx = multishift(x, [-1, -2], reshape=True, solution="valid")
     assert_equal(xx[..., 0], np.array([[1., 1., 1., 1., 1., 1., 1., 1.],
                                        [1., 1., 1., 1., 1., 1., 1., 1.]]))
     assert_equal(xx[..., 1], np.array([[1., 1., 1., 1., 1., 1., 1., 1.],
@@ -125,7 +142,7 @@ def test_widen_mask():
 
 def test_multismooth():
     """Test smoothing."""
-    x = (np.random.randn(1000, 1) / 2 +
+    x = (rng.standard_normal((1000, 1)) / 2 +
          np.cos(2 * np.pi * 3 * np.linspace(0, 20, 1000))[:, None])
 
     for i in np.arange(1, 10, 1):
@@ -141,7 +158,7 @@ def test_demean(show=False):
     n_trials = 100
     n_chans = 8
     n_times = 1000
-    x = np.random.randn(n_times, n_chans, n_trials)
+    x = rng.standard_normal((n_times, n_chans, n_trials))
     x, s = _sim_data(n_times, n_chans, n_trials, 8, SNR=10)
 
     # 1. demean and check trial average is almost zero
@@ -158,14 +175,14 @@ def test_demean(show=False):
     if show:
         import matplotlib.pyplot as plt
         f, ax = plt.subplots(3, 1)
-        ax[0].plot(times, x[:, 0].mean(-1), label='noisy_data')
-        ax[0].plot(times, s[:, 0].mean(-1), label='signal')
+        ax[0].plot(times, x[:, 0].mean(-1), label="noisy_data")
+        ax[0].plot(times, s[:, 0].mean(-1), label="signal")
         ax[0].legend()
-        ax[1].plot(times, x1[:, 0].mean(-1), label='mean over entire epoch')
+        ax[1].plot(times, x1[:, 0].mean(-1), label="mean over entire epoch")
         ax[1].legend()
-        ax[2].plot(x2[:, 0].mean(-1), label='weighted mean')
+        ax[2].plot(x2[:, 0].mean(-1), label="weighted mean")
         plt.gca().set_prop_cycle(None)
-        ax[2].plot(s[:, 0].mean(-1), 'k:')
+        ax[2].plot(s[:, 0].mean(-1), "k:")
         ax[2].legend()
         plt.show()
 
@@ -194,7 +211,7 @@ def test_demean(show=False):
 
 def test_computeci():
     """Compute CI."""
-    x = np.random.randn(1000, 8, 100)
+    x = rng.standard_normal((1000, 8, 100))
     ci_low, ci_high = bootstrap_ci(x)
 
     assert ci_low.shape == (1000, 8)
@@ -205,7 +222,7 @@ def test_computeci():
     # assert ci_low.shape == (1000,)
     # assert ci_high.shape == (1000,)
 
-    x = np.random.randn(1000, 100)
+    x = rng.standard_normal((1000, 100))
     ci_low, ci_high = bootstrap_ci(x)
 
     assert ci_low.shape == (1000,)
@@ -214,7 +231,7 @@ def test_computeci():
 
 def test_outliers(show=False):
     """Test outlier detection."""
-    x = np.random.randn(250, 8, 50)  # 50 trials, 8, channels
+    x = rng.standard_normal((250, 8, 50))  # 50 trials, 8, channels
     x[..., :5] *= 10  # 5 first trials are outliers
 
     # Pass standard threshold
@@ -248,13 +265,13 @@ def test_cronbach():
     m = robust_mean(X, axis=0)
     assert m.shape == (X.shape[1], X.shape[2])
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
 
     # test_outliers()
     # import matplotlib.pyplot as plt
-    # x = np.random.randn(1000,)
+    # x = rng.standard_normal((1000,)
     # y = multismooth(x, np.arange(1, 200, 4))
     # plt.imshow(y.T, aspect='auto')
     # plt.show()

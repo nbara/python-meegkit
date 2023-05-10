@@ -1,8 +1,7 @@
 """TRCA utils."""
 import numpy as np
-
-from scipy.signal import filtfilt, cheb1ord, cheby1
 from scipy import stats
+from scipy.signal import cheb1ord, cheby1, filtfilt
 
 
 def round_half_up(num, decimals=0):
@@ -91,10 +90,10 @@ def itr(n, p, t):
     itr = 0
 
     if (p < 0 or 1 < p):
-        raise ValueError('Accuracy need to be between 0 and 1.')
+        raise ValueError("Accuracy need to be between 0 and 1.")
     elif (p < 1 / n):
         itr = 0
-        raise ValueError('ITR might be incorrect because accuracy < chance')
+        raise ValueError("ITR might be incorrect because accuracy < chance")
     elif (p == 1):
         itr = np.log2(n) * 60 / t
     else:
@@ -137,7 +136,7 @@ def bandpass(eeg, sfreq, Wp, Ws):
 
     # the arguments 'axis=0, padtype='odd', padlen=3*(max(len(B),len(A))-1)'
     # correspond to Matlab filtfilt : https://dsp.stackexchange.com/a/47945
-    y = filtfilt(B, A, eeg, axis=0, padtype='odd',
+    y = filtfilt(B, A, eeg, axis=0, padtype="odd",
                  padlen=3 * (max(len(B), len(A)) - 1))
     return y
 

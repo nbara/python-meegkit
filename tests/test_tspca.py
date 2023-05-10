@@ -1,9 +1,10 @@
+import matplotlib.pyplot as plt
 import numpy as np
 
 from meegkit import dss, sns, tspca
 from meegkit.utils import demean, fold, unfold
 
-import matplotlib.pyplot as plt
+rng = np.random.default_rng(9)
 
 
 def test_tspca_sns_dss():  # TODO
@@ -16,12 +17,12 @@ def test_tspca_sns_dss():  # TODO
     Remove non-repeatable components with DSS.
     """
     # Random data (time*chans*trials)
-    data = np.random.random((800, 102, 200))
-    ref = np.random.random((800, 3, 200))
+    data = rng.random((800, 102, 200))
+    ref = rng.random((800, 3, 200))
 
     # remove means
     noisy_data = demean(data)
-    noisy_ref = demean(ref)
+    demean(ref)
 
     # Apply TSPCA
     # -------------------------------------------------------------------------
@@ -34,18 +35,18 @@ def test_tspca_sns_dss():  # TODO
     # Apply SNS
     # -------------------------------------------------------------------------
     nneighbors = 10
-    print('SNS...')
+    print("SNS...")
     y_tspca_sns, r = sns.sns(y_tspca, nneighbors)
-    print('\b OK!')
+    print("\b OK!")
 
     # apply DSS
     # -------------------------------------------------------------------------
-    print('DSS...')
+    print("DSS...")
     # Keep all PC components
     y_tspca_sns = demean(y_tspca_sns)
     print(y_tspca_sns.shape)
     todss, fromdss, _, _ = dss.dss1(y_tspca_sns)
-    print('\b OK!')
+    print("\b OK!")
 
     # c3 = DSS components
     y_tspca_sns_dss = fold(
@@ -60,7 +61,7 @@ def test_tsr(show=True):
     sr = 200
     nsamples = 10000
     nchans = 10
-    x = np.random.randn(nsamples, nchans)
+    x = rng.standard_normal((nsamples, nchans))
 
     # artifact + harmonics
     artifact = np.sin(np.arange(nsamples) / sr * 2 * np.pi * 10)[:, None]
@@ -78,10 +79,10 @@ def test_tsr(show=True):
         shifts=[0])
 
     if show:
-        f, ax = plt.subplots(2, 1, num='without shifts')
-        ax[0].plot(y[:500, 0], 'grey', label='recovered signal')
-        ax[0].plot(x[:500, 0], ':', label='real signal')
-        ax[1].plot((y - x)[:500], label='residual')
+        f, ax = plt.subplots(2, 1, num="without shifts")
+        ax[0].plot(y[:500, 0], "grey", label="recovered signal")
+        ax[0].plot(x[:500, 0], ":", label="real signal")
+        ax[1].plot((y - x)[:500], label="residual")
         ax[0].legend()
         ax[1].legend()
         # plt.show()
@@ -97,17 +98,17 @@ def test_tsr(show=True):
         shifts=[-1, 0, 1])
 
     if show:
-        f, ax = plt.subplots(3, 1, num='with shifts')
-        ax[0].plot(signal[:500], label='signal + noise')
-        ax[1].plot(x[:500, 0], 'grey', label='real signal')
-        ax[1].plot(y[:500, 0], ':', label='recovered signal')
-        ax[2].plot((signal - y)[:500, 0], label='before - after')
+        f, ax = plt.subplots(3, 1, num="with shifts")
+        ax[0].plot(signal[:500], label="signal + noise")
+        ax[1].plot(x[:500, 0], "grey", label="real signal")
+        ax[1].plot(y[:500, 0], ":", label="recovered signal")
+        ax[2].plot((signal - y)[:500, 0], label="before - after")
         ax[0].legend()
         ax[1].legend()
         ax[2].legend()
         plt.show()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
     # test_tspca_sns_dss()

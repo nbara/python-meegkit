@@ -1,12 +1,13 @@
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from meegkit.utils import tscov, tsxcov, convmtx
+from meegkit.utils import convmtx, tscov, tsxcov
 
+rng = np.random.default_rng(10)
 
 def test_tscov():
     """Test time-shift covariance."""
-    x = 2 * np.eye(3) + 0.1 * np.random.rand(3)
+    x = 2 * np.eye(3) + 0.1 * rng.random(3)
     x = x - np.mean(x, 0)
 
     # Compare 0-lag case with numpy.cov()
@@ -87,7 +88,7 @@ def test_convmtx():
                   ])
     )
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # import pytest
     # pytest.main([__file__])
     test_convmtx()

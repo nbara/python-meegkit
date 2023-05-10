@@ -4,8 +4,11 @@ import numpy as np
 import pytest
 import scipy.signal as ss
 from scipy.linalg import pinv
+
 from meegkit import ress
 from meegkit.utils import fold, matmul3d, rms, snr_spectrum, unfold
+
+rng = np.random.default_rng(9)
 
 
 def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
@@ -20,7 +23,7 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
     """
     # source
     source = np.sin(2 * np.pi * freq * np.arange(n_times - t0) / sfreq)[None].T
-    s = source * np.random.randn(1, n_chans)
+    s = source * rng.standard_normal((1, n_chans))
     s = s[:, :, np.newaxis]
     s = np.tile(s, (1, 1, n_trials))
     signal = np.zeros((n_times, n_chans, n_trials))
@@ -28,8 +31,8 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
 
     # noise
     noise = np.dot(
-        unfold(np.random.randn(n_times, noise_dim, n_trials)),
-        np.random.randn(noise_dim, n_chans))
+        unfold(rng.standard_normal((n_times, noise_dim, n_trials))),
+        rng.standard_normal((noise_dim, n_chans)))
     noise = fold(noise, n_times)
 
     # mix signal and noise
@@ -39,9 +42,9 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
 
     if show:
         f, ax = plt.subplots(3)
-        ax[0].plot(signal[:, 0, 0], label='source')
-        ax[1].plot(noise[:, 1, 0], label='noise')
-        ax[2].plot(noisy_data[:, 1, 0], label='mixture')
+        ax[0].plot(signal[:, 0, 0], label="source")
+        ax[1].plot(noise[:, 1, 0], label="noise")
+        ax[2].plot(noisy_data[:, 1, 0], label="mixture")
         ax[0].legend()
         ax[1].legend()
         ax[2].legend()
@@ -50,11 +53,11 @@ def create_data(n_times, n_chans=10, n_trials=20, freq=12, sfreq=250,
     return noisy_data, signal
 
 
-@pytest.mark.parametrize('target', [12, 15, 20])
-@pytest.mark.parametrize('n_trials', [16])
-@pytest.mark.parametrize('peak_width', [.5, 1])
-@pytest.mark.parametrize('neig_width', [1])
-@pytest.mark.parametrize('neig_freq', [1])
+@pytest.mark.parametrize("target", [12, 15, 20])
+@pytest.mark.parametrize("n_trials", [16])
+@pytest.mark.parametrize("peak_width", [.5, 1])
+@pytest.mark.parametrize("neig_width", [1])
+@pytest.mark.parametrize("neig_freq", [1])
 def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     """Test RESS."""
     sfreq = 250
@@ -73,7 +76,7 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     nfft = 500
     bins, psd = ss.welch(out.squeeze(1), sfreq, window="boxcar",
                          nperseg=nfft / (peak_width * 2),
-                         noverlap=0, axis=0, average='mean')
+                         noverlap=0, axis=0, average="mean")
     # psd = np.abs(np.fft.fft(out, nfft, axis=0))
     # psd = psd[0:psd.shape[0] // 2 + 1]
     # bins = np.linspace(0, sfreq // 2, psd.shape[0])
@@ -85,17 +88,17 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     # snr = snr.mean(1)
     if show:
         f, ax = plt.subplots(2)
-        ax[0].plot(bins, snr, ':o')
-        ax[0].axhline(1, ls=':', c='grey', zorder=0)
-        ax[0].axvline(target, ls=':', c='grey', zorder=0)
-        ax[0].set_ylabel('SNR (a.u.)')
-        ax[0].set_xlabel('Frequency (Hz)')
+        ax[0].plot(bins, snr, ":o")
+        ax[0].axhline(1, ls=":", c="grey", zorder=0)
+        ax[0].axvline(target, ls=":", c="grey", zorder=0)
+        ax[0].set_ylabel("SNR (a.u.)")
+        ax[0].set_xlabel("Frequency (Hz)")
         ax[0].set_xlim([0, 40])
         ax[0].set_ylim([0, 10])
         ax[1].plot(bins, psd)
-        ax[1].axvline(target, ls=':', c='grey', zorder=0)
-        ax[1].set_ylabel('PSD')
-        ax[1].set_xlabel('Frequency (Hz)')
+        ax[1].axvline(target, ls=":", c="grey", zorder=0)
+        ax[1].set_ylabel("PSD")
+        ax[1].set_xlabel("Frequency (Hz)")
         ax[1].set_xlim([0, 40])
         # plt.show()
 
@@ -113,16 +116,16 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     assert proj.shape == (n_times, n_chans, n_trials)
 
     if show:
-        f, ax = plt.subplots(data.shape[1], 2, sharey='col')
+        f, ax = plt.subplots(data.shape[1], 2, sharey="col")
         for c in range(data.shape[1]):
-            ax[c, 0].plot(data[:, c].mean(-1), lw=.5, label='data')
-            ax[c, 1].plot(proj[:, c].mean(-1), lw=.5, label='projection')
+            ax[c, 0].plot(data[:, c].mean(-1), lw=.5, label="data")
+            ax[c, 1].plot(proj[:, c].mean(-1), lw=.5, label="projection")
             if c < data.shape[1]:
                 ax[c, 0].set_xticks([])
                 ax[c, 1].set_xticks([])
 
-        ax[0, 0].set_title('Before')
-        ax[0, 1].set_title('After')
+        ax[0, 0].set_title("Before")
+        ax[0, 1].set_title("After")
         plt.legend()
 
     # 2 comps
@@ -141,19 +144,19 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
         _max = np.amax(combined_data)
 
         f, ax = plt.subplots(3)
-        ax[0].imshow(toress, label='toRESS')
-        ax[0].set_title('toRESS')
-        ax[1].imshow(fromress, label='fromRESS', vmin=-_max, vmax=_max)
-        ax[1].set_title('fromRESS')
+        ax[0].imshow(toress, label="toRESS")
+        ax[0].set_title("toRESS")
+        ax[1].imshow(fromress, label="fromRESS", vmin=-_max, vmax=_max)
+        ax[1].set_title("fromRESS")
         ax[2].imshow(pinv(toress), vmin=-_max, vmax=_max)
-        ax[2].set_title('toRESS$^{-1}$')
+        ax[2].set_title("toRESS$^{-1}$")
         plt.tight_layout()
         plt.show()
 
     print(np.sum(np.abs(pinv(toress) - fromress) >= .1))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
     # test_ress(20, 16, 1, 1, 1, show=False)

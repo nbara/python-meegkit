@@ -100,7 +100,7 @@ def widen_mask(mask, widen=4, axis=0):
     dtype = mask.dtype
 
     if axis > dims - 1:
-        raise AttributeError('Invalid `axis` value.')
+        raise AttributeError("Invalid `axis` value.")
 
     if widen < 0:
         # This places the desired axis at the front of the shape tuple, then
@@ -188,7 +188,7 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
     ref = _check_data(ref)
 
     if X.shape[0] != ref.shape[0]:
-        raise AttributeError('X and ref must have same n_times')
+        raise AttributeError("X and ref must have same n_times")
 
     # First we delay X
     y = multishift(X, shifts=shifts, axis=axis, fill_value=fill_value)
@@ -209,7 +209,7 @@ def relshift(X, ref, shifts, fill_value=0, axis=0):
 
 
 def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
-               reshape=False, solution='full'):
+               reshape=False, solution="full"):
     """Apply several shifts along specified axis.
 
     If `shifts` has multiple values, the output will contain one shift per
@@ -268,7 +268,7 @@ def multishift(X, shifts, fill_value=0, axis=0, keep_dims=False,
     if n_shifts == 1 and not keep_dims:
         y = np.squeeze(y, axis=-1)
 
-    if solution == 'valid':
+    if solution == "valid":
         max_neg_shift = np.abs(np.min(np.min(shifts), 0))
         max_pos_shift = np.max((np.max(shifts), 0))
         y = y[max_pos_shift:-max_neg_shift, ...]
@@ -349,7 +349,7 @@ def shift(X, shift, fill_value=0, axis=0):
 
     """
     if not np.equal(np.mod(shift, 1), 0):
-        raise AttributeError('shift must be a single int')
+        raise AttributeError("shift must be a single int")
 
     # reallocate empty array and assign slice.
     y = np.empty_like(X)
@@ -382,7 +382,7 @@ def shift(X, shift, fill_value=0, axis=0):
                 y[..., :shift] = X[..., -shift:]
 
         else:
-            raise NotImplementedError('Axis must be 0, 1 or -1.')
+            raise NotImplementedError("Axis must be 0, 1 or -1.")
 
     return y
 
@@ -499,7 +499,7 @@ def fold(X, epoch_size):
     if X.ndim == 1:
         X = X[:, np.newaxis]
     if X.ndim > 2:
-        raise AttributeError('X must be 2D at most')
+        raise AttributeError("X must be 2D at most")
 
     nt = X.shape[0] // epoch_size
     nc = X.shape[1]
@@ -579,7 +579,7 @@ def normcol(X, weights=None, return_norm=False):
         n_samples, n_chans, n_trials = theshapeof(X)
         weights = _check_weights(weights, X)
         if not weights.any():
-            with np.errstate(divide='ignore'):
+            with np.errstate(divide="ignore"):
                 N = ((np.sum(X ** 2, axis=0) / n_samples) ** -0.5)[np.newaxis]
 
             N[np.isinf(N)] = 0
@@ -588,12 +588,12 @@ def normcol(X, weights=None, return_norm=False):
 
         else:
             if weights.shape[0] != X.shape[0]:
-                raise ValueError('Weight array should have same number of ' +
-                                 'columns as X')
+                raise ValueError("Weight array should have same number of " +
+                                 "columns as X")
             if weights.shape[1] == 1:
                 weights = np.tile(weights, (1, n_chans))
             if weights.shape != X.shape:
-                raise ValueError('Weight array should have be same shape as X')
+                raise ValueError("Weight array should have be same shape as X")
 
             N = (np.sum(X ** 2 * weights, axis=0) /
                  np.sum(weights, axis=0)) ** -0.5
@@ -623,14 +623,14 @@ def matmul3d(X, mixin):
         Projection.
 
     """
-    assert mixin.ndim == 2, 'mixing matrix must be 2D'
+    assert mixin.ndim == 2, "mixing matrix must be 2D"
 
     if X.ndim == 2:
         return X @ mixin
     elif X.ndim == 3:
-        return np.einsum('sct,ck->skt', X, mixin)
+        return np.einsum("sct,ck->skt", X, mixin)
     else:
-        raise RuntimeError('X must be (n_samples, n_chans, n_trials)')
+        raise RuntimeError("X must be (n_samples, n_chans, n_trials)")
 
 
 def _check_shifts(shifts, allow_floats=False):
@@ -639,7 +639,7 @@ def _check_shifts(shifts, allow_floats=False):
     if allow_floats:
         types += (float, np.float_)
     if not isinstance(shifts, (np.ndarray, list, type(None)) + types):
-        raise AttributeError('shifts should be a list, an array or an int')
+        raise AttributeError("shifts should be a list, an array or an int")
     if isinstance(shifts, (list, ) + types):
         shifts = np.array(shifts).flatten()
     if shifts is None or len(shifts) == 0:
@@ -653,12 +653,12 @@ def _check_shifts(shifts, allow_floats=False):
 def _check_data(X):
     """Check data is numpy array and has the proper dimensions."""
     if not isinstance(X, (np.ndarray, list)):
-        raise AttributeError('data should be a list or a numpy array')
+        raise AttributeError("data should be a list or a numpy array")
 
     dtype = np.complex128 if np.any(np.iscomplex(X)) else np.float64
     X = np.asanyarray(X, dtype=dtype)
     if X.ndim > 3:
-        raise ValueError('Data must be 3D at most')
+        raise ValueError("Data must be 3D at most")
 
     return X
 
@@ -667,7 +667,7 @@ def _check_weights(weights, X):
     """Check weights dimensions against X."""
     if not isinstance(weights, (np.ndarray, list)):
         if weights is not None:
-            warnings.warn('weights should be a list or a numpy array.')
+            warnings.warn("weights should be a list or a numpy array.")
         weights = np.array([])
 
     weights = np.asanyarray(weights)
@@ -675,7 +675,7 @@ def _check_weights(weights, X):
         dtype = np.complex128 if np.any(np.iscomplex(weights)) else np.float64
         weights = np.asanyarray(weights, dtype=dtype)
         if weights.ndim > 3:
-            raise ValueError('Weights must be 3D at most')
+            raise ValueError("Weights must be 3D at most")
         if weights.shape[0] != X.shape[0]:
             raise ValueError("Weights should be the same n_times as X.")
 
@@ -695,7 +695,7 @@ def _check_weights(weights, X):
                 raise ValueError("Weights array should have a single column.")
 
         if np.any(np.abs(weights) > 1.):
-            warnings.warn('weights should be between 0 and 1.')
+            warnings.warn("weights should be between 0 and 1.")
             weights[np.abs(weights) > 1.] = 1.
 
     return weights
@@ -706,18 +706,18 @@ def _times_to_delays(lags, sfreq):
     if lags is None:
         return np.array([0])
     if not isinstance(sfreq, (int, float, np.int_)):
-        raise ValueError('`sfreq` must be an integer or float')
+        raise ValueError("`sfreq` must be an integer or float")
     sfreq = float(sfreq)
 
     if not all([isinstance(ii, (int, float, np.int_)) for ii in lags]):
-        raise ValueError('lags must be an integer or float')
+        raise ValueError("lags must be an integer or float")
 
     if len(lags) == 2 and sfreq != 1:
         tmin = lags[0]
         tmax = lags[1]
 
         if not tmin <= tmax:
-            raise ValueError('tmin must be <= tmax')
+            raise ValueError("tmin must be <= tmax")
 
         # Convert seconds to samples
         delays = np.arange(int(np.round(tmin * sfreq)),

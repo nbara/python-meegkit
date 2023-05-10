@@ -1,8 +1,19 @@
 """Time-shift PCA."""
 import numpy as np
 
-from .utils import (demean, fold, multishift, normcol, pca, regcov, tscov,
-                    tsxcov, unfold, theshapeof, unsqueeze)
+from .utils import (
+    demean,
+    fold,
+    multishift,
+    normcol,
+    pca,
+    regcov,
+    theshapeof,
+    tscov,
+    tsxcov,
+    unfold,
+    unsqueeze,
+)
 from .utils.matrix import _check_shifts, _check_weights
 
 

@@ -1,8 +1,8 @@
 """Synthetic test data."""
-import numpy as np
-from meegkit.utils import fold, rms, unfold
-
 import matplotlib.pyplot as plt
+import numpy as np
+
+from meegkit.utils import fold, rms, unfold
 
 
 def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
@@ -63,9 +63,9 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
 
     if show:
         f, ax = plt.subplots(3)
-        ax[0].plot(source.mean(-1), label='source')
-        ax[1].plot(noise[:, 1].mean(-1), label='noise (avg over trials)')
-        ax[2].plot(data[:, 1].mean(-1), label='mixture (avg over trials)')
+        ax[0].plot(source.mean(-1), label="source")
+        ax[1].plot(noise[:, 1].mean(-1), label="noise (avg over trials)")
+        ax[2].plot(data[:, 1].mean(-1), label="mixture (avg over trials)")
         ax[0].legend()
         ax[1].legend()
         ax[2].legend()

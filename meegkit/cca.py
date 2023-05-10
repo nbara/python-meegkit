@@ -3,7 +3,7 @@ import numpy as np
 from scipy import linalg
 
 from .utils import cov_lags, pca
-from .utils.matrix import _check_shifts, normcol, relshift, _times_to_delays
+from .utils.matrix import _check_shifts, _times_to_delays, normcol, relshift
 
 try:
     from tqdm import tqdm
@@ -11,7 +11,7 @@ except ImportError:
     def tqdm(*args, **kwargs):  # noqa
         if args:
             return args[0]
-        return kwargs.get('iterable', None)
+        return kwargs.get("iterable", None)
 
 
 def mcca(C, n_channels, n_keep=[]):
@@ -45,9 +45,9 @@ def mcca(C, n_channels, n_keep=[]):
 
     """
     if C.shape[0] != C.shape[1]:
-        raise ValueError('Covariance must be square !')
+        raise ValueError("Covariance must be square !")
     if np.mod(C.shape[0], n_channels) != 0:
-        raise ValueError('!')
+        raise ValueError("!")
 
     # Whiten covariance by blocks
     n_blocks = C.shape[0] // n_channels
@@ -78,8 +78,7 @@ def mcca(C, n_channels, n_keep=[]):
     return A, scores, AA
 
 
-def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
-                      plot=False):
+def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False, plot=False):
     """CCA with cross-validation.
 
     Parameters
@@ -119,8 +118,8 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         xx = [xx[..., t] for t in np.arange(xx.shape[-1])]
         yy = [yy[..., t] for t in np.arange(yy.shape[-1])]
     else:
-        raise AttributeError('xx and yy both must be lists of same length, '
-                             'or arrays os same n_trials.')
+        raise AttributeError("xx and yy both must be lists of same length, "
+                             "or arrays os same n_trials.")
 
     shifts = _times_to_delays(shifts, sfreq)
     shifts, n_shifts = _check_shifts(shifts)
@@ -128,13 +127,13 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
     n_feats = xx[0].shape[1] + yy[0].shape[1]  # sum of channels
 
     # Calculate covariance matrices
-    print('Calculate all covariances...')
+    print("Calculate all covariances...")
     C = np.zeros((n_feats, n_feats, n_shifts, n_trials)).squeeze()
     for t in tqdm(np.arange(n_trials)):
         C[..., t], _, _ = cov_lags(xx[t], yy[t], shifts)
 
     # Calculate leave-one-out CCAs
-    print('Calculate CCAs...')
+    print("Calculate CCAs...")
     AA = []
     BB = []
     for t in tqdm(np.arange(n_trials)):
@@ -152,7 +151,7 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
     del C, CC
 
     # Calculate leave-one-out correlation coefficients
-    print('Calculate cross-correlations...')
+    print("Calculate cross-correlations...")
     n_comps = AA[0].shape[1]
     r = np.zeros((n_comps, n_shifts))
     RR = np.zeros((n_comps, n_shifts, n_trials))
@@ -191,23 +190,23 @@ def cca_crossvalidate(xx, yy, shifts=None, sfreq=1, surrogate=False,
         import matplotlib.pyplot as plt
         f, (ax1) = plt.subplots(1, 1)
         for k in range(RR.shape[0]):
-            ax1.plot(shifts, np.mean(RR[k, :, :], 1).T, label='CC{}'.format(k))
-        ax1.set_title('correlation for each CC')
-        ax1.set_xlabel('shift')
-        ax1.set_ylabel('correlation')
+            ax1.plot(shifts, np.mean(RR[k, :, :], 1).T, label=f"CC{k}")
+        ax1.set_title("correlation for each CC")
+        ax1.set_xlabel("shift")
+        ax1.set_ylabel("correlation")
         ax1.legend()
         # if surrogate:
         #     ax1.plot(SD.T, ':')
 
         f2, axes = plt.subplots(min(4, RR.shape[0]), 1)
-        for k, ax in zip(np.arange(min(4, RR.shape[0])), axes):
+        for k, ax in zip(np.arange(min(4, RR.shape[0])), axes, strict=True):
             idx = np.argmax(np.mean(RR[k, :, :], 1))
             [x, y] = relshift(xx[0], yy[0], shifts[idx])
-            ax.plot(np.dot(x, AA[0][:, k, idx]).T, label='CC{}'.format(k))
-            ax.plot(np.dot(y, BB[0][:, k, idx]).T, ':')
+            ax.plot(np.dot(x, AA[0][:, k, idx]).T, label=f"CC{k}")
+            ax.plot(np.dot(y, BB[0][:, k, idx]).T, ":")
             ax.legend()
 
-        ax.set_xlabel('sample')
+        ax.set_xlabel("sample")
         f2.set_tight_layout(True)
         plt.show()
 
@@ -268,7 +267,7 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
     """
     if (X is None and Y is not None) or (Y is None and X is not None):
-        raise AttributeError('Either *both* X and Y should be defined, or C!')
+        raise AttributeError("Either *both* X and Y should be defined, or C!")
 
     if X is not None:
         lags = _times_to_delays(lags, sfreq)
@@ -278,15 +277,15 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
         return A, B, R
 
     if C is None:
-        raise RuntimeError('covariance matrix should be defined')
+        raise RuntimeError("covariance matrix should be defined")
     if m is None:
-        raise RuntimeError('m should be defined')
+        raise RuntimeError("m should be defined")
     if C.shape[0] != C.shape[1]:
-        raise RuntimeError('covariance matrix should be square')
+        raise RuntimeError("covariance matrix should be square")
     if any((X, Y, lags)):
-        raise RuntimeError('only covariance should be defined at this point')
+        raise RuntimeError("only covariance should be defined at this point")
     if C.ndim > 3:
-        raise RuntimeError('covariance should be 3D at most')
+        raise RuntimeError("covariance should be 3D at most")
 
     if C.ndim == 3:  # covariance is 3D: do a separate CCA for each page
         n_chans, _, n_lags = C.shape

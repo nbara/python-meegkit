@@ -2,14 +2,22 @@
 # Authors:  Nicolas Barascud <nicolas.barascud@gmail.com>
 #           Maciej Szul <maciej.szul@isc.cnrs.fr>
 import numpy as np
+from numpy.lib.stride_tricks import sliding_window_view
 from scipy import linalg
 from scipy.signal import welch
 
 from .tspca import tsr
-from .utils import (demean, gaussfilt, matmul3d, mean_over_trials, pca, smooth,
-                    theshapeof, tscov, wpwr)
-
-from numpy.lib.stride_tricks import sliding_window_view
+from .utils import (
+    demean,
+    gaussfilt,
+    matmul3d,
+    mean_over_trials,
+    pca,
+    smooth,
+    theshapeof,
+    tscov,
+    wpwr,
+)
 
 
 def dss1(X, weights=None, keep1=None, keep2=1e-12):
@@ -94,15 +102,15 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
 
     """
     if c0 is None or c1 is None:
-        raise AttributeError('dss0 needs at least two arguments')
+        raise AttributeError("dss0 needs at least two arguments")
     if c0.shape != c1.shape:
-        raise AttributeError('c0 and c1 should have same size')
+        raise AttributeError("c0 and c1 should have same size")
     if c0.shape[0] != c0.shape[1]:
-        raise AttributeError('c0 should be square')
+        raise AttributeError("c0 should be square")
     if np.any(np.isnan(c0)) or np.any(np.isinf(c0)):
-        raise ValueError('NaN or INF in c0')
+        raise ValueError("NaN or INF in c0")
     if np.any(np.isnan(c1)) or np.any(np.isinf(c1)):
-        raise ValueError('NaN or INF in c1')
+        raise ValueError("NaN or INF in c1")
 
     # derive PCA and whitening matrix from unbiased covariance
     eigvec0, eigval0 = pca(c0, max_comps=keep1, thresh=keep2)
@@ -190,7 +198,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
 
     """
     if X.shape[0] < nfft:
-        print('Reducing nfft to {}'.format(X.shape[0]))
+        print(f"Reducing nfft to {X.shape[0]}")
         nfft = X.shape[0]
     n_samples, n_chans, _ = theshapeof(X)
     if blocksize is None:
@@ -233,10 +241,10 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
 
     if show:
         import matplotlib.pyplot as plt
-        plt.plot(pwr1 / pwr0, '.-')
-        plt.xlabel('component')
-        plt.ylabel('score')
-        plt.title('DSS to enhance line frequencies')
+        plt.plot(pwr1 / pwr0, ".-")
+        plt.xlabel("component")
+        plt.ylabel("score")
+        plt.title("DSS to enhance line frequencies")
         plt.show()
 
     # Remove line components from X_noise
@@ -249,7 +257,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
 
     # Power of components
     p = wpwr(X - y)[0] / wpwr(X)[0]
-    print('Power of components removed by DSS: {:.2f}'.format(p))
+    print(f"Power of components removed by DSS: {p:.2f}")
     # return the reconstructed clean signal, and the artifact
     return y, X - y
 
@@ -334,7 +342,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         mean_score = np.mean(residuals[freq_sp_ix])
         aggr_resid.append(mean_score)
 
-        print("Iteration {} score: {}".format(iterations, mean_score))
+        print(f"Iteration {iterations} score: {mean_score}")
 
         if show:
             import matplotlib.pyplot as plt
@@ -362,7 +370,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             ax.flat[2].scatter(residuals[tf_ix], freq_used[tf_ix], c=color)
             ax.flat[2].set_title("Residuals")
 
-            ax.flat[3].plot(np.arange(iterations + 1), aggr_resid, marker='o')
+            ax.flat[3].plot(np.arange(iterations + 1), aggr_resid, marker="o")
             ax.flat[3].set_title("Iterations")
 
             f.set_tight_layout(True)
@@ -375,7 +383,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         iterations += 1
 
     if iterations == n_iter_max:
-        raise RuntimeError('Could not converge. Consider increasing the '
-                           'maximum number of iterations')
+        raise RuntimeError("Could not converge. Consider increasing the "
+                           "maximum number of iterations")
 
     return data, iterations

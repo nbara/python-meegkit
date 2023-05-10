@@ -2,8 +2,7 @@
 import numpy as np
 from scipy.signal import filtfilt
 
-from .utils import (demean, fold, mrdivide, normcol, pca, theshapeof, tscov,
-                    unfold, wpwr)
+from .utils import demean, fold, mrdivide, normcol, pca, theshapeof, tscov, unfold, wpwr
 
 
 def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
@@ -48,7 +47,9 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     if thresh is None:
         thresh = 1
     if len(closest) > 0 and closest.shape[0] != X.shape[1]:
-        raise ValueError('`closest` should have as many rows as n_chans')
+        raise ValueError("`closest` should have as many rows as n_chans")
+
+    rng = np.random.default_rng()
 
     ndims = X.ndim
     n_samples, n_chans, n_trials = theshapeof(X)
@@ -64,9 +65,9 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
     idx_nan = np.all(np.isnan(X), axis=0)
     idx_zero = np.all(X == 0, axis=0)
     if idx_nan.any():
-        X[:, idx_nan] = np.random.randn(X.shape[0], np.sum(idx_nan))
+        X[:, idx_nan] = rng.standard_normal((X.shape[0], np.sum(idx_nan)))
     if idx_zero.any():
-        X[:, idx_zero] = np.random.randn(X.shape[0], np.sum(idx_zero))
+        X[:, idx_zero] = rng.standard_normal((X.shape[0], np.sum(idx_zero)))
 
     # initial covariance estimate
     X = demean(X)
@@ -98,12 +99,12 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
 
         artifact_free = np.mean(w, axis=0)
         if verbose:
-            print('proportion artifact free: {:.2f}'.format(artifact_free))
+            print(f"proportion artifact free: {artifact_free:.2f}")
 
         if iter == n_iter and artifact_free < min_prop:
             thresh = thresh * 1.1
             if verbose:
-                print('Warning: increasing threshold to {:.2f}'.format(thresh))
+                print(f"Warning: increasing threshold to {thresh:.2f}")
             w = np.ones(w.shape)
         else:
             iter = iter - 1
@@ -153,10 +154,10 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
             y[bad_samples, ch] = z.squeeze()  # fix
 
         if verbose:
-            print('depth: {}'.format(i_depth + 1))
-            print('fixed channels: {}'.format(i_fixed))
-            print('fixed samples: {}'.format(n_fixed))
-            print('ratio: {:.2f}'.format(wpwr(X)[0] / p00))
+            print(f"depth: {i_depth + 1}")
+            print(f"fixed channels: {i_fixed}")
+            print(f"fixed samples: {n_fixed}")
+            print(f"ratio: {wpwr(X)[0] / p00:.2f}")
 
     y = demean(y)
     y *= norm
@@ -169,9 +170,9 @@ def star(X, thresh=1, closest=[], depth=1, pca_thresh=1e-15, n_smooth=10,
         y[:, idx_zero] = 0
 
     if verbose:
-        print('power ratio: {:.2f}'.format(wpwr(y)[0] / p0))
+        print(f"power ratio: {wpwr(y)[0] / p0:.2f}")
 
-    if verbose == 'debug':
+    if verbose == "debug":
         _diagnostics(X * norm + intercept, y, d, thresh)
 
     if ndims == 3:  # fold back into trials
@@ -250,24 +251,24 @@ def _diagnostics(X, y, d, thresh):
 
     f, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1)
     ax1.plot(X, lw=.5)
-    ax1.set_title('Signal + Artifacts')
+    ax1.set_title("Signal + Artifacts")
     ax1.set_xticklabels([])
 
     ax2.plot(demean(y), lw=.5)
-    ax2.set_title('Denoised')
+    ax2.set_title("Denoised")
     ax2.set_xticklabels([])
 
     ax3.plot(X - demean(y), lw=.5)
-    ax3.set_title('Residual')
+    ax3.set_title("Residual")
     ax3.set_xticklabels([])
 
     ax4.plot(d, lw=.5, alpha=.3)
     d[d < thresh] = None
     ax4.plot(d, lw=1)
-    ax4.axhline(thresh, lw=2, color='k', ls=':')
+    ax4.axhline(thresh, lw=2, color="k", ls=":")
     ax4.set_ylim([0, thresh + 1])
-    ax4.set_title('Eccentricity')
-    ax4.set_xlabel('samples')
+    ax4.set_title("Eccentricity")
+    ax4.set_xlabel("samples")
 
-    f.set_tight_layout(True)
+    f.set_layout_engine("tight")
     plt.show()

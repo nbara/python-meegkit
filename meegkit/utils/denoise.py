@@ -1,10 +1,9 @@
 """Denoising utilities."""
 import matplotlib.pyplot as plt
 import numpy as np
-
 from matplotlib import gridspec
 
-from .matrix import fold, theshapeof, unfold, _check_weights
+from .matrix import _check_weights, fold, theshapeof, unfold
 
 
 def demean(X, weights=None, return_mean=False, inplace=False):
@@ -40,15 +39,15 @@ def demean(X, weights=None, return_mean=False, inplace=False):
         weights = unfold(weights)
 
         if weights.shape[0] != X.shape[0]:
-            raise ValueError('X and weights arrays should have same ' +
-                             'number of samples (rows).')
+            raise ValueError("X and weights arrays should have same " +
+                             "number of samples (rows).")
 
         if weights.shape[1] == 1 or weights.shape[1] == n_chans:
             mn = (np.sum(X * weights, axis=0) /
                   np.sum(weights, axis=0))[None, :]
         else:
-            raise ValueError('Weight array should have either the same ' +
-                             'number of columns as X array, or 1 column.')
+            raise ValueError("Weight array should have either the same " +
+                             "number of columns as X array, or 1 column.")
 
     else:
         mn = np.mean(X, axis=0, keepdims=True)
@@ -92,7 +91,7 @@ def mean_over_trials(X, weights=None):
         weights = fold(weights, n_samples)
 
         # Take weighted average
-        with np.errstate(divide='ignore', invalid='ignore'):
+        with np.errstate(divide="ignore", invalid="ignore"):
             y = np.sum(X, -1) / np.sum(weights, -1)
         tw = np.mean(weights, -1)
         y = np.nan_to_num(y)
@@ -179,7 +178,7 @@ def find_outlier_trials(X, thresh=None, show=True):
         thresh = [thresh]
 
     if X.ndim > 3:
-        raise ValueError('X should be 2D or 3D')
+        raise ValueError("X should be 2D or 3D")
     elif X.ndim == 3:
         n_samples, n_chans, n_trials = theshapeof(X)
         X = np.reshape(X, (n_samples * n_chans, n_trials))
@@ -196,27 +195,27 @@ def find_outlier_trials(X, thresh=None, show=True):
     if show:
         plt.figure(figsize=(7, 4))
         gs = gridspec.GridSpec(1, 2)
-        plt.suptitle('Outlier trial detection')
+        plt.suptitle("Outlier trial detection")
 
         # Before
         ax1 = plt.subplot(gs[0, 0])
-        ax1.plot(d, ls='-')
+        ax1.plot(d, ls="-")
         ax1.plot(np.setdiff1d(np.arange(n_trials), idx),
-                 d[np.setdiff1d(np.arange(n_trials), idx)], color='r', ls=' ',
-                 marker='.')
-        ax1.axhline(y=thresh[0], color='grey', linestyle=':')
-        ax1.set_xlabel('Trial #')
-        ax1.set_ylabel('Normalized deviation from mean')
-        ax1.set_title('Before, ' + str(len(d)), fontsize=10)
+                 d[np.setdiff1d(np.arange(n_trials), idx)], color="r", ls=" ",
+                 marker=".")
+        ax1.axhline(y=thresh[0], color="grey", linestyle=":")
+        ax1.set_xlabel("Trial #")
+        ax1.set_ylabel("Normalized deviation from mean")
+        ax1.set_title("Before, " + str(len(d)), fontsize=10)
         ax1.set_xlim(0, len(d) + 1)
         plt.draw()
 
         # After
         ax2 = plt.subplot(gs[0, 1])
         _, dd = find_outlier_trials(X[:, idx], None, False)
-        ax2.plot(dd, ls='-')
-        ax2.set_xlabel('Trial #')
-        ax2.set_title('After, ' + str(len(idx)), fontsize=10)
+        ax2.plot(dd, ls="-")
+        ax2.set_xlabel("Trial #")
+        ax2.set_title("After, " + str(len(idx)), fontsize=10)
         ax2.yaxis.tick_right()
         ax2.set_xlim(0, len(idx) + 1)
         plt.show()

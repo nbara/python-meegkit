@@ -6,11 +6,12 @@ from scipy.linalg import toeplitz
 from scipy.spatial.distance import cdist, euclidean
 from scipy.special import gamma, gammaincinv
 
+SHAPE_RANGE = np.linspace(1.7, 3.5, 13)
+
 
 def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
-                         fit_quantiles=[0.022, 0.6],
-                         step_sizes=[0.0220, 0.6000],
-                         shape_range=np.linspace(1.7, 3.5, 13)):
+                         fit_quantiles=[0.022, 0.6], step_sizes=[0.0220, 0.6000],
+                         shape_range=SHAPE_RANGE):
     """Estimate the mean and SD of clean EEG from contaminated data.
 
     This function estimates the mean and standard deviation of clean EEG from a
@@ -39,14 +40,14 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     ----------
     X : array, shape=(n_channels, n_samples)
         EEG data, possibly containing artifacts.
-    max_dropout_fraction : float
-        Maximum fraction that can have dropouts. This is the maximum fraction
-        of time windows that may have arbitrarily low amplitude (e.g., due to
-        the sensors being unplugged) (default=0.25).
     min_clean_fraction : float
         Minimum fraction that needs to be clean. This is the minimum fraction
         of time windows that need to contain essentially uncontaminated EEG
         (default=0.1).
+    max_dropout_fraction : float
+        Maximum fraction that can have dropouts. This is the maximum fraction
+        of time windows that may have arbitrarily low amplitude (e.g., due to
+        the sensors being unplugged) (default=0.25).
     fit_quantiles : 2-tuple
         Quantile range [lower,upper] of the truncated generalized Gaussian
         distribution that shall be fit to the EEG contents (default=[0.022
@@ -56,7 +57,7 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
         lower bound (which essentially steps over any dropout samples), and the
         second value is the stepping over possible scales (i.e., clean-data
         quantiles) (default=[0.01, 0.01]).
-    beta : array
+    shape_range : array
         Range that the clean EEG distribution's shape parameter beta may take.
 
     Returns

@@ -16,15 +16,14 @@ References
 """
 import matplotlib.pyplot as plt
 import numpy as np
-
 from scipy.optimize import leastsq
 
-from meegkit import star, dss
+from meegkit import dss, star
 from meegkit.utils import demean, normcol, tscov
 
 # import config  # noqa
 
-np.random.seed(9)
+rng = np.random.default_rng(9)
 
 ###############################################################################
 # Create simulated data
@@ -37,12 +36,12 @@ n_chans, n_samples = 10, 1000
 f = 2
 target = np.sin(np.arange(n_samples) / n_samples * 2 * np.pi * f)
 target = target[:, np.newaxis]
-noise = np.random.randn(n_samples, n_chans - 3)
+noise = rng.standard_normal((n_samples, n_chans - 3))
 
 # Create artifact signal
 SNR = np.sqrt(1)
-x0 = (normcol(np.dot(noise, np.random.randn(noise.shape[1], n_chans))) +
-      SNR * target * np.random.randn(1, n_chans))
+x0 = normcol(np.dot(noise, rng.standard_normal((noise.shape[1], n_chans)))) + \
+    SNR * target * rng.standard_normal((1, n_chans))
 x0 = demean(x0)
 artifact = np.zeros(x0.shape)
 for k in np.arange(n_chans):
@@ -95,18 +94,18 @@ z2 = normcol(np.dot(y, todss))
 # -----------------------------------------------------------------------------
 f, (ax0, ax1, ax2, ax3) = plt.subplots(4, 1, figsize=(7, 9))
 ax0.plot(target, lw=.5)
-ax0.set_title('Target')
+ax0.set_title("Target")
 
 ax1.plot(x, lw=.5)
-ax1.set_title('Signal + Artifacts (SNR = {})'.format(SNR))
+ax1.set_title(f"Signal + Artifacts (SNR = {SNR})")
 
-ax2.plot(z1[:, 0], lw=.5, label='Best DSS component')
-ax2.set_title('DSS')
-ax2.legend(loc='lower right')
+ax2.plot(z1[:, 0], lw=.5, label="Best DSS component")
+ax2.set_title("DSS")
+ax2.legend(loc="lower right")
 
-ax3.plot(z2[:, 0], lw=.5, label='Best DSS component')
-ax3.set_title('STAR + DSS')
-ax3.legend(loc='lower right')
+ax3.plot(z2[:, 0], lw=.5, label="Best DSS component")
+ax3.set_title("STAR + DSS")
+ax3.legend(loc="lower right")
 
 f.set_tight_layout(True)
 plt.show()

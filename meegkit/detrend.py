@@ -1,6 +1,5 @@
 """Robust detrending."""
 import numpy as np
-
 from scipy.signal import lfilter
 
 from .utils import demean, mrdivide, pca, unfold
@@ -8,7 +7,7 @@ from .utils.matrix import _check_weights
 from .utils.sig import stmcb
 
 
-def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4,
+def detrend(x, order, w=None, basis="polynomials", threshold=3, n_iter=4,
             show=False):
     """Robustly remove trend.
 
@@ -59,7 +58,7 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4,
 
     """
     if threshold == 0:
-        raise ValueError('thresh=0 is not what you want...')
+        raise ValueError("thresh=0 is not what you want...")
 
     # check/fix sizes
     dims = x.shape
@@ -73,22 +72,22 @@ def detrend(x, order, w=None, basis='polynomials', threshold=3, n_iter=4,
         r = basis
     else:
         lin = np.linspace(-1, 1, n_times)
-        if basis == 'polynomials' or basis is None:
+        if basis == "polynomials" or basis is None:
             r = np.zeros((n_times, order))
             for i, o in enumerate(range(1, order + 1)):
                 r[:, i] = lin ** o
-        elif basis == 'sinusoids':
+        elif basis == "sinusoids":
             r = np.zeros((n_times, order * 2))
             for i, o in enumerate(range(1, order + 1)):
                 r[:, 2 * i] = np.sin(2 * np.pi * o * lin / 2)
                 r[:, 2 * i + 1] = np.cos(2 * np.pi * o * lin / 2)
         else:
-            raise ValueError('!')
+            raise ValueError("!")
 
     # iteratively remove trends
     # the tricky bit is to ensure that weighted means are removed before
     # calculating the regression (see regress()).
-    for i in range(n_iter):
+    for _ in range(n_iter):
         # weighted regression on basis
         _, y = regress(x, r, w)
 
@@ -150,7 +149,7 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
     r = unfold(r)
     x = unfold(x)
     if r.shape[0] != x.shape[0]:
-        raise ValueError('r and x have incompatible shapes!')
+        raise ValueError("r and x have incompatible shapes!")
 
     # save weighted mean
     mn = x - demean(x, w)
@@ -171,11 +170,11 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
 
     else:  # weighted regression
         if w.shape[0] != n_times:
-            raise ValueError('!')
+            raise ValueError("!")
 
         if w.shape[1] == 1:  # same weight for all channels
             if sum(w.flatten()) == 0:
-                print('weights all zero')
+                print("weights all zero")
                 b = 0
             else:
                 yy = demean(x, w) * w
@@ -189,12 +188,12 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
 
         else:  # each channel has own weight
             if w.shape[1] != x.shape[1]:
-                raise ValueError('!')
+                raise ValueError("!")
             z = np.zeros(x.shape)
             b = np.zeros((n_chans, n_regs))
             for i in range(n_chans):
                 if not np.any(w[:, i]):
-                    print(f'weights are all zero for channel {i}')
+                    print(f"weights are all zero for channel {i}")
                 else:
                     wc = w[:, i][:, None]  # channel-specific weight
                     xx = demean(x[:, i], wc) * wc
@@ -245,7 +244,7 @@ def reduce_ringing(X, samples, order=10, n_samples=100, extra=50, threshold=3,
     samples = samples[samples < X.shape[0] - n_samples]
 
     y = X.copy()
-    for i, s in enumerate(samples):
+    for _i, s in enumerate(samples):
         for c in range(X.shape[1]):
             # select portion to fit filter response, remove polynomial trend
             response = X[s - extra:s + n_samples, c]
@@ -282,22 +281,22 @@ def _plot_detrend(x, y, w):
     f = plt.figure()
     gs = GridSpec(4, 1, figure=f)
     ax1 = f.add_subplot(gs[:3, 0])
-    lines = ax1.plot(x, label='original', color='C0')
+    lines = ax1.plot(x, label="original", color="C0")
     plt.setp(lines[1:], label="_")
-    lines = ax1.plot(y, label='detrended', color='C1')
+    lines = ax1.plot(y, label="detrended", color="C1")
     plt.setp(lines[1:], label="_")
     ax1.set_xlim(0, n_times)
-    ax1.set_xticklabels('')
-    ax1.set_title('Robust detrending')
-    ax1.legend(fontsize='smaller')
+    ax1.set_xticklabels("")
+    ax1.set_title("Robust detrending")
+    ax1.legend(fontsize="smaller")
 
     ax2 = f.add_subplot(gs[3, 0])
-    ax2.pcolormesh(w.T, cmap='Greys')
+    ax2.pcolormesh(w.T, cmap="Greys")
     ax2.set_yticks(np.arange(0, n_chans) + 0.5)
-    ax2.set_yticklabels(['ch{}'.format(i) for i in np.arange(n_chans)])
+    ax2.set_yticklabels([f"ch{i}" for i in np.arange(n_chans)])
     ax2.set_xlim(0, n_times)
-    ax2.set_ylabel('ch. weights')
-    ax2.set_xlabel('samples')
+    ax2.set_ylabel("ch. weights")
+    ax2.set_xlabel("samples")
     plt.show()
 
 
@@ -334,7 +333,7 @@ def create_masked_weight(x, events, tmin, tmax, sfreq):
 
     """
     if x.ndim != 2:
-        raise ValueError('The shape of x must be (n_times, n_channels)')
+        raise ValueError("The shape of x must be (n_times, n_channels)")
 
     weights = np.ones(x.shape)
     for e in events:

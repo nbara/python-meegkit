@@ -11,9 +11,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from meegkit import dss
-from meegkit.utils import unfold, rms, fold, tscov
+from meegkit.utils import fold, rms, tscov, unfold
 
-# import config
+rng = np.random.default_rng(5)
 
 ###############################################################################
 # Create simulated data
@@ -30,14 +30,14 @@ source = np.hstack((
     np.zeros((n_samples // 3,)),
     np.sin(2 * np.pi * np.arange(n_samples // 3) / (n_samples / 3)).T,
     np.zeros((n_samples // 3,))))[np.newaxis].T
-s = source * np.random.randn(1, n_chans)  # 300 * 30
+s = source * rng.standard_normal((1, n_chans))  # 300 * 30
 s = s[:, :, np.newaxis]
 s = np.tile(s, (1, 1, 100))
 
 # Noise
 noise = np.dot(
-    unfold(np.random.randn(n_samples, noise_dim, n_trials)),
-    np.random.randn(noise_dim, n_chans))
+    unfold(rng.standard_normal((n_samples, noise_dim, n_trials))),
+    rng.standard_normal((noise_dim, n_chans)))
 noise = fold(noise, n_samples)
 
 # Mix signal and noise
@@ -66,8 +66,8 @@ best_comp = np.mean(z[:, 0, :], -1)
 # Plot results
 # -----------------------------------------------------------------------------
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
-ax1.plot(source, label='source')
-ax2.plot(np.mean(data, 2), label='data')
-ax3.plot(best_comp, label='recovered')
+ax1.plot(source, label="source")
+ax2.plot(np.mean(data, 2), label="data")
+ax3.plot(best_comp, label="recovered")
 plt.legend()
 plt.show()

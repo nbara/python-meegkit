@@ -5,8 +5,10 @@ from .tspca import tsr
 from .utils import demean, fold, pca, theshapeof, tscov, unfold
 from .utils.matrix import _check_weights
 
+DEFAULT_WEIGHTS = np.array([])
 
-def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
+
+def sns(X, n_neighbors=0, skip=0, weights=DEFAULT_WEIGHTS):
     """Sensor Noise Suppression.
 
     This algorithm will replace the data from each channel by its regression on
@@ -61,7 +63,7 @@ def sns(X, n_neighbors=0, skip=0, weights=np.array([])):
     return y, r
 
 
-def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
+def sns0(c, n_neighbors=0, skip=0, wc=DEFAULT_WEIGHTS):
     """Sensor Noise Suppression from data covariance.
 
     Parameters
@@ -124,7 +126,7 @@ def sns0(c, n_neighbors=0, skip=0, wc=np.array([])):
         r[k, idx] = np.dot(eigvec, np.dot(wc[k][idx], eigvec))
 
         if r[k, k] != 0:
-            raise RuntimeError('SNS operator should be zero along diagonal')
+            raise RuntimeError("SNS operator should be zero along diagonal")
 
     return r.T
 

@@ -4,13 +4,14 @@ import os
 import numpy as np
 import pytest
 import scipy.io
+
 from meegkit.trca import TRCA
 from meegkit.utils.trca import itr, normfit, round_half_up
 
 ##########################################################################
 # Load data
 # -----------------------------------------------------------------------------
-path = os.path.join('.', 'tests', 'data', 'trcadata.mat')
+path = os.path.join(".", "tests", "data", "trcadata.mat")
 mat = scipy.io.loadmat(path)
 eeg = mat["eeg"]
 
@@ -41,12 +42,12 @@ filterbank = [[[6, 90], [4, 100]],  # passband freqs, stopband freqs (Wp, Ws)
               [[38, 90], [32, 100]]]
 
 
-@pytest.mark.parametrize('ensemble', [True, False])
-@pytest.mark.parametrize('method', ['original', 'riemann'])
-@pytest.mark.parametrize('regularization', ['schaefer', 'scm'])
+@pytest.mark.parametrize("ensemble", [True, False])
+@pytest.mark.parametrize("method", ["original", "riemann"])
+@pytest.mark.parametrize("regularization", ["schaefer", "scm"])
 def test_trca(ensemble, method, regularization):
     """Test TRCA."""
-    if method == 'original' and regularization == 'schaefer':
+    if method == "original" and regularization == "schaefer":
         pytest.skip("regularization only used for riemann version")
 
     len_gaze_s = 0.5  # data length for target identification [s]
@@ -101,15 +102,15 @@ def test_trca(ensemble, method, regularization):
     # Mean accuracy and ITR computation
     mu, _, muci, _ = normfit(accs, alpha_ci)
     print(f"Mean accuracy = {mu:.1f}%\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")  # noqa
-    if method != 'riemann' or (regularization == 'scm' and ensemble):
+    if method != "riemann" or (regularization == "scm" and ensemble):
         assert mu > 95
     mu, _, muci, _ = normfit(itrs, alpha_ci)
     print(f"Mean ITR = {mu:.1f}\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%)")
-    if method != 'riemann' or (regularization == 'scm' and ensemble):
+    if method != "riemann" or (regularization == "scm" and ensemble):
         assert mu > 300
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
     # test_trcacode()

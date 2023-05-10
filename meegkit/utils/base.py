@@ -39,11 +39,12 @@ def mldivide(A, B):
     try:
         # Note: we must use overwrite_a=False in order to be able to
         # use the fall-back solution below in case a LinAlgError is raised
-        return linalg.solve(A, B, assume_a='pos', overwrite_a=False)
+        return linalg.solve(A, B, assume_a="pos", overwrite_a=False)
     except linalg.LinAlgError:
         # Singular matrix in solving dual problem. Using least-squares
         # solution instead.
-        return linalg.lstsq(A, B, lapack_driver='gelsy')[0]
-    except linalg.LinAlgError:
-        print('Solution not stable. Model not updated!')
-        return None
+        try:
+            return linalg.lstsq(A, B, lapack_driver="gelsy")[0]
+        except linalg.LinAlgError:
+            print("Solution not stable. Model not updated!")
+            return None

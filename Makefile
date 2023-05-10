@@ -60,23 +60,32 @@ pydocstyle:
 	@pydocstyle
 
 pep:
-	@$(MAKE) -k flake pydocstyle codespell-error
+	@$(MAKE) -k ruff codespell
 
-flake:
-	@if command -v flake8 > /dev/null; then \
-		echo "Running flake8"; \
-		flake8 --count meegkit examples; \
-	else \
-		echo "flake8 not found, please install it!"; \
-		exit 1; \
-	fi;
-	@echo "flake8 passed"
+ruff:
+	@ruff check $(CODESPELL_DIRS)
+
+ruff-fix:
+	@ruff check $(CODESPELL_DIRS) --fix
+
+# Build and install
+# =============================================================================
+install-requirements:
+	@echo "Checking/Installing requirements..."
+	@pip install -q -r requirements.in
+
+install:
+	@echo "Installing  package..."
+	@pip install -q --no-deps .
+	@echo "\x1b[1m\x1b[32m * Package successfully installed! \x1b[0m"
+
+install-dev:
+	@echo "Installing  package in editable mode..."
+	@pip install -q -e ".[docs, tests]" --config-settings editable_mode=compat
+	@echo "\x1b[1m\x1b[32m * Package successfully installed! \x1b[0m"
 
 # Tests
 # =============================================================================
-# test:
-# 	py.test tests
-
 test: in
 	rm -f .coverage
 	$(PYTESTS) -m 'not ultraslowtest' meegkit
@@ -94,3 +103,6 @@ test-full: in
 	$(PYTESTS) meegkit
 
 .PHONY: init test
+
+
+
