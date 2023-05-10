@@ -12,20 +12,22 @@
 #
 import os
 import sys
-import matplotlib
-matplotlib.use('agg')
+
+import matplotlib as mpl
+
+mpl.use("agg")
 
 curdir = os.path.dirname(__file__)
-sys.path.append(os.path.abspath(os.path.join(curdir, '..')))
-sys.path.append(os.path.abspath(os.path.join(curdir, '..', 'meegkit')))
+sys.path.append(os.path.abspath(os.path.join(curdir, "..")))
+sys.path.append(os.path.abspath(os.path.join(curdir, "..", "meegkit")))
 
 import meegkit # noqa
 
 # -- Project information -----------------------------------------------------
 
-project = 'MEEGkit'
-copyright = '2022, Nicolas Barascud'
-author = 'Nicolas Barascud'
+project = "MEEGkit"
+copyright = "2023, Nicolas Barascud"
+author = "Nicolas Barascud"
 release = meegkit.__version__
 version = meegkit.__version__
 
@@ -35,31 +37,31 @@ version = meegkit.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.napoleon',
-    'numpydoc',
-    'jupyter_sphinx',
-    'sphinx_gallery.gen_gallery',
-    'sphinxemoji.sphinxemoji',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.napoleon",
+    "numpydoc",
+    "jupyter_sphinx",
+    "sphinx_gallery.gen_gallery",
+    "sphinxemoji.sphinxemoji",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'config.py']
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "config.py"]
 
 # generate autosummary even if no references
 # autosummary_generate = True
 autodoc_default_options = {
-    'members': True,
-    'special-members': '__init__',
-    'undoc-members': True,
-    'show-inheritance': True,
-    'exclude-members': '__weakref__'
+    "members": True,
+    "special-members": "__init__",
+    "undoc-members": True,
+    "show-inheritance": True,
+    "exclude-members": "__weakref__"
 }
 numpydoc_show_class_members = True
 
@@ -75,12 +77,12 @@ master_doc = "index"
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages
-html_theme = 'pydata_sphinx_theme'
+html_theme = "pydata_sphinx_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 
 html_theme_options = {
@@ -116,10 +118,10 @@ html_context = {
 # -- Options for Sphinx-gallery HTML ------------------------------------------
 
 sphinx_gallery_conf = {
-    'doc_module': ('meegkit',),
-    'examples_dirs': '../examples',   # path to your example scripts
-    'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
-    'filename_pattern': '/example_',
-    'ignore_pattern': 'config.py',
-    'run_stale_examples': False,
+    "doc_module": ("meegkit",),
+    "examples_dirs": "../examples",   # path to your example scripts
+    "gallery_dirs": "auto_examples",  # path to where to save gallery generated output
+    "filename_pattern": "/example_",
+    "ignore_pattern": "config.py",
+    "run_stale_examples": False,
 }

@@ -5,6 +5,7 @@ from numpy.testing import assert_allclose
 from meegkit.star import star
 from meegkit.utils import demean, normcol
 
+rng = np.random.default_rng(9)
 
 def test_star1():
     """Test STAR 1."""
@@ -17,11 +18,10 @@ def test_star1():
     def sim_data(n_samples, n_chans, f, SNR):
         target = np.sin(np.arange(n_samples) / n_samples * 2 * np.pi * f)
         target = target[:, np.newaxis]
-        noise = np.random.randn(n_samples, n_chans - 3)
+        noise = rng.standard_normal((n_samples, n_chans - 3))
 
-        x0 = (normcol(np.dot(
-            noise, np.random.randn(noise.shape[1], n_chans))) +
-            SNR * target * np.random.randn(1, n_chans))
+        x0 = normcol(np.dot(noise, rng.standard_normal((noise.shape[1], n_chans)))) \
+            + SNR * target * rng.standard_normal((1, n_chans))
         x0 = demean(x0)
         artifact = np.zeros(x0.shape)
         for k in np.arange(n_chans):
@@ -31,7 +31,7 @@ def test_star1():
 
     # Test SNR=1
     x, x0 = sim_data(n_samples, n_chans, f, SNR=np.sqrt(1))
-    y, w, _ = star(x, 2, verbose='debug')
+    y, w, _ = star(x, 2, verbose="debug")
     assert_allclose(demean(y), x0)  # check that denoised signal ~ x0
 
     # Test more unfavourable SNR
@@ -45,7 +45,7 @@ def test_star1():
     assert_allclose(demean(y)[:, 0], x[:, 0])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
     # test_star1()

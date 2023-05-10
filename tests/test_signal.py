@@ -1,15 +1,17 @@
 """Test signal utils."""
 import numpy as np
-from scipy.signal import lfilter, butter, freqz
-from meegkit.utils.sig import teager_kaiser, stmcb
+from scipy.signal import butter, freqz, lfilter
 
+from meegkit.utils.sig import stmcb, teager_kaiser
+
+rng = np.random.default_rng(9)
 
 def test_teager_kaiser(show=False):
     """Test Teager-Kaiser Energy."""
-    x = 2 * np.random.rand(1000, 2) - 1
+    x = 2 * rng.random((1000, 2)) - 1
     x[100, 0] = 5
     x[200, 0] = 5
-    x += np.cumsum(np.random.randn(1000, 1) + 0.1, axis=0) / 1000
+    x += np.cumsum(rng.standard_normal((1000, 1)) + 0.1, axis=0) / 1000
     for i in range(1, 5):
         print(i)
         y = teager_kaiser(x, M=i, m=1)
@@ -20,8 +22,8 @@ def test_teager_kaiser(show=False):
         plt.figure()
         # plt.plot((x[1:, 0] - x[1:, 0].mean()) / np.nanstd(x[1:, 0]))
         # plt.plot((y[..., 0] - y[..., 0].mean()) / np.nanstd(y[..., 0]))
-        plt.plot(x[1:, 0], label='X')
-        plt.plot(y[..., 0], label='Y')
+        plt.plot(x[1:, 0], label="X")
+        plt.plot(y[..., 0], label="Y")
         plt.legend()
         plt.show()
 
@@ -39,10 +41,10 @@ def test_stcmb(show=True):
     if show:
         import matplotlib.pyplot as plt
         f, ax = plt.subplots(2, 1)
-        ax[0].plot(x, label='step')
-        ax[0].plot(y, label='filt')
-        ax[1].plot(w, np.abs(h), label='real')
-        ax[1].plot(ww, np.abs(hh), label='stcmb')
+        ax[0].plot(x, label="step")
+        ax[0].plot(y, label="filt")
+        ax[1].plot(w, np.abs(h), label="real")
+        ax[1].plot(ww, np.abs(hh), label="stcmb")
         ax[0].legend()
         ax[1].legend()
         plt.show()
@@ -50,4 +52,5 @@ def test_stcmb(show=True):
     np.testing.assert_allclose(h, hh, rtol=2)  # equal to 2%
 
 if __name__ == "__main__":
+    test_teager_kaiser()
     test_stcmb()

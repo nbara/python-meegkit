@@ -3,12 +3,19 @@ import numpy as np
 from scipy import linalg
 
 from .base import mldivide
-from .matrix import (_check_shifts, _check_weights, multishift, relshift,
-                     theshapeof, unsqueeze)
+from .matrix import (
+    _check_shifts,
+    _check_weights,
+    multishift,
+    relshift,
+    theshapeof,
+    unsqueeze,
+)
+
+rng = np.random.default_rng()
 
 
-def block_covariance(data, window=128, overlap=0.5, padding=True,
-                     estimator='cov'):
+def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov"):
     """Compute blockwise covariance.
 
     Parameters
@@ -78,11 +85,11 @@ def cov_lags(X, Y, shifts=None):
     n_samples2, n_chans2, n_trials2 = theshapeof(Y)
 
     if n_samples != n_samples2:
-        raise AttributeError('X and Y must have same n_times')
+        raise AttributeError("X and Y must have same n_times")
     if n_trials != n_trials2:
-        raise AttributeError('X and Y must have same n_trials')
+        raise AttributeError("X and Y must have same n_trials")
     if n_samples <= max(shifts):
-        raise AttributeError('shifts should be no larger than n_samples')
+        raise AttributeError("shifts should be no larger than n_samples")
 
     n_cov = n_chans + n_chans2  # sum of channels of X and Y
     C = np.zeros((n_cov, n_cov, n_shifts))
@@ -142,7 +149,7 @@ def tsxcov(X, Y, shifts=None, weights=None, assume_centered=True):
 
     # Apply weights if any
     if weights.any():
-        X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult
+        X = np.einsum("ijk,ilk->ijk", X, weights)  # element-wise mult
         weights = weights[:n_times2, :, :]
 
     # cross covariance
@@ -208,7 +215,7 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
         X = X - X.mean(0, keepdims=1)
 
     if weights.any():  # weights
-        X = np.einsum('ijk,ilk->ijk', X, weights)  # element-wise mult
+        X = np.einsum("ijk,ilk->ijk", X, weights)  # element-wise mult
         tw = np.sum(weights[:])
     else:  # no weights
         N = 0
@@ -287,7 +294,7 @@ def convmtx(V, n):
     [nr, nc] = V.shape
     V = V.flatten()
 
-    c = np.hstack((V, np.zeros((n - 1))))
+    c = np.hstack((V, np.zeros(n - 1)))
     r = np.zeros(n)
     m = len(c)
     x_left = r[n:0:-1]  # reverse order from n to 2 in original code
@@ -336,7 +343,7 @@ def pca(cov, max_comps=None, thresh=0):
 
     """
     if thresh is not None and (thresh > 1 or thresh < 0):
-        raise ValueError('Threshold must be between 0 and 1 (or None).')
+        raise ValueError("Threshold must be between 0 and 1 (or None).")
 
     d, V = linalg.eigh(cov)
     d = d.real
@@ -365,13 +372,13 @@ def pca(cov, max_comps=None, thresh=0):
 
     var = 100 * d.sum() / p0
     if var < 99:
-        print('[PCA] Explained variance of selected components : {:.2f}%'.
+        print("[PCA] Explained variance of selected components : {:.2f}%".
               format(var))
 
     return V, d
 
 
-def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
+def regcov(Cxy, Cyy, keep=None, threshold=0):
     """Compute regression matrix from cross covariance.
 
     Parameters
@@ -381,9 +388,10 @@ def regcov(Cxy, Cyy, keep=np.array([]), threshold=np.array([])):
     Cyy : array
         Covariance matrix of regressor.
     keep : array
-        Number of regressor PCs to keep (default=all).
+        Number of regressor PCs to keep (default=None, which keeps all).
     threshold : float
-        Eigenvalue threshold for discarding regressor PCs (default=0).
+        Eigenvalue threshold for discarding regressor PCs (default=0, which keeps all
+        components).
 
     Returns
     -------
@@ -447,7 +455,7 @@ def nonlinear_eigenspace(L, k, alpha=1):
     from pymanopt.optimizers import TrustRegions
 
     n = L.shape[0]
-    assert L.shape[1] == n, 'L must be square.'
+    assert L.shape[1] == n, "L must be square."
 
     # Grassmann manifold description
     manifold = Grassmann(n, k)
@@ -483,7 +491,7 @@ def nonlinear_eigenspace(L, k, alpha=1):
 
     # Initialization as suggested in above referenced paper.
     # randomly generate starting point for svd
-    x = np.random.randn(n, k)
+    x = rng.standard_normal((n, k))
     [U, S, V] = linalg.svd(x, full_matrices=False)
     x = U.dot(V.T)
     S0, U0 = linalg.eig(

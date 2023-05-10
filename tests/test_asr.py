@@ -4,10 +4,11 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
+from scipy import signal
+
 from meegkit.asr import ASR, asr_calibrate, asr_process, clean_windows
 from meegkit.utils.asr import yulewalk, yulewalk_filter
 from meegkit.utils.matrix import sliding_window
-from scipy import signal
 
 # Data files
 THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
@@ -18,9 +19,10 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 # raw.crop(0, 60)  # keep 60s only
 # raw.pick_types(eeg=True, misc=False)
 # raw = raw._data
+rng = np.random.default_rng(9)
 
 
-@pytest.mark.parametrize(argnames='sfreq', argvalues=(125, 250, 256, 2048))
+@pytest.mark.parametrize(argnames="sfreq", argvalues=(125, 250, 256, 2048))
 def test_yulewalk(sfreq, show=False):
     """Test that my version of yulewelk works just like MATLAB's."""
     # Temp fix, values are computed in matlab using yulewalk.m
@@ -53,7 +55,7 @@ def test_yulewalk(sfreq, show=False):
              -132.920238664871, 158.567177443427, -121.909488069062,
              58.9853908881204, -16.4212688404351, 2.01391570212326]
     else:
-        raise AttributeError('Currently sfreq must be 250, 256 or 2048...')
+        raise AttributeError("Currently sfreq must be 250, 256 or 2048...")
 
     # Theoretical values
     w0, h0 = signal.freqz(b, a, sfreq)
@@ -68,12 +70,12 @@ def test_yulewalk(sfreq, show=False):
     if show:
         fig = plt.figure()
         ax = fig.add_subplot(111)
-        ax.plot(w0 / np.pi, np.abs(h0), label='matlab')
-        ax.plot(w1 / np.pi, np.abs(h1), ':', label='mine')
-        ax.set_title('Filter frequency response')
-        ax.set_xlabel('Frequency [radians / second]')
-        ax.set_ylabel('Amplitude [dB]')
-        ax.grid(which='both', axis='both')
+        ax.plot(w0 / np.pi, np.abs(h0), label="matlab")
+        ax.plot(w1 / np.pi, np.abs(h1), ":", label="mine")
+        ax.set_title("Filter frequency response")
+        ax.set_xlabel("Frequency [radians / second]")
+        ax.set_ylabel("Amplitude [dB]")
+        ax.grid(which="both", axis="both")
         ax.legend()
         # plt.show()
 
@@ -86,48 +88,48 @@ def test_yulewalk(sfreq, show=False):
 
     if show:
         plt.figure()
-        plt.plot(f, m, label='ideal')
-        plt.plot(w / np.pi, np.abs(h), '--', label='yw designed')
+        plt.plot(f, m, label="ideal")
+        plt.plot(w / np.pi, np.abs(h), "--", label="yw designed")
         plt.legend()
-        plt.title('Comparison of Frequency Response Magnitudes')
+        plt.title("Comparison of Frequency Response Magnitudes")
         plt.legend()
         plt.show()
 
 
-@pytest.mark.parametrize(argnames='n_chans', argvalues=(4, 8, 12))
+@pytest.mark.parametrize(argnames="n_chans", argvalues=(4, 8, 12))
 def test_yulewalk_filter(n_chans, show=False):
     """Test yulewalk filter."""
-    raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
     sfreq = 250
     n_chan_orig = raw.shape[0]
-    raw = np.random.randn(n_chans, n_chan_orig) @ raw
+    raw = rng.standard_normal((n_chans, n_chan_orig)) @ raw
     raw_filt, iirstate = yulewalk_filter(raw, sfreq)
 
     if show:
         f, ax = plt.subplots(n_chans, sharex=True, figsize=(8, 5))
         for i in range(n_chans):
-            ax[i].plot(raw[i], lw=.5, label='before')
-            ax[i].plot(raw_filt[i], label='after', lw=.5)
+            ax[i].plot(raw[i], lw=.5, label="before")
+            ax[i].plot(raw_filt[i], label="after", lw=.5)
             ax[i].set_ylim([-50, 50])
             if i < n_chans - 1:
                 ax[i].set_yticks([])
-        ax[i].set_xlabel('Time (s)')
-        ax[i].set_ylabel(f'ch{i}')
-        ax[0].legend(fontsize='small', bbox_to_anchor=(1.04, 1),
+        ax[i].set_xlabel("Time (s)")
+        ax[i].set_ylabel(f"ch{i}")
+        ax[0].legend(fontsize="small", bbox_to_anchor=(1.04, 1),
                      borderaxespad=0)
         plt.subplots_adjust(hspace=0, right=0.75)
-        plt.suptitle('Before/after filter')
+        plt.suptitle("Before/after filter")
         plt.show()
 
 
-def test_asr_functions(show=False, method='riemann'):
+def test_asr_functions(show=False, method="riemann"):
     """Test ASR functions (offline use).
 
     Note: this will not be optimal since the filter parameters will be
     estimated only once and not updated online as is intended.
 
     """
-    raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
     sfreq = 250
     raw_filt = raw.copy()
     raw_filt, iirstate = yulewalk_filter(raw_filt, sfreq)
@@ -147,34 +149,33 @@ def test_asr_functions(show=False, method='riemann'):
     if show:
         f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
         for i in range(8):
-            ax[i].fill_between(train_idx, 0, 1, color='grey', alpha=.3,
+            ax[i].fill_between(train_idx, 0, 1, color="grey", alpha=.3,
                                transform=ax[i].get_xaxis_transform(),
-                               label='calibration window')
+                               label="calibration window")
             ax[i].fill_between(train_idx, 0, 1, where=sample_mask.flat,
                                transform=ax[i].get_xaxis_transform(),
-                               facecolor='none', hatch='...', edgecolor='k',
-                               label='selected window')
-            ax[i].plot(raw[i], lw=.5, label='before ASR')
-            ax[i].plot(clean[i], label='after ASR', lw=.5)
+                               facecolor="none", hatch="...", edgecolor="k",
+                               label="selected window")
+            ax[i].plot(raw[i], lw=.5, label="before ASR")
+            ax[i].plot(clean[i], label="after ASR", lw=.5)
             # ax[i].set_xlim([10, 50])
             ax[i].set_ylim([-50, 50])
             # ax[i].set_ylabel(raw.ch_names[i])
             if i < 7:
                 ax[i].set_yticks([])
-        ax[i].set_xlabel('Time (s)')
-        ax[0].legend(fontsize='small', bbox_to_anchor=(1.04, 1),
+        ax[i].set_xlabel("Time (s)")
+        ax[0].legend(fontsize="small", bbox_to_anchor=(1.04, 1),
                      borderaxespad=0)
         plt.subplots_adjust(hspace=0, right=0.75)
-        plt.suptitle('Before/after ASR')
+        plt.suptitle("Before/after ASR")
         plt.show()
 
 
-@pytest.mark.parametrize(argnames='method', argvalues=('riemann', 'euclid'))
-@pytest.mark.parametrize(argnames='reref', argvalues=(False, True))
+@pytest.mark.parametrize(argnames="method", argvalues=("riemann", "euclid"))
+@pytest.mark.parametrize(argnames="reref", argvalues=(False, True))
 def test_asr_class(method, reref, show=False):
     """Test ASR class (simulate online use)."""
-    np.random.default_rng(9)
-    raw = np.load(os.path.join(THIS_FOLDER, 'data', 'eeg_raw.npy'))
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
     sfreq = 250
     # Train on a clean portion of data
     train_idx = np.arange(5 * sfreq, 45 * sfreq, dtype=int)
@@ -187,15 +188,15 @@ def test_asr_class(method, reref, show=False):
         raw2 = raw.copy()
 
     if reref:
-        if method == 'riemann':
-            with pytest.raises(ValueError, match='Add regularization'):
-                blah = ASR(method=method, estimator='scm')
+        if method == "riemann":
+            with pytest.raises(ValueError, match="Add regularization"):
+                blah = ASR(method=method, estimator="scm")
                 blah.fit(raw2[:, train_idx])
 
-        asr = ASR(method=method, estimator='lwf')
+        asr = ASR(method=method, estimator="lwf")
         asr.fit(raw2[:, train_idx])
     else:
-        asr = ASR(method=method, estimator='scm')
+        asr = ASR(method=method, estimator="scm")
         asr.fit(raw2[:, train_idx])
 
     # Split into small windows
@@ -219,27 +220,27 @@ def test_asr_class(method, reref, show=False):
     if show:
         f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
         for i in range(8):
-            ax[i].plot(times, X[i], lw=.5, label='before ASR')
-            ax[i].plot(times, Y[i], label='after ASR', lw=.5)
+            ax[i].plot(times, X[i], lw=.5, label="before ASR")
+            ax[i].plot(times, Y[i], label="after ASR", lw=.5)
             ax[i].set_ylim([-50, 50])
-            ax[i].set_ylabel(f'ch{i}')
+            ax[i].set_ylabel(f"ch{i}")
             if i < 7:
                 ax[i].set_yticks([])
-        ax[i].set_xlabel('Time (s)')
-        ax[0].legend(fontsize='small', bbox_to_anchor=(1.04, 1),
+        ax[i].set_xlabel("Time (s)")
+        ax[0].legend(fontsize="small", bbox_to_anchor=(1.04, 1),
                      borderaxespad=0)
         plt.subplots_adjust(hspace=0, right=0.75)
-        plt.suptitle('Before/after ASR')
+        plt.suptitle("Before/after ASR")
 
         f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
         for i in range(8):
-            ax[i].plot(times, Y[i], label='incremental', lw=.5)
-            ax[i].plot(times, Y2[i], label='bulk', lw=.5)
-            ax[i].plot(times, Y[i] - Y2[i], label='difference', lw=.5)
+            ax[i].plot(times, Y[i], label="incremental", lw=.5)
+            ax[i].plot(times, Y2[i], label="bulk", lw=.5)
+            ax[i].plot(times, Y[i] - Y2[i], label="difference", lw=.5)
             if i < 7:
                 ax[i].set_yticks([])
-        ax[i].set_xlabel('Time (s)')
-        plt.suptitle('incremental vs. bulk difference ')
+        ax[i].set_xlabel("Time (s)")
+        plt.suptitle("incremental vs. bulk difference ")
         plt.show()
 
     # TODO: the transform() process is stochastic, so Y and Y2 are not going to

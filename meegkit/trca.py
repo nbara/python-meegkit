@@ -3,11 +3,11 @@
 #          Ludovic Darmet <ludovic.darmet@isae-supaero.fr>
 import numpy as np
 import scipy.linalg as linalg
-from pyriemann.utils.mean import mean_covariance
 from pyriemann.estimation import Covariances
+from pyriemann.utils.mean import mean_covariance
 
-from .utils.trca import bandpass, schaefer_strimmer_cov
 from .utils import theshapeof
+from .utils.trca import bandpass, schaefer_strimmer_cov
 
 
 class TRCA:
@@ -66,15 +66,15 @@ class TRCA:
 
     """
 
-    def __init__(self, sfreq, filterbank, ensemble=False, method='original',
-                 estimator='scm'):
+    def __init__(self, sfreq, filterbank, ensemble=False, method="original",
+                 estimator="scm"):
         self.sfreq = sfreq
         self.ensemble = ensemble
         self.filterbank = filterbank
         self.n_bands = len(self.filterbank)
         self.coef_ = None
         self.method = method
-        if estimator == 'schaefer':
+        if estimator == "schaefer":
             self.estimator = schaefer_strimmer_cov
         else:
             self.estimator = estimator
@@ -112,12 +112,12 @@ class TRCA:
                     trains[class_i, fb_i] = eeg_tmp
                 # Find the spatial filter for the corresponding filtered signal
                 # and label
-                if self.method == 'original':
+                if self.method == "original":
                     w_best = trca(eeg_tmp)
-                elif self.method == 'riemann':
+                elif self.method == "riemann":
                     w_best = trca_regul(eeg_tmp, self.estimator)
                 else:
-                    raise ValueError('Invalid `method` option.')
+                    raise ValueError("Invalid `method` option.")
 
                 W[fb_i, class_i, :] = w_best  # Store the spatial filter
 
@@ -144,14 +144,14 @@ class TRCA:
 
         """
         if self.coef_ is None:
-            raise RuntimeError('TRCA is not fitted')
+            raise RuntimeError("TRCA is not fitted")
 
         # Alpha coefficients for the fusion of filterbank analysis
         fb_coefs = [(x + 1)**(-1.25) + 0.25 for x in range(self.n_bands)]
         _, _, n_trials = theshapeof(X)
 
         r = np.zeros((self.n_bands, len(self.classes)))
-        pred = np.zeros((n_trials), 'int')  # To store predictions
+        pred = np.zeros((n_trials), "int")  # To store predictions
 
         for trial in range(n_trials):
             test_tmp = X[..., trial]  # pick a trial to be analysed
@@ -318,9 +318,9 @@ def trca_regul(X, method):
     # If the number of samples is too big, we compute an approximate of
     # riemannian mean to speed up the computation
     if n_trials < 30:
-        S = mean_covariance(S, metric='riemann')
+        S = mean_covariance(S, metric="riemann")
     else:
-        S = mean_covariance(S, metric='logeuclid')
+        S = mean_covariance(S, metric="logeuclid")
 
     # 3. Compute eigenvalues and vectors
     # -------------------------------------------------------------------------

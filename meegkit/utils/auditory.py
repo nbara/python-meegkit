@@ -224,5 +224,5 @@ class AuditoryFilterbank(GammatoneFilterbank):
                          30, 800, 1000, 1250, 1600, 2000, 2500, 3150, 4000,
                          5000, 6300, 8000])
 
-        super(AuditoryFilterbank, self).__init__(
+        super().__init__(
             sfreq=sfreq, cf=cf, b=b, order=order, q=q, min_bw=min_bw)

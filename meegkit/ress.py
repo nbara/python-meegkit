@@ -2,7 +2,7 @@
 import numpy as np
 from scipy import linalg
 
-from .utils import demean, gaussfilt, theshapeof, tscov, mrdivide
+from .utils import demean, gaussfilt, mrdivide, theshapeof, tscov
 
 
 def RESS(X, sfreq: int, peak_freq: float, neig_freq: float = 1,

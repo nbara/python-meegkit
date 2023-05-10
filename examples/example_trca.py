@@ -11,8 +11,8 @@ https://github.com/mnakanishi/TRCA-SSVEP
 
 Uses `meegkit.trca.TRCA()`.
 
-References:
-
+References
+----------
 .. [1] M. Nakanishi, Y. Wang, X. Chen, Y.-T. Wang, X. Gao, and T.-P. Jung,
    "Enhancing detection of SSVEPs for a high-speed brain speller using
    task-related component analysis", IEEE Trans. Biomed. Eng, 65(1): 104-112,
@@ -33,6 +33,7 @@ import time
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
+
 from meegkit.trca import TRCA
 from meegkit.utils.trca import itr, normfit, round_half_up
 
@@ -65,7 +66,7 @@ ci = 100 * (1 - alpha_ci)  # confidence interval
 ###############################################################################
 # Load data
 # -----------------------------------------------------------------------------
-path = os.path.join('..', 'tests', 'data', 'trcadata.mat')
+path = os.path.join("..", "tests", "data", "trcadata.mat")
 eeg = scipy.io.loadmat(path)["eeg"]
 
 n_trials, n_chans, n_samples, n_blocks = eeg.shape
@@ -98,27 +99,27 @@ filterbank = [[(6, 90), (4, 100)],  # passband, stopband freqs [(Wp), (Ws)]
               [(54, 90), (48, 100)]]
 
 f, ax = plt.subplots(1, figsize=(7, 4))
-for i, band in enumerate(filterbank):
+for i, _band in enumerate(filterbank):
     ax.axvspan(ymin=i / len(filterbank) + .02,
                ymax=(i + 1) / len(filterbank) - .02,
                xmin=filterbank[i][1][0], xmax=filterbank[i][1][1],
-               alpha=0.2, facecolor=f'C{i}')
+               alpha=0.2, facecolor=f"C{i}")
     ax.axvspan(ymin=i / len(filterbank) + .02,
                ymax=(i + 1) / len(filterbank) - .02,
                xmin=filterbank[i][0][0], xmax=filterbank[i][0][1],
-               alpha=0.5, label=f'sub-band{i}', facecolor=f'C{i}')
+               alpha=0.5, label=f"sub-band{i}", facecolor=f"C{i}")
 
 for f in list_freqs.flat:
     colors = np.ones((9, 4))
     colors[:, :3] = np.linspace(0, .5, 9)[:, None]
     ax.scatter(f * np.arange(1, 10), [f] * 9, c=colors, s=8, zorder=100)
 
-ax.set_ylabel('Stimulus frequency (Hz)')
-ax.set_xlabel('EEG response frequency (Hz)')
+ax.set_ylabel("Stimulus frequency (Hz)")
+ax.set_xlabel("EEG response frequency (Hz)")
 ax.set_xlim([0, 102])
 ax.set_xticks(np.arange(0, 100, 10))
-ax.grid(True, ls=':', axis='x')
-ax.legend(bbox_to_anchor=(1.05, .5), fontsize='small')
+ax.grid(True, ls=":", axis="x")
+ax.legend(bbox_to_anchor=(1.05, .5), fontsize="small")
 plt.tight_layout()
 plt.show()
 
@@ -126,7 +127,7 @@ plt.show()
 # Now perform the TRCA-based SSVEP detection algorithm
 trca = TRCA(sfreq, filterbank, is_ensemble)
 
-print('Results of the ensemble TRCA-based method:\n')
+print("Results of the ensemble TRCA-based method:\n")
 accs = np.zeros(n_blocks)
 itrs = np.zeros(n_blocks)
 for i in range(n_blocks):
@@ -159,8 +160,8 @@ print(f"\nMean accuracy = {mu:.1f}%\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f}%
 mu, _, muci, _ = normfit(itrs, alpha_ci)
 print(f"Mean ITR = {mu:.1f}\t({ci:.0f}% CI: {muci[0]:.1f}-{muci[1]:.1f})")
 if is_ensemble:
-    ensemble = 'ensemble TRCA-based method'
+    ensemble = "ensemble TRCA-based method"
 else:
-    ensemble = 'TRCA-based method'
+    ensemble = "TRCA-based method"
 
 print(f"\nElapsed time: {time.time()-t:.1f} seconds")

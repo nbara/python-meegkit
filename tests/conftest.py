@@ -1,6 +1,5 @@
-import pytest
-
 import matplotlib.pyplot as plt
+import pytest
 
 
 def pytest_addoption(parser):
@@ -22,7 +21,7 @@ def pytest_addoption(parser):
 def pytest_collection_modifyitems(config, items):
     """Do not skip slow test if option provided."""
     if config.getoption("--noplots"):
-        plt.switch_backend('agg')
+        plt.switch_backend("agg")
 
     if config.getoption("--runslow"):
         # --runslow given in cli: do not skip slow tests

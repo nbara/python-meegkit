@@ -12,7 +12,7 @@ import numpy as np
 from meegkit import star
 from meegkit.utils import demean, normcol
 
-# import config
+rng = np.random.default_rng(9)
 
 ###############################################################################
 # Create simulated data
@@ -26,12 +26,12 @@ n_samples = 1000
 f = 2
 target = np.sin(np.arange(n_samples) / n_samples * 2 * np.pi * f)
 target = target[:, np.newaxis]
-noise = np.random.randn(n_samples, nchans - 3)
+noise = rng.standard_normal((n_samples, nchans - 3))
 
 # Create artifact signal
 SNR = np.sqrt(1)
-x0 = (normcol(np.dot(noise, np.random.randn(noise.shape[1], nchans))) +
-      SNR * target * np.random.randn(1, nchans))
+x0 = normcol(np.dot(noise, rng.standard_normal((noise.shape[1], nchans)))) + \
+    SNR * target * rng.standard_normal((1, nchans))
 x0 = demean(x0)
 artifact = np.zeros(x0.shape)
 for k in np.arange(nchans):
@@ -54,10 +54,10 @@ y, w, _ = star.star(x, 2)
 # -----------------------------------------------------------------------------
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.plot(x, lw=.5)
-ax1.set_title('Signal + Artifacts (SNR = {})'.format(SNR))
+ax1.set_title(f"Signal + Artifacts (SNR = {SNR})")
 ax2.plot(y, lw=.5)
-ax2.set_title('Denoised')
+ax2.set_title("Denoised")
 ax3.plot(demean(y) - x0, lw=.5)
-ax3.set_title('Residual')
+ax3.set_title("Residual")
 f.set_tight_layout(True)
 plt.show()

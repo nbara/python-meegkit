@@ -1,5 +1,4 @@
 """Statistics utilities."""
-from __future__ import division, print_function
 
 import numpy as np
 
@@ -9,6 +8,8 @@ try:
     import mne
 except ImportError:
     mne = None
+
+rng = np.random.default_rng()
 
 
 def rms(X, axis=0):
@@ -62,11 +63,11 @@ def rolling_corr(X, y, window=None, sfreq=1, step=1, axis=0):
     if y.ndim == 3:
         y = np.squeeze(y)
     if X.ndim > 3:
-        raise AttributeError('Data must be 2D or 3D.')
+        raise AttributeError("Data must be 2D or 3D.")
     if y.shape[0] != X.shape[0]:
-        raise AttributeError('X and y must share the same time axis.')
+        raise AttributeError("X and y must share the same time axis.")
     if y.ndim > 2:
-        raise AttributeError('y must be at most 2D.')
+        raise AttributeError("y must be at most 2D.")
 
     n_times, n_chans, n_epochs = theshapeof(X)
     timebins = np.arange(n_times - window, 0, -step)[::-1]
@@ -116,15 +117,13 @@ def bootstrap_ci(X, n_bootstrap=2000, ci=(5, 95), axis=-1):
         Confidence intervals.
 
     """
-    n_samples, n_chans, n_trials = theshapeof(X)
     idx = np.arange(X.shape[axis], dtype=int)
-
     shape = list(X.shape)
     shape.pop(axis)
 
-    bootstraps = np.nan * np.ones(((n_bootstrap,) + tuple(shape)))
+    bootstraps = np.nan * np.ones((n_bootstrap,) + tuple(shape))
     for i in range(n_bootstrap):
-        temp_idx = np.random.choice(idx, replace=True, size=len(idx))
+        temp_idx = rng.choice(idx, replace=True, size=len(idx))
         bootstraps[i] = np.mean(np.take(X, temp_idx, axis=axis), axis=axis)
 
     ci_low, ci_up = np.percentile(bootstraps, ci, axis=0)
@@ -179,14 +178,14 @@ def bootstrap_snr(epochs, n_bootstrap=2000, baseline=None, window=None):
     gfp_bs = np.empty((n_bootstrap, n_chans, len(epochs.times)))
 
     for i in range(n_bootstrap):
-        bs_indices = np.random.choice(indices, replace=True, size=len(indices))
+        bs_indices = rng.choice(indices, replace=True, size=len(indices))
         erp_bs[i] = np.mean(epochs._data[bs_indices, ...], 0)
 
         # Baseline correct mean waveform
         if baseline:
             erp_bs[i] = mne.baseline.rescale(erp_bs[i], epochs.times,
                                              baseline=baseline,
-                                             verbose='ERROR')
+                                             verbose="ERROR")
 
         # Rectify waveform
         gfp_bs[i] = np.sqrt(erp_bs[i] ** 2)
@@ -271,7 +270,7 @@ def cronbach(epochs, K=None, n_bootstrap=2000, tmin=None, tmax=None):
 
     alpha = np.empty((n_bootstrap, n_chans))
     for b in np.arange(n_bootstrap):  # take K trials randomly
-        idx = np.random.choice(range(n_trials), K)
+        idx = rng.choice(range(n_trials), K)
         X = erp[idx, :, tmin:tmax]
         sigmaY = X.var(axis=2).sum(0)  # var over time
         sigmaX = X.sum(axis=0).var(-1)  # var of average
@@ -329,8 +328,8 @@ def snr_spectrum(X, freqs, n_avg=1, n_harm=1, skipbins=1):
         n_freqs = X.shape[0]
         n_chans = X.shape[1]
     else:
-        raise ValueError('Data must have shape (n_freqs, n_chans, [n_trials,])'
-                         f', got {X.shape}')
+        raise ValueError("Data must have shape (n_freqs, n_chans, [n_trials,])"
+                         f", got {X.shape}")
 
     # Number of points to get desired resolution
     X = np.reshape(X, (n_freqs, n_chans * n_trials))
@@ -385,7 +384,7 @@ def snr_spectrum(X, freqs, n_avg=1, n_harm=1, skipbins=1):
                 B[h] = np.mean(X[bin_noise[h], i_trial].flatten() ** 2)
 
             # Ratio
-            with np.errstate(divide='ignore', invalid='ignore'):
+            with np.errstate(divide="ignore", invalid="ignore"):
                 SNR[i_bin, i_trial] = np.sqrt(A) / np.sqrt(B)
 
             del A

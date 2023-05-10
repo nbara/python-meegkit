@@ -3,7 +3,7 @@ from numpy.testing import assert_almost_equal, assert_equal
 from scipy.io import loadmat
 from sklearn.cross_decomposition import CCA
 
-from meegkit.cca import cca_crossvalidate, nt_cca, mcca
+from meegkit.cca import cca_crossvalidate, mcca, nt_cca
 from meegkit.utils import multishift, tscov
 
 
@@ -14,11 +14,11 @@ def test_cca():
     # y = rng.randn(1000, 9)
     # x = demean(x).squeeze()
     # y = demean(y).squeeze()
-    mat = loadmat('./tests/data/ccadata.mat')
-    x = mat['x']
-    y = mat['y']
-    A2 = mat['A2']
-    B2 = mat['B2']
+    mat = loadmat("./tests/data/ccadata.mat")
+    x = mat["x"]
+    y = mat["y"]
+    A2 = mat["A2"]
+    B2 = mat["B2"]
 
     A1, B1, R = nt_cca(x, y)  # if mean(A1(:).*A2(:))<0; A2=-A2; end
     X1 = np.dot(x, A1)
@@ -80,9 +80,9 @@ def test_cca2():
 
 def test_cca_scaling():
     """Test CCA with MEG data."""
-    data = np.load('./tests/data/ccadata_meg_2trials.npz')
-    raw = data['arr_0']
-    env = data['arr_1']
+    data = np.load("./tests/data/ccadata_meg_2trials.npz")
+    raw = data["arr_0"]
+    env = data["arr_1"]
 
     # Test with scaling (unit: fT)
     A0, B0, R0 = nt_cca(raw * 1e15, env)
@@ -138,9 +138,9 @@ def test_correlated():
 
 def test_cca_lags():
     """Test multiple lags."""
-    mat = loadmat('./tests/data/ccadata.mat')
-    x = mat['x']
-    y = mat['y']
+    mat = loadmat("./tests/data/ccadata.mat")
+    x = mat["x"]
+    y = mat["y"]
     y[:, :3] = x[:, :3]
     lags = np.arange(-10, 11, 1)
     A1, B1, R1 = nt_cca(x, y, lags)
@@ -165,10 +165,10 @@ def test_cca_crossvalidate():
     # xx = [x, x, x]
     # yy = [x[:, :9], y, y]
 
-    mat = loadmat('./tests/data/ccadata2.mat')
-    xx = mat['x']
-    yy = mat['y']
-    R1 = mat['R']  # no shifts
+    mat = loadmat("./tests/data/ccadata2.mat")
+    xx = mat["x"]
+    yy = mat["y"]
+    R1 = mat["R"]  # no shifts
 
     # Test with no shifts
     A, B, R = cca_crossvalidate(xx, yy)
@@ -201,8 +201,8 @@ def test_cca_crossvalidate_shifts():
     # uncorrelated
     y[:, 6:8, :] = rng.randn(n_times, 2, n_trials)
 
-    xx = multishift(x, -np.arange(1, 4), reshape=True, solution='valid')
-    yy = multishift(y, -np.arange(1, 4), reshape=True, solution='valid')
+    xx = multishift(x, -np.arange(1, 4), reshape=True, solution="valid")
+    yy = multishift(y, -np.arange(1, 4), reshape=True, solution="valid")
 
     # Test with shifts
     A, B, R = cca_crossvalidate(xx, yy, shifts=[-3, -2, -1, 0, 1, 2, 3])
@@ -217,10 +217,10 @@ def test_cca_crossvalidate_shifts():
 
 def test_cca_crossvalidate_shifts2():
     """Test CCA crossvalidation with shifts."""
-    mat = loadmat('./tests/data/ccacrossdata.mat')
-    xx = mat['xx2']
-    yy = mat['yy2']
-    R2 = mat['R'][:, ::-1, :]  # shifts go in reverse direction in noisetools
+    mat = loadmat("./tests/data/ccacrossdata.mat")
+    xx = mat["xx2"]
+    yy = mat["yy2"]
+    R2 = mat["R"][:, ::-1, :]  # shifts go in reverse direction in noisetools
 
     # Test with shifts
     A, B, R = cca_crossvalidate(xx, yy, shifts=[-3, -2, -1, 0, 1, 2, 3])
@@ -261,18 +261,18 @@ def test_mcca(show=False):
     if show:
         import matplotlib.pyplot as plt
         f, axes = plt.subplots(2, 3, figsize=(10, 6))
-        axes[0, 0].imshow(A, aspect='auto')
-        axes[0, 0].set_title('mCCA transform matrix')
-        axes[0, 1].imshow(A.T @ C @ A, aspect='auto')
-        axes[0, 1].set_title('Covariance of\ntransformed data')
-        axes[0, 2].imshow(x.T @ x @ A, aspect='auto')
-        axes[0, 2].set_title('Cross-correlation between\nraw & transformed data')
-        axes[0, 2].set_xlabel('transformed')
-        axes[0, 2].set_ylabel('raw')
+        axes[0, 0].imshow(A, aspect="auto")
+        axes[0, 0].set_title("mCCA transform matrix")
+        axes[0, 1].imshow(A.T @ C @ A, aspect="auto")
+        axes[0, 1].set_title("Covariance of\ntransformed data")
+        axes[0, 2].imshow(x.T @ x @ A, aspect="auto")
+        axes[0, 2].set_title("Cross-correlation between\nraw & transformed data")
+        axes[0, 2].set_xlabel("transformed")
+        axes[0, 2].set_ylabel("raw")
         ax = plt.subplot2grid((2, 3), (1, 0), colspan=3)
-        ax.plot(np.mean(z ** 2, axis=0), ':o')
-        ax.set_ylabel('Power')
-        ax.set_xlabel('CC')
+        ax.plot(np.mean(z ** 2, axis=0), ":o")
+        ax.set_ylabel("Power")
+        ax.set_xlabel("CC")
         plt.tight_layout()
         plt.show()
 
@@ -296,18 +296,18 @@ def test_mcca(show=False):
 
     if show:
         f, axes = plt.subplots(2, 3, figsize=(10, 6))
-        axes[0, 0].imshow(A, aspect='auto')
-        axes[0, 0].set_title('mCCA transform matrix')
-        axes[0, 1].imshow(A.T.dot(C.dot(A)), aspect='auto')
-        axes[0, 1].set_title('Covariance of\ntransformed data')
-        axes[0, 2].imshow(x.T.dot((x.dot(A))), aspect='auto')
-        axes[0, 2].set_title('Cross-correlation between\nraw & transformed data')
-        axes[0, 2].set_xlabel('transformed')
-        axes[0, 2].set_ylabel('raw')
+        axes[0, 0].imshow(A, aspect="auto")
+        axes[0, 0].set_title("mCCA transform matrix")
+        axes[0, 1].imshow(A.T.dot(C.dot(A)), aspect="auto")
+        axes[0, 1].set_title("Covariance of\ntransformed data")
+        axes[0, 2].imshow(x.T.dot(x.dot(A)), aspect="auto")
+        axes[0, 2].set_title("Cross-correlation between\nraw & transformed data")
+        axes[0, 2].set_xlabel("transformed")
+        axes[0, 2].set_ylabel("raw")
         ax = plt.subplot2grid((2, 3), (1, 0), colspan=3)
-        ax.plot(np.mean(z ** 2, axis=0), ':o')
-        ax.set_ylabel('Power')
-        ax.set_xlabel('CC')
+        ax.plot(np.mean(z ** 2, axis=0), ":o")
+        ax.set_ylabel("Power")
+        ax.set_xlabel("CC")
         plt.tight_layout()
         plt.show()
 
@@ -330,20 +330,20 @@ def test_mcca(show=False):
     # Plot results
     if show:
         f, axes = plt.subplots(2, 3, figsize=(10, 6))
-        axes[0, 0].imshow(A, aspect='auto')
-        axes[0, 0].set_title('mCCA transform matrix')
+        axes[0, 0].imshow(A, aspect="auto")
+        axes[0, 0].set_title("mCCA transform matrix")
 
-        axes[0, 1].imshow(A.T @ C @ A, aspect='auto')
-        axes[0, 1].set_title('Covariance of\ntransformed data')
+        axes[0, 1].imshow(A.T @ C @ A, aspect="auto")
+        axes[0, 1].set_title("Covariance of\ntransformed data")
 
-        axes[0, 2].imshow(x.T @ x @ A, aspect='auto')
-        axes[0, 2].set_title('Cross-correlation between\nraw & transformed data')
-        axes[0, 2].set_xlabel('transformed')
-        axes[0, 2].set_ylabel('raw')
+        axes[0, 2].imshow(x.T @ x @ A, aspect="auto")
+        axes[0, 2].set_title("Cross-correlation between\nraw & transformed data")
+        axes[0, 2].set_xlabel("transformed")
+        axes[0, 2].set_ylabel("raw")
         ax = plt.subplot2grid((2, 3), (1, 0), colspan=3)
-        ax.plot(np.mean(z ** 2, axis=0), ':o')
-        ax.set_ylabel('Power')
-        ax.set_xlabel('CC')
+        ax.plot(np.mean(z ** 2, axis=0), ":o")
+        ax.set_ylabel("Power")
+        ax.set_xlabel("CC")
         plt.tight_layout()
         plt.show()
 
@@ -352,7 +352,7 @@ def test_mcca(show=False):
     assert np.all(diagonal[:10] > 1), diagonal[:10]
     assert np.all(diagonal[10:] < .01)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import pytest
     pytest.main([__file__])
     # test_mcca(False)

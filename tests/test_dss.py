@@ -5,13 +5,16 @@ from tempfile import TemporaryDirectory
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from meegkit import dss
-from meegkit.utils import create_line_data, fold, tscov, unfold
 from numpy.testing import assert_allclose
 from scipy import signal
 
+from meegkit import dss
+from meegkit.utils import create_line_data, fold, tscov, unfold
 
-@pytest.mark.parametrize('n_bad_chans', [0, -1])
+rng = np.random.default_rng(10)
+
+
+@pytest.mark.parametrize("n_bad_chans", [0, -1])
 def test_dss0(n_bad_chans):
     """Test dss0.
 
@@ -64,9 +67,9 @@ def test_dss1(show=True):
 
     if show:
         f, (ax1, ax2, ax3) = plt.subplots(3, 1)
-        ax1.plot(source, label='source')
-        ax2.plot(np.mean(data, 2), label='data')
-        ax3.plot(best_comp, label='recovered')
+        ax1.plot(source, label="source")
+        ax2.plot(np.mean(data, 2), label="data")
+        ax3.plot(best_comp, label="recovered")
         plt.legend()
         plt.show()
 
@@ -74,7 +77,7 @@ def test_dss1(show=True):
                     atol=1e-6)  # use abs as DSS component might be flipped
 
 
-@pytest.mark.parametrize('nkeep', [None, 2])
+@pytest.mark.parametrize("nkeep", [None, 2])
 def test_dss_line(nkeep):
     """Test line noise removal."""
     sr = 200
@@ -92,11 +95,11 @@ def test_dss_line(nkeep):
         f, Pxx = signal.welch(s, sr, nperseg=1024, axis=0,
                               return_onesided=True)
         ax[0].semilogy(f, Pxx)
-        ax[0].set_xlabel('frequency [Hz]')
-        ax[1].set_xlabel('frequency [Hz]')
-        ax[0].set_ylabel('PSD [V**2/Hz]')
-        ax[0].set_title('before')
-        ax[1].set_title('after')
+        ax[0].set_xlabel("frequency [Hz]")
+        ax[1].set_xlabel("frequency [Hz]")
+        ax[0].set_ylabel("PSD [V**2/Hz]")
+        ax[0].set_title("before")
+        ax[1].set_title("after")
         plt.show()
 
     # 2D case, n_outputs == 1
@@ -112,7 +115,7 @@ def test_dss_line(nkeep):
     # _plot(out)
 
     # Test n_trials > 1
-    x = np.random.randn(nsamples, nchans, 4)
+    x = rng.standard_normal((nsamples, nchans, 4))
     artifact = np.sin(
         np.arange(nsamples) / sr * 2 * np.pi * fline)[:, None, None]
     artifact[artifact < 0] = 0
@@ -144,7 +147,7 @@ def test_dss_line_iter():
 
     with TemporaryDirectory() as tmpdir:
         out, _ = dss.dss_line_iter(x, fline + .5, sr,
-                                   prefix=os.path.join(tmpdir, 'dss_iter_'),
+                                   prefix=os.path.join(tmpdir, "dss_iter_"),
                                    show=True)
 
     def _plot(before, after):
@@ -155,11 +158,11 @@ def test_dss_line_iter():
         f, Pxx = signal.welch(after[:, -1], sr, nperseg=1024, axis=0,
                               return_onesided=True)
         ax[1].semilogy(f, Pxx)
-        ax[0].set_xlabel('frequency [Hz]')
-        ax[1].set_xlabel('frequency [Hz]')
-        ax[0].set_ylabel('PSD [V**2/Hz]')
-        ax[0].set_title('before')
-        ax[1].set_title('after')
+        ax[0].set_xlabel("frequency [Hz]")
+        ax[1].set_xlabel("frequency [Hz]")
+        ax[0].set_ylabel("PSD [V**2/Hz]")
+        ax[0].set_title("before")
+        ax[1].set_title("after")
         plt.show()
 
     _plot(x, out)
@@ -193,7 +196,7 @@ def profile_dss_line(nkeep):
     ps.print_stats()
     print(s.getvalue())
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pytest.main([__file__])
     # create_data(SNR=5, show=True)
     # test_dss1(True)

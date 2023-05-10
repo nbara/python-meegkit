@@ -6,8 +6,7 @@ from scipy import linalg, signal
 from statsmodels.robust.scale import mad
 
 from .utils import block_covariance, nonlinear_eigenspace
-from .utils.asr import (geometric_median, fit_eeg_distribution, yulewalk,
-                        yulewalk_filter)
+from .utils.asr import fit_eeg_distribution, geometric_median, yulewalk, yulewalk_filter
 
 try:
     import pyriemann
@@ -101,12 +100,12 @@ class ASR():
 
     def __init__(self, sfreq=250, cutoff=5, blocksize=100, win_len=0.5,
                  win_overlap=0.66, max_dropout_fraction=0.1,
-                 min_clean_fraction=0.25, name='asrfilter', method='euclid',
-                 estimator='scm', **kwargs):
+                 min_clean_fraction=0.25, name="asrfilter", method="euclid",
+                 estimator="scm", **kwargs):
 
-        if pyriemann is None and method == 'riemann':
-            logging.warning('Need pyriemann to use riemannian ASR flavor.')
-            method = 'euclid'
+        if pyriemann is None and method == "riemann":
+            logging.warning("Need pyriemann to use riemannian ASR flavor.")
+            method = "euclid"
 
         self.cutoff = cutoff
         self.blocksize = blocksize
@@ -224,10 +223,10 @@ class ASR():
                 X, sfreq=self.sfreq, ab=self.ab_, zi=self.zi_)
 
         if not self._fitted:
-            logging.warning('ASR is not fitted ! Returning unfiltered data.')
+            logging.warning("ASR is not fitted ! Returning unfiltered data.")
             return X
 
-        if self.estimator == 'scm':
+        if self.estimator == "scm":
             cov = 1 / X.shape[-1] * X_filt @ X_filt.T
         else:
             cov = pyriemann.estimation.covariances(X_filt[None, ...],
@@ -331,7 +330,7 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     N = int(win_len * sfreq)
     offsets = np.round(np.arange(0, ns - N, (N * (1 - win_overlap))))
     offsets = offsets.astype(int)
-    logging.debug('[ASR] Determining channel-wise rejection thresholds')
+    logging.debug("[ASR] Determining channel-wise rejection thresholds")
 
     wz = np.zeros((nc, len(offsets)))
     for ichan in range(nc):
@@ -391,18 +390,18 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
         for i in range(nc):
             ax[i].fill_between(times, 0, 1, where=sample_mask.flat,
                                transform=ax[i].get_xaxis_transform(),
-                               facecolor='none', hatch='...', edgecolor='k',
-                               label='selected window')
-            ax[i].plot(times, X[i], lw=.5, label='EEG')
+                               facecolor="none", hatch="...", edgecolor="k",
+                               label="selected window")
+            ax[i].plot(times, X[i], lw=.5, label="EEG")
             ax[i].set_ylim([-50, 50])
             # ax[i].set_ylabel(raw.ch_names[i])
             ax[i].set_yticks([])
-        ax[i].set_xlabel('Time (s)')
-        ax[i].set_ylabel(f'ch{i}')
-        ax[0].legend(fontsize='small', bbox_to_anchor=(1.04, 1),
+        ax[i].set_xlabel("Time (s)")
+        ax[i].set_ylabel(f"ch{i}")
+        ax[0].legend(fontsize="small", bbox_to_anchor=(1.04, 1),
                      borderaxespad=0)
         plt.subplots_adjust(hspace=0, right=0.75)
-        plt.suptitle('Clean windows')
+        plt.suptitle("Clean windows")
         plt.show()
 
     return clean, sample_mask
@@ -410,7 +409,7 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
 
 def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
                   win_overlap=0.66, max_dropout_fraction=0.1,
-                  min_clean_fraction=0.25, method='euclid', estimator='scm'):
+                  min_clean_fraction=0.25, method="euclid", estimator="scm"):
     """Calibration function for the Artifact Subspace Reconstruction method.
 
     The input to this data is a multi-channel time series of calibration data.
@@ -478,7 +477,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         Threshold matrix.
 
     """
-    logging.debug('[ASR] Calibrating...')
+    logging.debug("[ASR] Calibrating...")
 
     # set number of channels and number of samples
     [nc, ns] = X.shape
@@ -491,11 +490,11 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
 
     U = block_covariance(X, window=blocksize, overlap=win_overlap,
                          estimator=estimator)
-    if method == 'euclid':
+    if method == "euclid":
         Uavg = geometric_median(U.reshape((-1, nc * nc)))
         Uavg = Uavg.reshape((nc, nc))
     else:  # method == 'riemann'
-        Uavg = pyriemann.utils.mean.mean_covariance(U, metric='riemann')
+        Uavg = pyriemann.utils.mean.mean_covariance(U, metric="riemann")
 
     # get the mixing matrix M
     M = linalg.sqrtm(np.real(Uavg))
@@ -520,11 +519,11 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
             Y, min_clean_fraction, max_dropout_fraction)
 
     T = np.dot(np.diag(mu + cutoff * sig), V.T)
-    logging.debug('[ASR] Calibration done.')
+    logging.debug("[ASR] Calibration done.")
     return M, T
 
 
-def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
+def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
                 sample_weight=None):
     """Apply Artifact Subspace Reconstruction method.
 
@@ -567,14 +566,14 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
 
     if cov is None:
         if detrend:
-            X_filt = signal.detrend(X_filt, axis=1, type='constant')
+            X_filt = signal.detrend(X_filt, axis=1, type="constant")
         cov = block_covariance(X_filt, window=nc ** 2)
 
     cov = cov.squeeze()
     if cov.ndim == 3:
-        if method == 'riemann':
+        if method == "riemann":
             cov = pyriemann.utils.mean.mean_covariance(
-                cov, metric='riemann', sample_weight=sample_weight)
+                cov, metric="riemann", sample_weight=sample_weight)
         else:
             cov = geometric_median(cov.reshape((-1, nc * nc)))
             cov = cov.reshape((nc, nc))
@@ -582,7 +581,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
     maxdims = int(np.fix(0.66 * nc))  # constant TODO make param
 
     # do a PCA to find potential artifacts
-    if method == 'riemann':
+    if method == "riemann":
         D, Vtmp = nonlinear_eigenspace(cov, nc)  # TODO
     else:
         D, Vtmp = linalg.eigh(cov)
@@ -604,14 +603,14 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method='riemann',
         demux = VT * keep[:, None]
         R = np.dot(np.dot(M, linalg.pinv(demux)), V.T)
 
-    if state['R'] is not None:
+    if state["R"] is not None:
         # apply the reconstruction to intermediate samples (using raised-cosine
         # blending)
         blend = (1 - np.cos(np.pi * np.arange(ns) / ns)) / 2
-        clean = blend * R.dot(X) + (1 - blend) * state['R'].dot(X)
+        clean = blend * R.dot(X) + (1 - blend) * state["R"].dot(X)
     else:
         clean = R.dot(X)
 
-    state['R'] = R
+    state["R"] = R
 
     return clean, state
