@@ -5,7 +5,7 @@ import numpy as np
 from scipy import linalg
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from meegkit.utils import demean, gaussfilt, mrdivide, tscov, theshapeof
+from meegkit.utils import demean, gaussfilt, mrdivide, tscov
 
 
 class RESS(TransformerMixin, BaseEstimator):
@@ -100,7 +100,7 @@ class RESS(TransformerMixin, BaseEstimator):
         if self.n_keep == -1:
             self.n_keep = n_chans
 
-        # Covariance of  neighboor frequencies (noise)
+        # Covariance of  neighbor frequencies (noise)
         c01 = tscov(gaussfilt(X, self.sfreq,  self.peak_freq + self.neig_freq,
                               fwhm=self.neig_width, n_harm=1))[0]
         c02 = tscov(gaussfilt(X, self.sfreq, self.peak_freq - self.neig_freq,
@@ -119,7 +119,7 @@ class RESS(TransformerMixin, BaseEstimator):
         # c0^{-1} c1 (max c1 and min c0)
         d, to_ress = linalg.eigh(c1, c0)
 
-        # Keep only the real part as c1 and c0 are symetric (then PSD) the
+        # Keep only the real part as c1 and c0 are symmetric (then PSD) the
         # imaginary part is only a numerical error
         d = d.real
         to_ress = to_ress.real
