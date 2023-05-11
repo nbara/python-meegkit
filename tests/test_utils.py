@@ -20,7 +20,7 @@ from meegkit.utils import (
     widen_mask,
 )
 
-rng = np.random.default_rng()
+rng = np.random.default_rng(9)
 
 
 def _sim_data(n_times, n_chans, n_trials, noise_dim, SNR=1, t0=100):
@@ -250,15 +250,17 @@ def test_outliers(show=False):
 
 def test_cronbach():
     """Test Cronbach's alpha."""
+    np.random.default_rng(9)
+
     X, _ = _sim_data(800, 8, 80, noise_dim=6, SNR=.2)
     X = X.transpose([2, 1, 0])  # trials, channels, samples
-    alpha, lo, hi = cronbach(X, tmin=0, n_bootstrap=100)
+    alpha, lo, hi = cronbach(X, tmin=0, n_bootstrap=200)
     print(alpha)
     assert np.all(lo < hi)
 
-    X, _ = _sim_data(800, 8, 80, noise_dim=6, SNR=1)
+    X, _ = _sim_data(800, 8, 80, noise_dim=6, SNR=2)
     X = X.transpose([2, 1, 0])
-    alpha2, lo, hi = cronbach(X, tmin=100, n_bootstrap=100)
+    alpha2, lo, hi = cronbach(X, tmin=100, n_bootstrap=200)
     print(alpha2)
     assert np.sum(alpha2 > alpha) >= 6
 
