@@ -4,7 +4,7 @@ PYTHON ?= python
 PYTESTS ?= py.test
 CTAGS ?= ctags
 CODESPELL_SKIPS ?= "*.html,*.fif,*.eve,*.gz,*.tgz,*.zip,*.mat,*.stc,*.label,*.w,*.bz2,*.annot,*.sulc,*.log,*.local-copy,*.orig_avg,*.inflated_avg,*.gii,*.pyc,*.doctree,*.pickle,*.inv,*.png,*.edf,*.touch,*.thickness,*.nofix,*.volume,*.defect_borders,*.mgh,lh.*,rh.*,COR-*,FreeSurferColorLUT.txt,*.examples,.xdebug_mris_calc,bad.segments,BadChannels,*.hist,empty_file,*.orig,*.js,*.map,*.ipynb,searchindex.dat"
-CODESPELL_DIRS ?= meegkit/ doc/
+CODESPELL_DIRS ?= meegkit/ examples/
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of:"
@@ -43,9 +43,8 @@ build-doc:
 	cd doc; make html
 
 build-examples:
-	cd examples;
-	find . -name "example_*.py" | xargs sphx_glr_python_to_jupyter.py
-	find . -name "example_*.ipynb" | xargs jupyter nbconvert --execute --to notebook --inplace
+	cd examples; find . -name "example_*.py" | xargs sphx_glr_python_to_jupyter.py
+	cd examples; find . -name "example_*.ipynb" | xargs jupyter nbconvert --execute --to notebook --inplace
 
 # Style
 # =============================================================================

@@ -32,6 +32,7 @@ def demean(X, weights=None, return_mean=False, inplace=False):
 
     if not inplace:
         X = X.copy()
+
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
 
@@ -54,7 +55,6 @@ def demean(X, weights=None, return_mean=False, inplace=False):
 
     # Remove mean (no copy)
     X -= mn
-    # np.subtract(X, mn, out=X)
 
     if n_trials > 1 or ndims == 3:
         X = fold(X, n_samples)
