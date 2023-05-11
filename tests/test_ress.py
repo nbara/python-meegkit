@@ -79,7 +79,7 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     # print(psd.shape)
     # print(bins[:10])
 
-    psd = psd.mean(axis=0, keepdims=True).T  # average over trials
+    psd = psd.mean(axis=-1, keepdims=True)  # average over trials
     snr = snr_spectrum(psd + psd.max() / 20, bins, skipbins=1, n_avg=2)
     # snr = snr.mean(1)
     if show:
@@ -108,7 +108,7 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
     fromress = r.from_ress
 
     proj = matmul3d(out, fromress)
-    assert proj.shape == (n_trials, n_chans, n_times)
+    assert proj.shape == (n_times, n_chans, n_trials)
 
     if show:
         f, ax = plt.subplots(data.shape[1], 2, sharey="col")
@@ -155,5 +155,5 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
 
 if __name__ == "__main__":
     import pytest
-    pytest.main([__file__])
-    # test_ress(20, 16, 1, 1, 1, show=False)
+    # pytest.main([__file__])
+    test_ress(20, 16, 1, 1, 1, show=True)

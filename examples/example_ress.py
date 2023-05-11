@@ -72,8 +72,8 @@ out = r.fit_transform(data)
 nfft = 250
 df = sfreq / nfft  # frequency resolution
 bins, psd = ss.welch(np.squeeze(out), sfreq, window="hamming", nperseg=nfft,
-                     noverlap=125, axis=1)
-psd = psd.mean(axis=0, keepdims=True).T  # average over trials
+                     noverlap=125, axis=0)
+psd = psd.mean(axis=1, keepdims=True)  # average over trials
 snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
 
 f, ax = plt.subplots(1)

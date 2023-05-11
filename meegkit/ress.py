@@ -1,12 +1,11 @@
 """Rhythmic Entrainment Source Separation."""
-import functools
 import warnings
 
 import numpy as np
 from scipy import linalg
 from sklearn.base import BaseEstimator, TransformerMixin
 
-from meegkit.utils import gaussfilt
+from meegkit.utils import demean, gaussfilt, mrdivide, tscov, theshapeof
 
 
 class RESS(TransformerMixin, BaseEstimator):
@@ -63,17 +62,9 @@ class RESS(TransformerMixin, BaseEstimator):
        ArXiv:2104.12356 [Eess, q-Bio].
     """
 
-    def __init__(
-        self,
-        sfreq: int,
-        peak_freq: float,
-        neig_freq: float = 1,
-        peak_width: float = 0.5,
-        neig_width: float = 1,
-        n_keep: int = 1,
-        gamma: float = 0.01,
-        compute_unmixing: bool = False
-    ):
+    def __init__(self, sfreq: int, peak_freq: float, neig_freq: float = 1,
+                 peak_width: float = 0.5, neig_width: float = 1, n_keep: int = 1,
+                 gamma: float = 0.01, compute_unmixing: bool = False):
 
         self.sfreq = sfreq
         self.peak_freq = peak_freq
@@ -87,7 +78,7 @@ class RESS(TransformerMixin, BaseEstimator):
     def fit(self, X, y=None):
         """Learn a RESS filter.
 
-        X : np.array (n_trials, n_chans, n_samples)
+        X : np.array (n_samples, n_chans, n_trials)
             Follow MNE format
         y : (ignored)
             Ignored parameter.
@@ -104,60 +95,37 @@ class RESS(TransformerMixin, BaseEstimator):
         _, n_chans, _ = X.shape
 
         # Compute mean along epoch + trial and remove it
-        X -= np.mean(X, axis=(0, 2), keepdims=True)
+        X = demean(X)
 
         if self.n_keep == -1:
             self.n_keep = n_chans
 
-        # Back to Matlab formatting for gaussfilt
-        X = X.transpose([2,1,0])
-
         # Covariance of  neighboor frequencies (noise)
-        c01 = self._avg_cov(
-            gaussfilt(
-                X,
-                self.sfreq,
-                self.peak_freq + self.neig_freq,
-                fwhm=self.neig_width,
-                n_harm=1,
-            )
-        )
-        c02 = self._avg_cov(
-            gaussfilt(
-                X,
-                self.sfreq,
-                self.peak_freq - self.neig_freq,
-                fwhm=self.neig_width,
-                n_harm=1,
-            )
-        )
+        c01 = tscov(gaussfilt(X, self.sfreq,  self.peak_freq + self.neig_freq,
+                              fwhm=self.neig_width, n_harm=1))[0]
+        c02 = tscov(gaussfilt(X, self.sfreq, self.peak_freq - self.neig_freq,
+                              fwhm=self.neig_width, n_harm=1))[0]
+
         # Covariance of the signal
-        c1 = self._avg_cov(
-            gaussfilt(
-                X, self.sfreq, self.peak_freq, fwhm=self.peak_width, n_harm=1
-            )
-        )
+        c1 = tscov(gaussfilt(X, self.sfreq, self.peak_freq, fwhm=self.peak_width,
+                             n_harm=1))[0]
 
         # add 1% regularization to avoid numerical precision problems in the GED
         c0 = (c01 + c02) / 2
-        c0 = c0 * (1 - self.gamma) + self.gamma * np.trace(c0) / len(c0) * np.eye(
-            len(c0)
-        )
+        c0 = c0 * (1 - self.gamma) + self.gamma * np.trace(c0) / len(c0) * np.eye(len(c0))
 
-        # Perform generalized eigendecomposition
-        # It solve a Generalized Eigenvalue Problem:
-        # find a vector `to_ress` that maximize the ratio
+        # Perform generalized eigendecomposition. Solves a Generalized
+        # Eigenvalue Problem: find a vector `to_ress` that maximize the ratio
         # c0^{-1} c1 (max c1 and min c0)
         d, to_ress = linalg.eigh(c1, c0)
-        # Keep only the real part as c1 and c0
-        # are symetric (then PSD) the imaginary
-        # part is only a numerical error
+
+        # Keep only the real part as c1 and c0 are symetric (then PSD) the
+        # imaginary part is only a numerical error
         d = d.real
         to_ress = to_ress.real
 
-        # Sort eigenvectors by decreasing eigenvalues
-        # We are looking for the eigenvectors associated
-        # with the larger eigenvalue
+        # Sort eigenvectors by decreasing eigenvalues. We are looking for the
+        # eigenvectors associated with the larger eigenvalue
         idx = np.argsort(d)[::-1]
         d = d[idx]
         to_ress = to_ress[:, idx]
@@ -168,28 +136,21 @@ class RESS(TransformerMixin, BaseEstimator):
 
         if self.compute_unmixing:
             # Compute unmixing matrix
-            A = np.matmul(c1, to_ress)
-            B = np.matmul(to_ress.T, np.matmul(c1, to_ress))
-            try:
-                # Note: we must use overwrite_a=False in order to be able to
-                # use the fall-back solution below in case a LinAlgError is raised
-                from_ress = linalg.solve(B.T, A.T, overwrite_a=False)
-            except linalg.LinAlgError:
-                # A or B is not full rank so exact solution is not tractable.
-                #  Using least-squares solution instead.
-                from_ress = linalg.lstsq(B.T, A.T, lapack_driver="gelsy")[0]
-            self.from_ress = from_ress[: self.n_keep, :]
+            A = c1 @ to_ress
+            B = to_ress.T @ A
+            self.from_ress = mrdivide(A, B).T
+            self.from_ress = self.from_ress[:self.n_keep, :]
 
         return self
 
     def transform(self, X):
         """Project data using the learned RESS filter."""
         if X.ndim == 2:
-            out = np.matmul(X, self.to_ress)
+            out = X @ self.to_ress
         else:
             out = np.zeros((X.shape[0], self.n_keep, X.shape[2]))
-            for idx_trial in range(len(X)):
-                out[idx_trial] = np.matmul(X[idx_trial].T, self.to_ress).T
+            for t in range(X.shape[2]):
+                out[..., t] = X[..., t] @ self.to_ress
 
         return out
 
@@ -202,13 +163,4 @@ class RESS(TransformerMixin, BaseEstimator):
     def inverse_transform(self, X):
         """Backproject the RESS filtered data to the sensors space."""
         return np.matmul(X, self.from_ress)
-
-    def _avg_cov(self, X):
-        """Compute average covariance matrix along trials."""
-        X_transpose = X.transpose([0, 2, 1])
-        s = list(X_transpose.shape)
-        combined = functools.reduce(lambda x, y: x * y, s[0: 0 + 1 + 1])
-        X_combined = np.reshape(X_transpose, s[:0] + [combined] + s[0 + 1 + 1:])
-        cov = EmpiricalCovariance().fit(X_combined)
-        return cov.covariance_
 

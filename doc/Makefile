@@ -24,6 +24,7 @@ help:
 clean:
 	-rm -rf _build/*
 	-rm -rf _source/*
+	-rm -rf auto_examples/*
 	-rm -rf generated
 	-rm -rf *.stc
 	-rm -rf *.fif

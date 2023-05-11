@@ -276,8 +276,7 @@ def spectral_envelope(x, sfreq, lowpass=32):
     return y[len(a):-len(b)]
 
 
-def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False,
-              show=False):
+def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False, show=False):
     """Narrow-band filter via frequency-domain Gaussian.
 
     Empirical frequency and FWHM depend on the sampling rate and the
