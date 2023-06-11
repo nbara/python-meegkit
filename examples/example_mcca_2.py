@@ -1,9 +1,12 @@
+"""
+Example 1 - sinusoidal target in separable noise.
+=================================================
+reproduced from de Cheveigné et al. (2018).
 
-# # Example 1 - sinusoidal target in separable noise.
-# reproduced from de Cheveigné et al. (2018).
-# 
-# Synthetic data for this example consisted of 10 data matrices, each of dimensions 10000 samples 
-#  10 channels. Each was obtained by multiplying 9 Gaussian noise time series (independent and uncorrelated) by a 9 x 10 mixing matrix with random Gaussian coefficients. To this background of noise was added a “target” consisting of a sinusoidal time series multiplied by a 1 x 10 mixing matrix with random coefficients. The target was the same for all data matrices, but the mixing matrices differed, as did the noise matrices. The SNR was set to 10−20, i.e. a very unfavorable SNR. The noise is of rank 9 and the signal of rank 1, so signal and noise are in principle linearly separable.
+Synthetic data for this example consisted of 10 data matrices, each of dimensions 10000 samples 
+10 channels. Each was obtained by multiplying 9 Gaussian noise time series (independent and uncorrelated) by a 9 x 10 mixing matrix with random Gaussian coefficients. To this background of noise was added a “target” consisting of a sinusoidal time series multiplied by a 1 x 10 mixing matrix with random coefficients. The target was the same for all data matrices, but the mixing matrices differed, as did the noise matrices. The SNR was set to 10−20, i.e. a very unfavorable SNR. The noise is of rank 9 and the signal of rank 1, so signal and noise are in principle linearly separable.
+
+"""
 
 # %%
 import numpy as np
