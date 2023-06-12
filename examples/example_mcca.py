@@ -1,6 +1,6 @@
 """
-Example multiway canonical correlation analysis (mCCA)
-======================================================
+Multiway canonical correlation analysis (mCCA)
+==============================================
 
 Find a set of components which are shared between different datasets.
 

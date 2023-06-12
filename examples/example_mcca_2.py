@@ -1,24 +1,22 @@
 """
-Example 1 - sinusoidal target in separable noise.
-=================================================
+mCCA example: Sinusoidal target in separable noise
+==================================================
 
-reproduced from de Cheveigné et al. (2018).
+Reproduced from de Cheveigné et al. (2018).
 
-Synthetic data for this example consisted of 10 data matrices,
-each of dimensions 10000 samples x 10 channels. Each was
-obtained by multiplying 9 Gaussian noise time series
-(independent and uncorrelated) by a 9 x 10 mixing matrix with
-random Gaussian coefficients. To this background of noise was
-added a “target” consisting of a sinusoidal time series multiplied
-by a 1 x 10 mixing matrix with random coefficients. The target was
-the same for all data matrices, but the mixing matrices differed,
-as did the noise matrices. The SNR was set to 10−20, i.e. a very
-unfavorable SNR. The noise is of rank 9 and the signal of rank 1,
-so signal and noise are in principle linearly separable.
+Synthetic data for this example consisted of 10 data matrices, each of
+dimensions 10000 samples x 10 channels. Each was obtained by multiplying 9
+Gaussian noise time series (independent and uncorrelated) by a 9 x 10 mixing
+matrix with random Gaussian coefficients. To this background of noise was added
+a "target" consisting of a sinusoidal time series multiplied by a 1 x 10 mixing
+matrix with random coefficients. The target was the same for all data matrices,
+but the mixing matrices differed, as were the noise matrices. The SNR was set
+to 10−20, i.e. a very unfavorable SNR. The noise is of rank 9 and the signal of
+rank 1, so signal and noise are in principle linearly separable.
+
+Uses meegkit.cca.mmca()
 
 """
-
-# %%
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -27,7 +25,9 @@ from meegkit import cca
 # Set the seed for the random number generator for reproducibility
 rng = np.random.default_rng(5)
 
-# %%
+###############################################################################
+# Generate toy data
+# -----------------------------------------------------------------------------
 # Constants
 num_matrices = 10
 num_samples = 10000
@@ -68,27 +68,31 @@ for i in range(num_matrices):
 
     data_matrices.append(data_matrix)
 
-# %%
 # Concatenate data matrices
 x = np.concatenate(data_matrices, axis=-1)
 
-# %%
+###############################################################################
+# Use mCCA to recover signal in noise
+# -----------------------------------------------------------------------------
+
 # Compute Covariance matrix
 C = np.dot(x.T, x)
 
-# Compute mCCA
+# Compute mCCA from covariance
 A, score, AA = cca.mcca(C, 10)
 
-# %%
 # Compute the recovered signal using first SC
 x_recovered = x.dot(A)[:, 0]
+
 # Normalize the recovered signal
 x_recovered = x_recovered / x_recovered.std()
+
 # Compute variance across SCs
 variance = np.var(x.dot(A), axis=0)
 
-# %%
+###############################################################################
 # Plot the results
+# -----------------------------------------------------------------------------
 fig, ax = plt.subplots(1, 4, figsize=(12, 4))
 ax[0].plot(target_signal)
 ax[0].set_title("Target")
@@ -106,3 +110,4 @@ ax[3].set_title("Recovered")
 ax[3].set_ylabel("Amplitude")
 ax[3].set_xlabel("Sample")
 plt.tight_layout()
+plt.show()
