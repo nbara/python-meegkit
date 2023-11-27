@@ -5,7 +5,7 @@ authors:
   given-names: "Nicolas"
   orcid: "https://orcid.org/0000-0003-1495-561X"
 title: "MEEGkit"
-version: 0.1.4
-doi: 10.5281/zenodo.5643659
-date-released: 2021-10-15
+version: 0.1.5
+doi: 10.5281/zenodo.10210992
+date-released: 2023-11-27
 url: "https://github.com/nbara/python-meegkit"
