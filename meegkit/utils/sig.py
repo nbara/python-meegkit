@@ -365,9 +365,7 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False, sho
         plt.plot(hz, fx, "o-")
         plt.xlim([0, None])
 
-        title = "Requested: {}, {} Hz\nEmpirical: {}, {} Hz".format(
-            f, fwhm, empVals[0], empVals[1]
-        )
+        title = f"Requested: {f}, {fwhm} Hz\nEmpirical: {empVals[0]}, {empVals[1]} Hz"
         plt.title(title)
         plt.xlabel("Frequency (Hz)")
         plt.ylabel("Amplitude gain")
@@ -515,8 +513,7 @@ def stmcb(x, u_in=None, q=None, p=None, niter=5, a_in=None):
     else:
         if len(u_in) != len(x):
             raise ValueError(
-                "stmcb: u_in and x must be of the same size: {} != {}".format(
-                    len(u_in), len(x)))
+                f"stmcb: u_in and x must be of the same size: {len(u_in)} != {len(x)}")
         if a_in is None:
             q = 0
             _, a_in = prony(x, q, p)

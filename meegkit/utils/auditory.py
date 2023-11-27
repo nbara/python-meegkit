@@ -56,7 +56,7 @@ def erbspace(flow, fhigh, n):
     return y, bw
 
 
-class GammatoneFilterbank():
+class GammatoneFilterbank:
     """Gammatone Filterbank.
 
     This class computes the filter coefficients for a bank of Gammatone

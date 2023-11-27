@@ -66,7 +66,8 @@ def test_ress(target, n_trials, peak_width, neig_width, neig_freq, show=False):
                                n_chans=n_chans, freq=target, sfreq=sfreq,
                                show=False)
     r = ress.RESS(sfreq=sfreq, peak_freq=target, neig_freq=neig_freq,
-        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep, compute_unmixing=True)
+        peak_width=peak_width, neig_width=neig_width, n_keep=n_keep,
+        compute_unmixing=True)
     out = r.fit_transform(data)
 
     nfft = 500
