@@ -21,7 +21,7 @@ def test_tspca_sns_dss():  # TODO
     ref = rng.random((800, 3, 200))
 
     # remove means
-    noisy_data = demean(data) + ref
+    noisy_data = demean(data)
 
     # Apply TSPCA
     # -------------------------------------------------------------------------
@@ -86,8 +86,7 @@ def test_tsr(show=True):
         ax[1].set_xlabel("time (samples)")
         ax[0].set_title("signals")
         ax[1].set_title("residuals")
-
-        f.set_constrained_layout(True)
+        plt.tight_layout()
         # ax[1].legend()
         # plt.show()
 
@@ -111,7 +110,7 @@ def test_tsr(show=True):
         ax[1].legend()
         ax[2].legend()
         ax[1].set_xlabel("time (samples)")
-        f.set_constrained_layout(True)
+        plt.tight_layout()
         plt.show()
 
 if __name__ == "__main__":
