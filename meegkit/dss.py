@@ -129,8 +129,8 @@ def dss0(c0, c1, keep1=None, keep2=1e-9, return_unmixing=True):
     todss = eigvec0 @ W @ eigvec2
 
     # Normalise DSS matrix
-    N = np.diag(1. / np.sqrt(todss.T @ c0 @ todss))
-    todss = todss * N
+    N = np.sqrt(np.diag(todss.T @ c0 @ todss))
+    todss /= N
 
     pwr0 = np.sqrt(np.sum((c0 @ todss) ** 2, axis=0))
     pwr1 = np.sqrt(np.sum((c1 @ todss) ** 2, axis=0))
@@ -376,7 +376,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             ax.flat[3].plot(np.arange(iterations + 1), aggr_resid, marker="o")
             ax.flat[3].set_title("Iterations")
 
-            f.set_tight_layout(True)
+            plt.tight_layout()
             plt.savefig(f"{prefix}_{iterations:03}.png")
             plt.close("all")
 
