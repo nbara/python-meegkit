@@ -14,7 +14,7 @@ except ImportError:
     pyriemann = None
 
 
-class ASR():
+class ASR:
     """Artifact Subspace Reconstruction.
 
     Artifact subspace reconstruction (ASR) is an automatic, online,

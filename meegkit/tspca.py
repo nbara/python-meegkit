@@ -192,8 +192,8 @@ def tsr(X, R, shifts=None, wX=None, wR=None, keep=None, thresh=1e-12):
     # TSPCA: clean x by removing regression on time-shifted refs
     y = np.zeros((n_samples_X, n_chans_X, n_trials_X))
     for t in np.arange(n_trials_X):
-        r = multishift(R[..., t], shifts, reshape=True)
-        y[..., t] = X[:z.shape[0], :, t] - (r @ regression)
+        z = multishift(R[..., t], shifts, reshape=True) @ regression
+        y[..., t] = X[:z.shape[0], :, t] - z
 
     y, mean2 = demean(y, wX, return_mean=True, inplace=True)
     idx = np.arange(offset1, initial_samples - offset2)

@@ -372,8 +372,7 @@ def pca(cov, max_comps=None, thresh=0):
 
     var = 100 * d.sum() / p0
     if var < 99:
-        print("[PCA] Explained variance of selected components : {:.2f}%".
-              format(var))
+        print(f"[PCA] Explained variance of selected components : {var:.2f}%")
 
     return V, d
 

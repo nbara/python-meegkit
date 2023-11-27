@@ -22,14 +22,13 @@ def test_tspca_sns_dss():  # TODO
 
     # remove means
     noisy_data = demean(data)
-    demean(ref)
 
     # Apply TSPCA
     # -------------------------------------------------------------------------
-    # shifts = np.arange(-50, 51)
-    # print('TSPCA...')
-    # y_tspca, idx = tspca.tsr(noisy_data, noisy_ref, shifts)[0:2]
-    # print('\b OK!')
+    shifts = np.arange(-50, 51)
+    print("TSPCA...")
+    y_tspca, idx = tspca.tsr(noisy_data, ref, shifts)[0:2]
+    print("\b OK!")
     y_tspca = noisy_data
 
     # Apply SNS
@@ -84,7 +83,11 @@ def test_tsr(show=True):
         ax[0].plot(x[:500, 0], ":", label="real signal")
         ax[1].plot((y - x)[:500], label="residual")
         ax[0].legend()
-        ax[1].legend()
+        ax[1].set_xlabel("time (samples)")
+        ax[0].set_title("signals")
+        ax[1].set_title("residuals")
+        plt.tight_layout()
+        # ax[1].legend()
         # plt.show()
 
     # Test residual almost 0.0
@@ -103,9 +106,11 @@ def test_tsr(show=True):
         ax[1].plot(x[:500, 0], "grey", label="real signal")
         ax[1].plot(y[:500, 0], ":", label="recovered signal")
         ax[2].plot((signal - y)[:500, 0], label="before - after")
-        ax[0].legend()
+        # ax[0].legend()
         ax[1].legend()
         ax[2].legend()
+        ax[1].set_xlabel("time (samples)")
+        plt.tight_layout()
         plt.show()
 
 if __name__ == "__main__":

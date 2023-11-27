@@ -63,12 +63,12 @@ def mcca(C, n_channels, n_keep=[]):
         W = whiten_nt(CC, keep=True)
         A[ix0:ix1, ix0:ix1] = W
 
-    C = A.T.dot(C.dot(A))
+    C = A.T @ C @ A
 
     # final PCA
     V, d = pca(C, thresh=None)  # don't threshold the PCA to keep n_channels
-    A = A.dot(V)
-    C = V.T.dot(C.dot(V))
+    A = A @ V
+    C = V.T @ C @ V
     scores = np.diag(C)
 
     AA = []

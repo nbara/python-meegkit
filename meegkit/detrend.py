@@ -159,7 +159,7 @@ def regress(x, r, w=None, threshold=1e-7, return_mean=False):
         yy = demean(x)
 
         # PCA
-        V, _ = pca(rr.T.dot(rr), thresh=threshold)
+        V, _ = pca(rr.T @ rr, thresh=threshold)
         rrr = rr.dot(V)
 
         # Regression (OLS)

@@ -68,7 +68,7 @@ def dss1(X, weights=None, keep1=None, keep2=1e-12):
     return todss, fromdss, pwr0, pwr1
 
 
-def dss0(c0, c1, keep1=None, keep2=1e-9):
+def dss0(c0, c1, keep1=None, keep2=1e-9, return_unmixing=True):
     """DSS base function.
 
     This function allows specifying arbitrary bias functions (as compared to
@@ -84,13 +84,16 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
         Number of PCs to retain (default=None, which keeps all).
     keep2: float
         Ignore PCs smaller than keep2 (default=1e-9).
+    return_unmixing : bool
+        If True (default), return the unmixing matrix.
 
     Returns
     -------
-    todss: array, shape=(n_dss_components, n_chans)
+    todss: array, shape=(n_chans, n_dss_components)
         Matrix to convert X to normalized DSS components.
-    fromdss : array, shape=()
-        Matrix to transform back to original space.
+    fromdss : array, shape=(n_dss_components, n_chans)
+        Matrix to transform back to original space. Only returned if
+        ``return_unmixing`` is True.
     pwr0: array
         Power per component (baseline).
     pwr1: array
@@ -101,46 +104,46 @@ def dss0(c0, c1, keep1=None, keep2=1e-9):
     The data mean is NOT removed prior to processing.
 
     """
-    if c0 is None or c1 is None:
-        raise AttributeError("dss0 needs at least two arguments")
-    if c0.shape != c1.shape:
-        raise AttributeError("c0 and c1 should have same size")
-    if c0.shape[0] != c0.shape[1]:
-        raise AttributeError("c0 should be square")
-    if np.any(np.isnan(c0)) or np.any(np.isinf(c0)):
-        raise ValueError("NaN or INF in c0")
-    if np.any(np.isnan(c1)) or np.any(np.isinf(c1)):
-        raise ValueError("NaN or INF in c1")
+    # Check size and squareness
+    assert c0.shape == c1.shape == (c0.shape[0], c0.shape[0]), \
+        "c0 and c1 should have the same size, and be square"
+
+    # Check for NaN or INF
+    assert not (np.any(np.isnan(c0)) or np.any(np.isinf(c0))), "NaN or INF in c0"
+    assert not (np.any(np.isnan(c1)) or np.any(np.isinf(c1))), "NaN or INF in c1"
 
     # derive PCA and whitening matrix from unbiased covariance
     eigvec0, eigval0 = pca(c0, max_comps=keep1, thresh=keep2)
 
     # apply whitening and PCA matrices to the biased covariance
     # (== covariance of bias whitened data)
-    W = np.sqrt(1. / eigval0)  # diagonal of whitening matrix
+    W = np.diag(np.sqrt(1. / eigval0))  # diagonal of whitening matrix
 
     # c1 is projected into whitened PCA space of data channels
-    c2 = (W * eigvec0).T.dot(c1).dot(eigvec0) * W
+    c2 = (eigvec0 @ W).T @ c1 @ (eigvec0 @ W)
 
     # proj. matrix from whitened data space to a space maximizing bias
     eigvec2, eigval2 = pca(c2, max_comps=keep1, thresh=keep2)
 
     # DSS matrix (raw data to normalized DSS)
-    todss = (W[np.newaxis, :] * eigvec0).dot(eigvec2)
-    fromdss = linalg.pinv(todss)
+    todss = eigvec0 @ W @ eigvec2
 
     # Normalise DSS matrix
-    N = np.sqrt(1. / np.diag(np.dot(np.dot(todss.T, c0), todss)))
-    todss = todss * N
+    N = np.sqrt(np.diag(todss.T @ c0 @ todss))
+    todss /= N
 
-    pwr0 = np.sqrt(np.sum(np.dot(c0, todss) ** 2, axis=0))
-    pwr1 = np.sqrt(np.sum(np.dot(c1, todss) ** 2, axis=0))
+    pwr0 = np.sqrt(np.sum((c0 @ todss) ** 2, axis=0))
+    pwr1 = np.sqrt(np.sum((c1 @ todss) ** 2, axis=0))
 
     # Return data
     # next line equiv. to: np.array([np.dot(todss, ep) for ep in data])
     # dss_data = np.einsum('ij,hjk->hik', todss, data)
 
-    return todss, fromdss, pwr0, pwr1
+    if return_unmixing:
+        fromdss = linalg.pinv(todss)
+        return todss, fromdss, pwr0, pwr1
+    else:
+        return todss, pwr0, pwr1
 
 
 def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
@@ -373,7 +376,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             ax.flat[3].plot(np.arange(iterations + 1), aggr_resid, marker="o")
             ax.flat[3].set_title("Iterations")
 
-            f.set_tight_layout(True)
+            plt.tight_layout()
             plt.savefig(f"{prefix}_{iterations:03}.png")
             plt.close("all")
 

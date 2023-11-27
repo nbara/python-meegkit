@@ -7,7 +7,7 @@ import logging
 from sklearn.neighbors import LocalOutlierFactor
 
 
-class LOF():
+class LOF:
     """Local Outlier Factor.
 
     Local Outlier Factor (LOF) is an automatic, density-based outlier detection
