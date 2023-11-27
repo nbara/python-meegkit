@@ -238,7 +238,7 @@ def test_outliers(show=False):
     idx, _ = find_outlier_trials(x, 2, show=show)
     np.testing.assert_array_equal(idx, np.arange(5))
 
-    idx, _ = find_outlier_trials(x, [2, 2], show=show)
+    idx, _ = find_outlier_trials(x, [2, 2], show=True)
     np.testing.assert_array_equal(idx, np.arange(5))
 
     idx = find_outlier_samples(x, 5)

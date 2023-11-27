@@ -162,7 +162,7 @@ def find_outlier_trials(X, thresh=None, show=True):
     thresh : float or array of floats
         Keep trials less than thresh from mean.
     show : bool
-        If true plot trial deviations before and after.
+        If True (default), plot trial deviations before and after.
 
     Returns
     -------
@@ -173,9 +173,11 @@ def find_outlier_trials(X, thresh=None, show=True):
 
     """
     if thresh is None:
-        thresh = [np.inf]
-    elif isinstance(thresh, float) or isinstance(thresh, int):
-        thresh = [thresh]
+        thresh = np.array([np.inf])
+    elif isinstance(thresh, (float, int)):
+        thresh = np.array([thresh])
+    else:
+        thresh = np.asarray(thresh)
 
     if X.ndim > 3:
         raise ValueError("X should be 2D or 3D")
@@ -206,7 +208,7 @@ def find_outlier_trials(X, thresh=None, show=True):
         ax1.axhline(y=thresh[0], color="grey", linestyle=":")
         ax1.set_xlabel("Trial #")
         ax1.set_ylabel("Normalized deviation from mean")
-        ax1.set_title("Before, " + str(len(d)), fontsize=10)
+        ax1.set_title("Before, " + str(len(d)))
         ax1.set_xlim(0, len(d) + 1)
         plt.draw()
 
@@ -215,19 +217,18 @@ def find_outlier_trials(X, thresh=None, show=True):
         _, dd = find_outlier_trials(X[:, idx], None, False)
         ax2.plot(dd, ls="-")
         ax2.set_xlabel("Trial #")
-        ax2.set_title("After, " + str(len(idx)), fontsize=10)
+        ax2.set_title("After, " + str(len(idx)))
         ax2.yaxis.tick_right()
         ax2.set_xlim(0, len(idx) + 1)
         plt.show()
 
-    thresh.pop(0)
+    thresh = thresh[1:]
     if thresh:
-        bads2, _ = find_outlier_trials(X[:, idx], thresh, show)
-        idx2 = idx[bads2]
-        idx = np.setdiff1d(idx, idx2)
+        bads, _ = find_outlier_trials(X[:, idx], thresh, show)
+        idx = np.setdiff1d(idx, idx[bads])
 
-    bads = []
+    bads_accumulated = []
     if len(idx) < n_trials:
-        bads = np.setdiff1d(range(n_trials), idx)
+        bads_accumulated = np.setdiff1d(range(n_trials), idx)
 
-    return bads, d
+    return bads_accumulated, d
