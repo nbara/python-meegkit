@@ -134,8 +134,6 @@ class TRCA:
         ----------
         X: array, shape=(n_samples, n_chans[, n_trials])
             Test data.
-        model: dict
-            Fitted model to be used in testing phase.
 
         Returns
         -------
