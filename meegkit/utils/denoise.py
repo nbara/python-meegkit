@@ -223,7 +223,7 @@ def find_outlier_trials(X, thresh=None, show=True):
         plt.show()
 
     thresh = thresh[1:]
-    if thresh:
+    if thresh.any():
         bads, _ = find_outlier_trials(X[:, idx], thresh, show)
         idx = np.setdiff1d(idx, idx[bads])
 
