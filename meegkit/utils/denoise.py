@@ -187,11 +187,11 @@ def find_outlier_trials(X, thresh=None, show=True):
     else:
         n_chans, n_trials = X.shape
 
-    avg = np.mean(X, axis=-1, keepdims=True)  # mean over trials
+    avg = np.nanmean(X, axis=-1, keepdims=True)  # mean over trials
     d = X - avg  # difference from mean
-    d = np.sum(d ** 2, axis=0)
+    d = np.nansum(d ** 2, axis=0)
 
-    d = d / (np.sum(X ** 2) / n_trials)
+    d = d / (np.nansum(X ** 2) / n_trials)
     idx = np.where(d < thresh[0])[0]
 
     if show:
