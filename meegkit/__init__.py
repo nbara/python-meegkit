@@ -1,5 +1,5 @@
 """M/EEG denoising utilities in python."""
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 
 from . import asr, cca, detrend, dss, lof, ress, sns, star, trca, tspca, utils
 
