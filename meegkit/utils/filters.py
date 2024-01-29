@@ -40,7 +40,7 @@ class Device:
             self.mu = mu
             self.edelmu = np.exp(-self.dt / self.mu)
 
-        self.state = dict(x=0, dx=0)
+        self.state = dict(x=0, y=0)
 
 
     def init_coefs(self, om0, dt, damping):
@@ -74,12 +74,12 @@ class Device:
         """
         if self.type == "oscillator":
             x = self.state["x"]
-            y = self.state["dx"]
-            x, dx = one_step_oscillator(x, y, self.damping, self.eta, self.enuDel,
+            y = self.state["y"]
+            x, y = one_step_oscillator(x, y, self.damping, self.eta, self.enuDel,
                                        self.ealDel, self.c1, self.c2, self.c3,
                                        sprev, s, snew)
             self.state["x"] = x
-            self.state["dx"] = dx
+            self.state["y"] = y
 
         elif self.type == "integrator":
             x = self.state["x"]
@@ -126,7 +126,7 @@ class NonResOscillator:
         self.dt = 1 / fs  # Sampling interval
         self.nu = nu  # Rough estimate of the tremor frequency
         self.om0 = 5 * nu  # Oscillator frequency (estimation)
-        self.alpha_a = 2.5 * self.om0  # Damping parameter for the "amplitude device"
+        self.alpha_a = 6.0  # Damping parameter for the "amplitude device"
         self.gamma_a = self.alpha_a / 2
         self.alpha_p = 0.2  # Damping parameter for the "phase device"
         self.gamma_p = self.alpha_p / 2
@@ -181,12 +181,12 @@ class NonResOscillator:
             # Amplitude estimation
             spp, sp, s = self.buffer.view(3)
             self.ampl_device.step(spp, sp, s)
-            z = self.ampl_device.state["dx"] / self.nu
+            z = self.ampl_device.state["y"] / self.nu
             ampl[k] = self.factor * np.sqrt(z ** 2 + self.ampl_device.state["x"] ** 2)
 
             # Phase estimation
             self.phase_device.step(spp, sp, s)
-            z = self.phase_device.state["dx"] / self.nu
+            z = self.phase_device.state["y"] / self.nu
             phase[k] = np.arctan2(-z, self.phase_device.state["x"])
 
             if k > self.update_point:
@@ -240,12 +240,12 @@ class ResOscillator:
 
         # Parameters of the measurement "device"
         self.dt = 1 / fs  # Sampling interval
-        self.om0 = 5 * nu  # Angular frequency
+        self.om0 = 1.1  # Angular frequency
         self.alpha = 0.3 * self.om0
         self.gamma = self.alpha / 2
 
         # Parameters of adaptation algorithm
-        nperiods = 2  # Number of previous periods for frequency correction
+        nperiods = 1  # Number of previous periods for frequency correction
         npt_period = round(2 * np.pi / self.om0 / self.dt)  # Number of points per period
         self.memory = nperiods * npt_period  # M points for frequency correction buffer
         self.update_factor = 5  # Number of frequency updates per period
@@ -253,7 +253,7 @@ class ResOscillator:
         self.updatepoint = 2 * self.memory
 
         # Precomputed quantities for linear fit for frequency adaptation
-        self._tbuf = np.arange(self.memory) * self.dt
+        self._tbuf = np.arange(1, self.memory + 1) * self.dt
         self._Sx = np.sum(self._tbuf)
         self._denom = self.memory * np.sum(self._tbuf ** 2) - self._Sx ** 2
 
@@ -284,27 +284,34 @@ class ResOscillator:
         n_samples = X.shape[0]
         phase = np.zeros(n_samples)
         ampl = np.zeros(n_samples)
-        sdemean = np.copy(X)
 
         if self.buffer is None:
             n_channels = 1 # X.shape[1]
             self.buffer = Buffer(self.memory, n_channels)
+            self._demean = np.zeros((3, n_channels)) # Buffer for the demeaned signal
+            self._oscbuf = np.zeros((3, n_channels)) # Buffer for the integrator
 
         for k in range(n_samples):
             self.buffer.push(X[k])
-            sdemean[k] = self.buffer.view(1) - self.runav  # Baseline correction
+            self._demean = np.roll(self._demean, -1, axis=0)
+            self._demean[-1] = self.buffer.view(1) - self.runav  # Baseline correction
 
             if self.buffer.counter < 3:
                 continue # Skip the first two samples
 
             # Perform one step of the oscillator equations
-            self.oscillator.step(sdemean[k - 2], sdemean[k - 1], sdemean[k])
-            self.integrator.step(sdemean[k - 2], sdemean[k - 1], sdemean[k])
+            self.oscillator.step(self._demean[-3], self._demean[-2], self._demean[-1])
+
+            self._oscbuf = np.roll(self._oscbuf, -1, axis=0)
+            self._oscbuf[-1] = self.oscillator.state["y"]
+
+            self.integrator.step(self._oscbuf[-3], self._oscbuf[-2], self._oscbuf[-1])
 
             # New phase and amplitude values
             v = self.integrator.mu * self.integrator.state["x"] * self.om0
-            phase[k] = np.arctan2(v, self.oscillator.state["dx"])
-            ampl[k] = self.alpha * np.sqrt(self.oscillator.state["dx"] ** 2 + v ** 2)
+
+            phase[k] = np.arctan2(v, self.oscillator.state["y"])
+            ampl[k] = self.alpha * np.sqrt(self.oscillator.state["y"] ** 2 + v ** 2)
 
             if k > self.updatepoint:
                 # Buffer for frequency estimation
@@ -315,12 +322,10 @@ class ResOscillator:
                        self._Sx * np.sum(tmp)) / self._denom
 
                 # Recompute integration parameters for the new frequency
-                self.integrator.om0 = self.om0
-                self.oscillator.om0 = self.om0
                 self.oscillator.init_coefs(self.om0, self.dt, self.gamma)
 
                 # Update running average
-                self.runav = (self.runav + np.mean(self.buffer.view(self.memory))) / 2
+                self.runav = np.mean(self.buffer.view(self.memory))
                 self.updatepoint += self.update_step  # Point for the next update
 
         return phase, ampl
@@ -480,7 +485,8 @@ def init_coefs(om0, dt, alpha):
     """
     # alpha is the half of the damping: x'' + 2 * alpha * x' + om0^2 * x = input
     eta2 = om0**2 - alpha**2
-    eta = np.sqrt(eta2) if eta2 > 0 else np.sqrt(-eta2)  # replicate Matlab behavior
+    eta2 = complex(eta2) if eta2 < 0 else eta2
+    eta = np.sqrt(eta2)  # replicate Matlab behavior
     eetadel = np.exp(1j * eta * dt)
     a = 1. / eetadel
     ealdel = np.exp(alpha * dt)
@@ -496,8 +502,7 @@ def init_coefs(om0, dt, alpha):
     return C1, C2, C3, eetadel, ealdel, eta
 
 
-def one_step_oscillator(x, xd, alpha, eta, edel_mu, eal_del, C1, C2, C3, spp,
-                        sp, s):
+def one_step_oscillator(x, xd, alpha, eta, eeta_del, eal_del, C1, C2, C3, spp, sp, s):
         """Perform one step of the oscillator equations.
 
         Parameters
@@ -511,7 +516,7 @@ def one_step_oscillator(x, xd, alpha, eta, edel_mu, eal_del, C1, C2, C3, spp,
         eta : float
             Square root of the difference of oscillator frequency squared and
             damping squared.
-        edel_mu : complex
+        eeta_del : complex
             Exponential term for time step.
         eal_del : float
             Exponential term for time step.
@@ -535,13 +540,14 @@ def one_step_oscillator(x, xd, alpha, eta, edel_mu, eal_del, C1, C2, C3, spp,
         xd : float
             Updated derivative of state variable x.
         """
-        A = x - 1j * (xd + alpha * x) / eta
-        A = A - 1j * (C1 * spp + C2 * sp + C3 * s) / eta
-        d = A * edel_mu
+        # A = x - 1j * (xd + alpha * x) / eta
+        # A = A - 1j * (C1 * spp + C2 * sp + C3 * s) / eta
+        A = x - 1j * (xd + alpha * x + C1 * spp + C2 * sp + C3 * s) / eta
+        d = A * eeta_del
         y = np.real(d)
-        yd = 1j * eta * (d - np.conj(d)) / 2
+        yd = - eta * np.imag(d)
         x = y / eal_del
-        xd = np.real((yd - alpha * y) / edel_mu)
+        xd = (yd - alpha * y) / eal_del
 
         return x, xd
 
@@ -572,9 +578,9 @@ def one_step_integrator(z, edelmu, mu, dt, spp, sp, s):
         Updated state variable z.
     """
     a = sp
-    b = (s - spp) / (2 * dt)
-    c = (spp - 2 * sp + s) / (2 * dt ** 2)
-    d = -a + b * mu - 2 * c * mu ** 2
+    b = (s - spp) / 2 / dt
+    c = (spp - 2 * sp + s) / 2 / dt ** 2
+    d = -a + b * mu - 2 * c * (mu ** 2)
     C0 = z + d
     z = C0 * edelmu - d + b * dt - 2 * c * mu * dt + c * dt ** 2
     return z
