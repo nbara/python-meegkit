@@ -9,6 +9,82 @@ from meegkit.utils.filters import (
 )
 
 
+def test_noisy_signal(show=True):
+    """Replicate the figure from the paper."""
+    # Model data, all three algorithms
+    npt = 100000
+    fs = 100
+    s0  = generate_multi_comp_data_fr_mod(npt, fs)  # Generate test data
+    s = generate_noisy_signal(npt, fs, noise=0.5)
+    dt = 1 / fs
+    time = np.arange(npt) * dt
+
+    # Plot the test signal's Fourier spectrum
+    # f, ax = plt.subplots(1, 1)
+    # ax.psd(s, Fs=fs, NFFT=2018*4, noverlap=fs)
+    # ax.set_title("Test signal's Fourier spectrum")
+    # plt.show()
+
+    # The test signal s and its Hilbert amplitude ah (red); one can see that
+    # ah does not represent a good envelope for s. On the contrary, the
+    # Hilbert-based phase estimation yields good results, and therefore we take
+    # it for the ground truth.
+    gta = np.abs(hilbert(s0))  # ground truth amplitude
+    gtp = np.angle(hilbert(s0))  # ground truth phase
+
+    hta = np.abs(hilbert(s))  # Hilbert amplitude
+    htp = np.angle(hilbert(s))  # Hilbert phase
+
+    osc = NonResOscillator(fs, 1.1)
+    nrp, nra = osc.transform(s)
+
+    osc = ResOscillator(fs, 1.1)
+    rp, ra = osc.transform(s)
+
+    f, ax = plt.subplots(3, 2, sharex="col", sharey=True, figsize=(12, 8))
+    ax[0, 0].plot(time, gtp, lw=.75, label="Ground truth")
+    ax[0, 0].plot(time, htp, lw=.75, label=r"$\phi_H$")
+    ax[0, 0].set_ylabel(r"$\phi_H$")
+    ax[0, 0].set_title("Signal and its Hilbert phase")
+
+    ax[1, 0].plot(time, gtp, lw=.75, label="Ground truth")
+    ax[1, 0].plot(time, nrp, lw=.75, label=r"$\phi_N$")
+    ax[1, 0].set_ylabel(r"$\phi_N$")
+    ax[1, 0].set_ylim([-np.pi, np.pi])
+    ax[1, 0].set_title("Nonresonant oscillator")
+
+    ax[2, 0].plot(time, gtp, lw=.75, label="Ground truth")
+    ax[2, 0].plot(time, rp, lw=.75, label=r"$\phi_N$")
+    ax[2, 0].set_ylim([-np.pi, np.pi])
+    ax[2, 0].set_ylabel("$\phi_H - \phi_R$")
+    ax[2, 0].set_xlabel("Time")
+    ax[2, 0].set_title("Resonant oscillator")
+
+    ax[0, 1].plot(time, gta, lw=.75, label="Ground truth")
+    ax[0, 1].plot(time, hta, lw=.75, label=r"$a_H$")
+    ax[0, 1].plot(time, s, lw=.75, label="Signal", color="grey", alpha=.5, zorder=0)
+    ax[0, 1].set_ylabel(r"$a_H$")
+    ax[0, 1].set_title("Signal and its Hilbert amplitude")
+
+    ax[1, 1].plot(time, gta, lw=.75, label="Ground truth")
+    ax[1, 1].plot(time, nra, lw=.75, label=r"$a_N$")
+    ax[1, 1].set_ylabel(r"$a_N$")
+    ax[1, 1].set_title("Amplitudes")
+    ax[1, 1].set_title("Nonresonant oscillator")
+
+    ax[2, 1].plot(time, gta, lw=.75, label="Ground truth")
+    ax[2, 1].plot(time, ra, lw=.75, label=r"$a_R$")
+    ax[2, 1].set_xlabel("Time")
+    ax[2, 1].set_ylabel(r"$a_R$")
+    ax[2, 1].set_title("Resonant oscillator")
+    plt.suptitle("Amplitude (right) and phase (left) - noisy signal")
+
+    ax[2, 0].set_xlim([0, 40])
+    ax[2, 1].set_xlim([0, 1000])
+    plt.tight_layout()
+    plt.show()
+
+
 def test_all_alg(show=True):
     """Replicate the figure from the paper."""
     # Model data, all three algorithms
@@ -24,7 +100,6 @@ def test_all_alg(show=True):
     # ax.set_title("Test signal's Fourier spectrum")
     # plt.show()
 
-
     # The test signal s and its Hilbert amplitude ah (red); one can see that
     # ah does not represent a good envelope for s. On the contrary, the
     # Hilbert-based phase estimation yields good results, and therefore we take
@@ -37,10 +112,12 @@ def test_all_alg(show=True):
 
     osc = NonResOscillator(fs, 1.1)
     nr_phase, nr_ampl = osc.transform(s)
+    nr_phase = nr_phase[:, 0]
     nr_phi_dif = phase_difference(ht_phase, nr_phase)
 
     osc = ResOscillator(fs, 1.1)
     r_phase, r_ampl = osc.transform(s)
+    r_phase = r_phase[:, 0]
     r_phi_dif = phase_difference(ht_phase, r_phase)
 
     # Panels (b, c, d) show the difference between the
@@ -96,6 +173,7 @@ def test_all_alg(show=True):
     plt.tight_layout()
     plt.show()
 
+
 def phase_difference(phi1, phi2):
     cos_phi_dif = np.cos(phi1) * np.cos(phi2) + np.sin(phi1) * np.sin(phi2)
     sin_phi_dif = np.sin(phi1) * np.cos(phi2) - np.cos(phi1) * np.sin(phi2)
@@ -133,8 +211,8 @@ def generate_noisy_signal(npt=40000, fs=100, noise=0.1):
         Generated data.
 
     """
-    rng = np.default_rng(42)
-    dt = 1 / fs
+    rng = np.random.default_rng(1)
+    # dt = 1 / fs
     # t = np.arange(1, npt + 1) * dt
     s = generate_multi_comp_data_fr_mod(npt, fs)
     s += rng.random(npt) * 0.1
@@ -145,3 +223,4 @@ def generate_noisy_signal(npt=40000, fs=100, noise=0.1):
 if __name__ == "__main__":
     # Run the model_data_all_alg function
     test_all_alg()
+    # test_noisy_signal()

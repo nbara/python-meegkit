@@ -1,6 +1,14 @@
 
 """Real-time phase and amplitude estimation using resonant oscillators.
 
+Notes
+-----
+While the original paper [1]_ only describes the algorithm for a single
+channel, this implementation can handle multiple channels. However, the
+algorithm is not optimized for this purpose. Therefore, this code is likely to
+be slow for large input arrays (n_channels >> 10), since an individual
+oscillator is instantiated for each channel.
+
 .. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
        of phase and amplitude with application to neural data. Sci Rep 11, 18037
        (2021). https://doi.org/10.1038/s41598-021-97560-5
@@ -13,7 +21,7 @@ from .buffer import Buffer
 class Device:
     """Measurement device.
 
-    This class implements a linear oscillator with a given frequency and damping.
+    This class implements a measurement device, as describes by Rosenblum et al.
 
     Parameters
     ----------
@@ -25,6 +33,9 @@ class Device:
         Damping parameter.
     type : str in {"integrator", "oscillator"}
         Type of the device.
+    mu : float
+        Integrator parameter (only for type="integrator"). Should be >> target
+        frequency of interest.
 
     """
 
@@ -132,11 +143,7 @@ class NonResOscillator:
         self.gamma_p = self.alpha_p / 2
         self.factor = np.sqrt((self.om0 ** 2 - nu ** 2) ** 2 + (self.alpha_a * nu) ** 2)
 
-        # Set up the phase amplitude "devices"
-        self.ampl_device = Device(self.om0, self.dt, self.gamma_a, "oscillator")
-        self.phase_device = Device(self.om0, self.dt, self.gamma_p, "oscillator")
-
-        # Update parameters
+        # Update parameters, and precomputed quantities
         update_factor = 5
         self.memory = round(2 * np.pi / self.om0 / self.dt)
         self.update_point = 2 * self.memory
@@ -149,28 +156,38 @@ class NonResOscillator:
         self.n_channels = None
         self.buffer = None
 
+    def _set_devices(self, n_channels):
+        # Set up the phase and amplitude "devices"
+        self.adevice = [Device(self.om0, self.dt, self.gamma_a, "oscillator")
+                        for _ in range(n_channels)]
+        self.pdevice = [Device(self.om0, self.dt, self.gamma_p, "oscillator")
+                        for _ in range(n_channels)]
+
+
     def transform(self, X):
         """Transform the input signal into phase and amplitude estimates.
 
         Parameters
         ----------
-        X : ndarray, shape (n_samples, n_channels)
+        X : ndarray, shape=(n_samples, n_channels)
             The input signal to be transformed.
 
         Returns
         -------
-        phase : float
+        phase : ndarray, shape=(n_samples, n_channels)
             Current phase estimate.
-        ampl : float
+        ampl : ndarray, shape=(n_samples, n_channels)
             Current amplitude estimate.
         """
-        n_samples = X.shape[0]
-        phase = np.zeros(n_samples)
-        ampl = np.zeros(n_samples)
-
         if self.buffer is None:
-            n_channels = 1 # X.shape[1]
-            self.buffer = Buffer(self.memory, n_channels)
+            self.n_channels = 1 if X.ndim < 2 else X.shape[1]
+            self.buffer = Buffer(self.memory, self.n_channels)
+            self.phase_buffer = Buffer(self.memory, self.n_channels)
+            self._set_devices(self.n_channels)
+
+        n_samples = X.shape[0]
+        phase = np.zeros((n_samples, self.n_channels))
+        amp = np.zeros((n_samples, self.n_channels))
 
         for k in range(n_samples):
             self.buffer.push(X[k])
@@ -180,23 +197,28 @@ class NonResOscillator:
 
             # Amplitude estimation
             spp, sp, s = self.buffer.view(3)
-            self.ampl_device.step(spp, sp, s)
-            z = self.ampl_device.state["y"] / self.nu
-            ampl[k] = self.factor * np.sqrt(z ** 2 + self.ampl_device.state["x"] ** 2)
 
-            # Phase estimation
-            self.phase_device.step(spp, sp, s)
-            z = self.phase_device.state["y"] / self.nu
-            phase[k] = np.arctan2(-z, self.phase_device.state["x"])
+            for ch in range(self.n_channels):
+                self.adevice[ch].step(spp, sp, s)
+                z = self.adevice[ch].state["y"] / self.nu
+                amp[k, ch] = self.factor * np.sqrt(z ** 2 + self.adevice[ch].state["x"] ** 2)
+
+                # Phase estimation
+                self.pdevice[ch].step(spp, sp, s)
+                z = self.pdevice[ch].state["y"] / self.nu
+                phase[k, ch] = np.arctan2(-z, self.pdevice[ch].state["x"])
+
+            self.phase_buffer.push(phase[k])
 
             if k > self.update_point:
-                tmp = np.unwrap(phase[k - self.memory:k])
-                self.nu = (self.memory * np.sum(self._tbuf * tmp) -
-                           self._Sx * np.sum(tmp)) / self._denom
+                tmpphase = self.phase_buffer.view(self.memory)
+                for ch in range(self.n_channels):
+                    tmp = np.unwrap(tmpphase[:, ch])
+                    self.nu = (self.memory * np.sum(self._tbuf * tmp) -
+                               self._Sx * np.sum(tmp)) / self._denom
                 self.update_point += self.update_step
 
-
-        return phase, ampl
+        return phase, amp
 
 
 class ResOscillator:
@@ -221,6 +243,8 @@ class ResOscillator:
         Sampling frequency in Hz.
     nu : float
         Rough estimate of the tremor frequency.
+    freq_adaptation : bool
+        Whether to use the frequency adaptation algorithm (default=True).
 
     Returns
     -------
@@ -236,7 +260,7 @@ class ResOscillator:
        (2021). https://doi.org/10.1038/s41598-021-97560-5
     """
 
-    def __init__(self, fs=1000, nu=4.5):
+    def __init__(self, fs=1000, nu=4.5, freq_adaptation=True):
 
         # Parameters of the measurement "device"
         self.dt = 1 / fs  # Sampling interval
@@ -257,14 +281,18 @@ class ResOscillator:
         self._Sx = np.sum(self._tbuf)
         self._denom = self.memory * np.sum(self._tbuf ** 2) - self._Sx ** 2
 
-        # Initialize amplitude and phase devices
-        self.oscillator = Device(self.om0, self.dt, self.gamma, "oscillator")
-        self.integrator = Device(self.om0, self.dt, self.gamma, "integrator")
-
         # Buffer to store past input values
         self.n_channels = None
         self.buffer = None
         self.runav = 0.  # Initial guess for the dc-component
+        self.freq_adaptation = freq_adaptation
+
+    def _set_devices(self, n_channels):
+        # Set up the phase and amplitude "devices"
+        self.osc = [Device(self.om0, self.dt, self.gamma, "oscillator")
+                    for _ in range(n_channels)]
+        self.int = [Device(self.om0, self.dt, self.gamma, "integrator")
+                    for _ in range(n_channels)]
 
     def transform(self, X):
         """Transform the input signal into phase and amplitude estimates.
@@ -281,15 +309,17 @@ class ResOscillator:
         ampl : float
             Current amplitude estimate.
         """
-        n_samples = X.shape[0]
-        phase = np.zeros(n_samples)
-        ampl = np.zeros(n_samples)
-
         if self.buffer is None:
-            n_channels = 1 # X.shape[1]
-            self.buffer = Buffer(self.memory, n_channels)
-            self._demean = np.zeros((3, n_channels)) # Buffer for the demeaned signal
-            self._oscbuf = np.zeros((3, n_channels)) # Buffer for the integrator
+            self.n_channels = 1 if X.ndim < 2 else X.shape[1]
+            self.buffer = Buffer(self.memory, self.n_channels)
+            self.phase_buffer = Buffer(self.memory, self.n_channels)
+            self._demean = np.zeros((3, self.n_channels)) # past demeaned signal values
+            self._oscbuf = np.zeros((3, self.n_channels)) # past integrator values
+            self._set_devices(self.n_channels)
+
+        n_samples = X.shape[0]
+        phase = np.zeros((n_samples, self.n_channels))
+        ampl = np.zeros((n_samples, self.n_channels))
 
         for k in range(n_samples):
             self.buffer.push(X[k])
@@ -299,33 +329,39 @@ class ResOscillator:
             if self.buffer.counter < 3:
                 continue # Skip the first two samples
 
-            # Perform one step of the oscillator equations
-            self.oscillator.step(self._demean[-3], self._demean[-2], self._demean[-1])
+            for ch in range(self.n_channels):
+                # Perform one step of the oscillator equations
+                self.osc[ch].step(self._demean[-3, ch],
+                                  self._demean[-2, ch],
+                                  self._demean[-1, ch])
 
-            self._oscbuf = np.roll(self._oscbuf, -1, axis=0)
-            self._oscbuf[-1] = self.oscillator.state["y"]
+                self._oscbuf[:, ch] = np.roll(self._oscbuf[:, ch], -1, axis=0)
+                self._oscbuf[-1, ch] = self.osc[ch].state["y"]
 
-            self.integrator.step(self._oscbuf[-3], self._oscbuf[-2], self._oscbuf[-1])
+                self.int[ch].step(self._oscbuf[-3, ch],
+                                  self._oscbuf[-2, ch],
+                                  self._oscbuf[-1, ch])
 
-            # New phase and amplitude values
-            v = self.integrator.mu * self.integrator.state["x"] * self.om0
+                # New phase and amplitude values
+                v = self.int[ch].mu * self.int[ch].state["x"] * self.osc[ch].om0
 
-            phase[k] = np.arctan2(v, self.oscillator.state["y"])
-            ampl[k] = self.alpha * np.sqrt(self.oscillator.state["y"] ** 2 + v ** 2)
+                phase[k, ch] = np.arctan2(v, np.real(self.osc[ch].state["y"]))
+                ampl[k, ch] = self.alpha * np.sqrt(self.osc[ch].state["y"] ** 2 + v ** 2)
 
-            if k > self.updatepoint:
-                # Buffer for frequency estimation
-                tmp = np.unwrap(phase[k - self.memory:k])
+            self.phase_buffer.push(phase[k])
 
-                # Frequency via linear fit of the phases in the buffer
-                self.om0 = (self.memory * np.sum(self._tbuf * tmp) -
-                       self._Sx * np.sum(tmp)) / self._denom
-
+            if self.freq_adaptation and k > self.updatepoint:
+                tmpphase = self.phase_buffer.view(self.memory)
                 # Recompute integration parameters for the new frequency
-                self.oscillator.init_coefs(self.om0, self.dt, self.gamma)
+                for ch in range(self.n_channels):
+                    tmp = np.unwrap(tmpphase[:, ch])
+                    # Frequency via linear fit of the phases in the buffer
+                    om0 = (self.memory * np.sum(self._tbuf * tmp) -
+                        self._Sx * np.sum(tmp)) / self._denom
+                    self.osc[ch].init_coefs(om0, self.dt, self.gamma)
 
                 # Update running average
-                self.runav = np.mean(self.buffer.view(self.memory))
+                self.runav = np.mean(self.buffer.view(self.memory), axis=0, keepdims=True)
                 self.updatepoint += self.update_step  # Point for the next update
 
         return phase, ampl
@@ -540,8 +576,6 @@ def one_step_oscillator(x, xd, alpha, eta, eeta_del, eal_del, C1, C2, C3, spp, s
         xd : float
             Updated derivative of state variable x.
         """
-        # A = x - 1j * (xd + alpha * x) / eta
-        # A = A - 1j * (C1 * spp + C2 * sp + C3 * s) / eta
         A = x - 1j * (xd + alpha * x + C1 * spp + C2 * sp + C3 * s) / eta
         d = A * eeta_del
         y = np.real(d)
