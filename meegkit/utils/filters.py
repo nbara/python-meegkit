@@ -201,7 +201,8 @@ class NonResOscillator:
             for ch in range(self.n_channels):
                 self.adevice[ch].step(spp, sp, s)
                 z = self.adevice[ch].state["y"] / self.nu
-                amp[k, ch] = self.factor * np.sqrt(z ** 2 + self.adevice[ch].state["x"] ** 2)
+                amp[k, ch] = self.factor * \
+                    np.sqrt(z ** 2 + self.adevice[ch].state["x"] ** 2)
 
                 # Phase estimation
                 self.pdevice[ch].step(spp, sp, s)
