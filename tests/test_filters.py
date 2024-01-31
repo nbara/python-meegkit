@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import hilbert
 
-from meegkit.utils.filters import (
+from meegkit.phase import (
     NonResOscillator,
     ResOscillator,
     locking_based_phase,
@@ -14,7 +14,7 @@ def test_noisy_signal(show=True):
     # Model data, all three algorithms
     npt = 100000
     fs = 100
-    s0  = generate_multi_comp_data_fr_mod(npt, fs)  # Generate test data
+    s0  = generate_multi_comp_data(npt, fs)  # Generate test data
     s = generate_noisy_signal(npt, fs, noise=0.5)
     dt = 1 / fs
     time = np.arange(npt) * dt
@@ -41,48 +41,49 @@ def test_noisy_signal(show=True):
     osc = ResOscillator(fs, 1.1)
     rp, ra = osc.transform(s)
 
-    f, ax = plt.subplots(3, 2, sharex="col", sharey=True, figsize=(12, 8))
-    ax[0, 0].plot(time, gtp, lw=.75, label="Ground truth")
-    ax[0, 0].plot(time, htp, lw=.75, label=r"$\phi_H$")
-    ax[0, 0].set_ylabel(r"$\phi_H$")
-    ax[0, 0].set_title("Signal and its Hilbert phase")
+    if show:
+        f, ax = plt.subplots(3, 2, sharex="col", sharey=True, figsize=(12, 8))
+        ax[0, 0].plot(time, gtp, lw=.75, label="Ground truth")
+        ax[0, 0].plot(time, htp, lw=.75, label=r"$\phi_H$")
+        ax[0, 0].set_ylabel(r"$\phi_H$")
+        ax[0, 0].set_title("Signal and its Hilbert phase")
 
-    ax[1, 0].plot(time, gtp, lw=.75, label="Ground truth")
-    ax[1, 0].plot(time, nrp, lw=.75, label=r"$\phi_N$")
-    ax[1, 0].set_ylabel(r"$\phi_N$")
-    ax[1, 0].set_ylim([-np.pi, np.pi])
-    ax[1, 0].set_title("Nonresonant oscillator")
+        ax[1, 0].plot(time, gtp, lw=.75, label="Ground truth")
+        ax[1, 0].plot(time, nrp, lw=.75, label=r"$\phi_N$")
+        ax[1, 0].set_ylabel(r"$\phi_N$")
+        ax[1, 0].set_ylim([-np.pi, np.pi])
+        ax[1, 0].set_title("Nonresonant oscillator")
 
-    ax[2, 0].plot(time, gtp, lw=.75, label="Ground truth")
-    ax[2, 0].plot(time, rp, lw=.75, label=r"$\phi_N$")
-    ax[2, 0].set_ylim([-np.pi, np.pi])
-    ax[2, 0].set_ylabel("$\phi_H - \phi_R$")
-    ax[2, 0].set_xlabel("Time")
-    ax[2, 0].set_title("Resonant oscillator")
+        ax[2, 0].plot(time, gtp, lw=.75, label="Ground truth")
+        ax[2, 0].plot(time, rp, lw=.75, label=r"$\phi_N$")
+        ax[2, 0].set_ylim([-np.pi, np.pi])
+        ax[2, 0].set_ylabel("$\phi_H - \phi_R$")
+        ax[2, 0].set_xlabel("Time")
+        ax[2, 0].set_title("Resonant oscillator")
 
-    ax[0, 1].plot(time, gta, lw=.75, label="Ground truth")
-    ax[0, 1].plot(time, hta, lw=.75, label=r"$a_H$")
-    ax[0, 1].plot(time, s, lw=.75, label="Signal", color="grey", alpha=.5, zorder=0)
-    ax[0, 1].set_ylabel(r"$a_H$")
-    ax[0, 1].set_title("Signal and its Hilbert amplitude")
+        ax[0, 1].plot(time, gta, lw=.75, label="Ground truth")
+        ax[0, 1].plot(time, hta, lw=.75, label=r"$a_H$")
+        ax[0, 1].plot(time, s, lw=.75, label="Signal", color="grey", alpha=.5, zorder=0)
+        ax[0, 1].set_ylabel(r"$a_H$")
+        ax[0, 1].set_title("Signal and its Hilbert amplitude")
 
-    ax[1, 1].plot(time, gta, lw=.75, label="Ground truth")
-    ax[1, 1].plot(time, nra, lw=.75, label=r"$a_N$")
-    ax[1, 1].set_ylabel(r"$a_N$")
-    ax[1, 1].set_title("Amplitudes")
-    ax[1, 1].set_title("Nonresonant oscillator")
+        ax[1, 1].plot(time, gta, lw=.75, label="Ground truth")
+        ax[1, 1].plot(time, nra, lw=.75, label=r"$a_N$")
+        ax[1, 1].set_ylabel(r"$a_N$")
+        ax[1, 1].set_title("Amplitudes")
+        ax[1, 1].set_title("Nonresonant oscillator")
 
-    ax[2, 1].plot(time, gta, lw=.75, label="Ground truth")
-    ax[2, 1].plot(time, ra, lw=.75, label=r"$a_R$")
-    ax[2, 1].set_xlabel("Time")
-    ax[2, 1].set_ylabel(r"$a_R$")
-    ax[2, 1].set_title("Resonant oscillator")
-    plt.suptitle("Amplitude (right) and phase (left) - noisy signal")
+        ax[2, 1].plot(time, gta, lw=.75, label="Ground truth")
+        ax[2, 1].plot(time, ra, lw=.75, label=r"$a_R$")
+        ax[2, 1].set_xlabel("Time")
+        ax[2, 1].set_ylabel(r"$a_R$")
+        ax[2, 1].set_title("Resonant oscillator")
+        plt.suptitle("Amplitude (right) and phase (left) - noisy signal")
 
-    ax[2, 0].set_xlim([0, 40])
-    ax[2, 1].set_xlim([0, 1000])
-    plt.tight_layout()
-    plt.show()
+        ax[2, 0].set_xlim([0, 40])
+        ax[2, 1].set_xlim([0, 1000])
+        plt.tight_layout()
+        plt.show()
 
 
 def test_all_alg(show=True):
@@ -90,7 +91,7 @@ def test_all_alg(show=True):
     # Model data, all three algorithms
     npt = 100000
     fs = 100
-    s  = generate_multi_comp_data_fr_mod(npt, fs)  # Generate test data
+    s  = generate_multi_comp_data(npt, fs)  # Generate test data
     dt = 1 / fs
     time = np.arange(npt) * dt
 
@@ -181,7 +182,7 @@ def phase_difference(phi1, phi2):
 
     return phi_dif
 
-def generate_multi_comp_data_fr_mod(npt=40000, fs=100):
+def generate_multi_comp_data(npt=40000, fs=100):
     """Generate multi-component data with frequency modulation.
 
     Returns
@@ -214,7 +215,7 @@ def generate_noisy_signal(npt=40000, fs=100, noise=0.1):
     rng = np.random.default_rng(1)
     # dt = 1 / fs
     # t = np.arange(1, npt + 1) * dt
-    s = generate_multi_comp_data_fr_mod(npt, fs)
+    s = generate_multi_comp_data(npt, fs)
     s += rng.random(npt) * 0.1
 
     return s

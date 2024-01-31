@@ -15,7 +15,7 @@ oscillator is instantiated for each channel.
 """
 import numpy as np
 
-from .buffer import Buffer
+from meegkit.utils.buffer import Buffer
 
 
 class Device:
