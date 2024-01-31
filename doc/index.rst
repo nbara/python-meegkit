@@ -38,6 +38,7 @@ Here is a list of the methods and techniques available in ``meegkit``:
    ~meegkit.dss
    ~meegkit.detrend
    ~meegkit.lof
+   ~meegkit.phase
    ~meegkit.ress
    ~meegkit.sns
    ~meegkit.star
