@@ -15,15 +15,9 @@ def test_noisy_signal(show=True):
     npt = 100000
     fs = 100
     s0  = generate_multi_comp_data(npt, fs)  # Generate test data
-    s = generate_noisy_signal(npt, fs, noise=0.5)
+    s = generate_noisy_signal(npt, fs, noise=0.8)
     dt = 1 / fs
     time = np.arange(npt) * dt
-
-    # Plot the test signal's Fourier spectrum
-    # f, ax = plt.subplots(1, 1)
-    # ax.psd(s, Fs=fs, NFFT=2018*4, noverlap=fs)
-    # ax.set_title("Test signal's Fourier spectrum")
-    # plt.show()
 
     # The test signal s and its Hilbert amplitude ah (red); one can see that
     # ah does not represent a good envelope for s. On the contrary, the
@@ -73,6 +67,7 @@ def test_noisy_signal(show=True):
         ax[1, 1].set_title("Amplitudes")
         ax[1, 1].set_title("Nonresonant oscillator")
 
+        # The resonant oscillator should be much more robust to noise
         ax[2, 1].plot(time, gta, lw=.75, label="Ground truth")
         ax[2, 1].plot(time, ra, lw=.75, label=r"$a_R$")
         ax[2, 1].set_xlabel("Time")
@@ -86,7 +81,7 @@ def test_noisy_signal(show=True):
         plt.show()
 
 
-def test_all_alg(show=True):
+def test_all_alg(show=False):
     """Replicate the figure from the paper."""
     # Model data, all three algorithms
     npt = 100000
@@ -94,12 +89,6 @@ def test_all_alg(show=True):
     s  = generate_multi_comp_data(npt, fs)  # Generate test data
     dt = 1 / fs
     time = np.arange(npt) * dt
-
-    # Plot the test signal's Fourier spectrum
-    # f, ax = plt.subplots(1, 1)
-    # ax.psd(s, Fs=fs, NFFT=2018*4, noverlap=fs)
-    # ax.set_title("Test signal's Fourier spectrum")
-    # plt.show()
 
     # The test signal s and its Hilbert amplitude ah (red); one can see that
     # ah does not represent a good envelope for s. On the contrary, the
@@ -121,58 +110,62 @@ def test_all_alg(show=True):
     r_phase = r_phase[:, 0]
     r_phi_dif = phase_difference(ht_phase, r_phase)
 
-    # Panels (b, c, d) show the difference between the
-    # Hilbert phase and causally estimated phases (phi_L, phi_N, phi_R) are
-    # obtained by means of the locking-based technique, non-resonant and
-    # resonant oscillator, respectively). These panels demonstrate that the
-    # output of the developed causal algorithms is very close to the HT-phase.
-    # Notice that in (c) we show phi_H - phi_N modulo 2pi, since the phase
-    # difference is not bounded : within the first 20 time units the phase
-    # difference decreases to -14pi, until it saturates and oscillates around
-    # (phi_H - phi_N) = 0.
-    f, ax = plt.subplots(4, 2, sharex=True, sharey=True, figsize=(12, 8))
-    ax[0, 0].plot(time, s, time, ht_phase, lw=.75)
-    ax[0, 0].set_ylabel(r"$s,\phi_H$")
-    # ax[0, 0].set_ylim([-2, 3])
-    ax[0, 0].set_title("Signal and its Hilbert phase")
+    if show:
+        f, ax = plt.subplots(4, 2, sharex=True, sharey=True, figsize=(12, 8))
+        ax[0, 0].plot(time, s, time, ht_phase, lw=.75)
+        ax[0, 0].set_ylabel(r"$s,\phi_H$")
+        # ax[0, 0].set_ylim([-2, 3])
+        ax[0, 0].set_title("Signal and its Hilbert phase")
 
-    ax[1, 0].plot(time, lb_phi_dif, lw=.75)
-    ax[1, 0].axhline(0, color="k", ls=":", zorder=-1)
-    ax[1, 0].set_ylabel(r"$\phi_H - \phi_L$")
-    ax[1, 0].set_ylim([-np.pi, np.pi])
-    ax[1, 0].set_title("Phase locking approach")
+        ax[1, 0].plot(time, lb_phi_dif, lw=.75)
+        ax[1, 0].axhline(0, color="k", ls=":", zorder=-1)
+        ax[1, 0].set_ylabel(r"$\phi_H - \phi_L$")
+        ax[1, 0].set_ylim([-np.pi, np.pi])
+        ax[1, 0].set_title("Phase locking approach")
 
-    ax[2, 0].plot(time, nr_phi_dif, lw=.75)
-    ax[2, 0].axhline(0, color="k", ls=":", zorder=-1)
-    ax[2, 0].set_ylabel(r"$\phi_H - \phi_N$")
-    ax[2, 0].set_ylim([-np.pi, np.pi])
-    ax[2, 0].set_title("Nonresonant oscillator")
+        ax[2, 0].plot(time, nr_phi_dif, lw=.75)
+        ax[2, 0].axhline(0, color="k", ls=":", zorder=-1)
+        ax[2, 0].set_ylabel(r"$\phi_H - \phi_N$")
+        ax[2, 0].set_ylim([-np.pi, np.pi])
+        ax[2, 0].set_title("Nonresonant oscillator")
 
-    ax[3, 0].plot(time, r_phi_dif, lw=.75)
-    ax[3, 0].axhline(0, color="k", ls=":", zorder=-1)
-    ax[3, 0].set_ylim([-np.pi, np.pi])
-    ax[3, 0].set_ylabel("$\phi_H - \phi_R$")
-    ax[3, 0].set_xlabel("Time")
-    ax[3, 0].set_title("Resonant oscillator")
+        ax[3, 0].plot(time, r_phi_dif, lw=.75)
+        ax[3, 0].axhline(0, color="k", ls=":", zorder=-1)
+        ax[3, 0].set_ylim([-np.pi, np.pi])
+        ax[3, 0].set_ylabel("$\phi_H - \phi_R$")
+        ax[3, 0].set_xlabel("Time")
+        ax[3, 0].set_title("Resonant oscillator")
 
-    ax[0, 1].plot(time, s, time, ht_ampl, lw=.75)
-    ax[0, 1].set_ylabel(r"$s,a_H$")
-    ax[0, 1].set_title("Signal and its Hilbert amplitude")
+        ax[0, 1].plot(time, s, time, ht_ampl, lw=.75)
+        ax[0, 1].set_ylabel(r"$s,a_H$")
+        ax[0, 1].set_title("Signal and its Hilbert amplitude")
 
-    ax[1, 1].axis("off")
+        ax[1, 1].axis("off")
 
-    ax[2, 1].plot(time, s, time, nr_ampl, lw=.75)
-    ax[2, 1].set_ylabel(r"$s,a_N$")
-    ax[2, 1].set_title("Amplitudes")
-    ax[2, 1].set_title("Nonresonant oscillator")
+        ax[2, 1].plot(time, s, time, nr_ampl, lw=.75)
+        ax[2, 1].set_ylabel(r"$s,a_N$")
+        ax[2, 1].set_title("Amplitudes")
+        ax[2, 1].set_title("Nonresonant oscillator")
 
-    ax[3, 1].plot(time, s, time, r_ampl, lw=.75)
-    ax[3, 1].set_xlabel("Time")
-    ax[3, 1].set_ylabel(r"$s,a_R$")
-    ax[3, 1].set_title("Resonant oscillator")
-    plt.suptitle("Amplitude (right) and phase (left) estimation algorithms")
-    plt.tight_layout()
-    plt.show()
+        ax[3, 1].plot(time, s, time, r_ampl, lw=.75)
+        ax[3, 1].set_xlabel("Time")
+        ax[3, 1].set_ylabel(r"$s,a_R$")
+        ax[3, 1].set_title("Resonant oscillator")
+        plt.suptitle("Amplitude (right) and phase (left) estimation algorithms")
+        plt.tight_layout()
+        plt.show()
+
+    # Assert that the phase difference between the Hilbert phase and the
+    # phase estimated by the locking-based technique is small
+    assert np.mean(np.abs(lb_phi_dif)) < 0.27
+
+    # Assert that the phase difference between the Hilbert phase and the
+    # phase estimated by the non-resonant oscillator is small
+    assert np.mean(np.abs(nr_phi_dif)) < 0.2
+
+    # Assert that the phase difference between the Hilbert phase and the
+    # phase estimated by the resonant oscillator is small
+    assert np.mean(np.abs(r_phi_dif)) < 0.21
 
 
 def phase_difference(phi1, phi2):
@@ -216,7 +209,7 @@ def generate_noisy_signal(npt=40000, fs=100, noise=0.1):
     # dt = 1 / fs
     # t = np.arange(1, npt + 1) * dt
     s = generate_multi_comp_data(npt, fs)
-    s += rng.random(npt) * 0.1
+    s += rng.random(npt) * noise
 
     return s
 
