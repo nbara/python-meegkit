@@ -153,3 +153,12 @@ and was adapted to python by [Giuseppe Ferraro](mailto:giuseppe.ferraro@isae-sup
     EEG Bad Channel Detection Using Local Outlier Factor (LOF). Sensors (Basel). 
     2022 Sep 27;22(19):7314. https://doi.org/10.3390/s22197314.
 ```
+
+### 6. Real-Time Phase Estimation
+
+This code is based on the Matlab implementation from [Michael Rosenblum](http://www.stat.physik.uni-potsdam.de/~mros), and its corresponding paper [1].
+
+```sql
+[1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation of phase and amplitude with application to neural data. Sci Rep 11, 18037 (2021). https://doi.org/10.1038/s41598-021-97560-5
+
+```
