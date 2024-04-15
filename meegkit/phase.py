@@ -9,8 +9,8 @@ algorithm is not optimized for this purpose. Therefore, this code is likely to
 be slow for large input arrays (n_channels >> 10), since an individual
 oscillator is instantiated for each channel.
 
-.. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
-       of phase and amplitude with application to neural data. Sci Rep 11, 18037
+.. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation of
+       phase and amplitude with application to neural data. Sci Rep 11, 18037
        (2021). https://doi.org/10.1038/s41598-021-97560-5
 """
 import numpy as np
@@ -104,13 +104,14 @@ class Device:
 class NonResOscillator:
     """Real-time measurement of phase and amplitude using non-resonant oscillator.
 
-    This estimator relies on the resonance effect. The measuring “device” consists
-    of two linear damped oscillators. The oscillators' frequency is much larger
-    than the frequency of the signal, i.e., the system is far from resonance.
-    We choose the damping parameters to ensure that (i) the phase of the first
-    linear oscillator equals that of the input and that (ii) amplitude of the
-    second one and the input relate by a known constant multiplicator. The
-    technique yields both phase and amplitude of the input signal.
+    This estimator relies on the resonance effect. The measuring “device”
+    consists of two linear damped oscillators. The oscillators' frequency is
+    much larger than the frequency of the signal, i.e., the system is far from
+    resonance. We choose the damping parameters to ensure that (i) the phase of
+    the first linear oscillator equals that of the input and that (ii)
+    amplitude of the second one and the input relate by a known constant
+    multiplicator. The technique yields both phase and amplitude of the input
+    signal.
 
     This estimator includes an automated frequency-tuning algorithm to adjust
     to the a priori unknown signal frequency.
@@ -127,24 +128,23 @@ class NonResOscillator:
     References
     ----------
     .. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
-        of phase and amplitude with application to neural data. Sci Rep 11, 18037
-        (2021). https://doi.org/10.1038/s41598-021-97560-5
+        of phase and amplitude with application to neural data. Sci Rep 11,
+        18037 (2021). https://doi.org/10.1038/s41598-021-97560-5
     """
 
-    def __init__(self, fs=250, nu=1.1):
+    def __init__(self, fs=250, nu=1.1, alpha_a=6.0, alpha_p=0.2, update_factor=5):
 
         # Parameters of the measurement "devices"
         self.dt = 1 / fs  # Sampling interval
         self.nu = nu  # Rough estimate of the tremor frequency
         self.om0 = 5 * nu  # Oscillator frequency (estimation)
-        self.alpha_a = 6.0  # Damping parameter for the "amplitude device"
-        self.gamma_a = self.alpha_a / 2
-        self.alpha_p = 0.2  # Damping parameter for the "phase device"
-        self.gamma_p = self.alpha_p / 2
+        self.alpha_a = alpha_a  # Damping parameter for the "amplitude device"
+        self.gamma_a = alpha_a / 2
+        self.alpha_p = alpha_p  # Damping parameter for the "phase device"
+        self.gamma_p = alpha_p / 2
         self.factor = np.sqrt((self.om0 ** 2 - nu ** 2) ** 2 + (self.alpha_a * nu) ** 2)
 
         # Update parameters, and precomputed quantities
-        update_factor = 5
         self.memory = round(2 * np.pi / self.om0 / self.dt)
         self.update_point = 2 * self.memory
         self.update_step = round(self.memory / update_factor)
@@ -261,11 +261,12 @@ class ResOscillator:
        (2021). https://doi.org/10.1038/s41598-021-97560-5
     """
 
-    def __init__(self, fs=1000, nu=4.5, freq_adaptation=True):
+    def __init__(self, fs=1000, nu=4.5, update_factor=5, freq_adaptation=True,
+                 assume_centered=False):
 
         # Parameters of the measurement "device"
         self.dt = 1 / fs  # Sampling interval
-        self.om0 = 1.1  # Angular frequency
+        self.om0 = nu  # Angular frequency
         self.alpha = 0.3 * self.om0
         self.gamma = self.alpha / 2
 
@@ -273,7 +274,7 @@ class ResOscillator:
         nperiods = 1  # Number of previous periods for frequency correction
         npt_period = round(2 * np.pi / self.om0 / self.dt)  # Number of points per period
         self.memory = nperiods * npt_period  # M points for frequency correction buffer
-        self.update_factor = 5  # Number of frequency updates per period
+        self.update_factor = update_factor  # Number of frequency updates per period
         self.update_step = round(npt_period / self.update_factor)
         self.updatepoint = 2 * self.memory
 
@@ -287,6 +288,7 @@ class ResOscillator:
         self.buffer = None
         self.runav = 0.  # Initial guess for the dc-component
         self.freq_adaptation = freq_adaptation
+        self.assume_centered = assume_centered
 
     def _set_devices(self, n_channels):
         # Set up the phase and amplitude "devices"
@@ -362,7 +364,9 @@ class ResOscillator:
                     self.osc[ch].init_coefs(om0, self.dt, self.gamma)
 
                 # Update running average
-                self.runav = np.mean(self.buffer.view(self.memory), axis=0, keepdims=True)
+                if self.assume_centered is False:
+                    self.runav = np.mean(self.buffer.view(self.memory), axis=0,
+                                         keepdims=True)
                 self.updatepoint += self.update_step  # Point for the next update
 
         return phase, ampl
