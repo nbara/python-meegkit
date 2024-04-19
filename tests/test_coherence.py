@@ -23,7 +23,7 @@ def test_coherence(norm, show=True):
     # create signal with 5Hz and 8Hz components and noise, as well as a
     # 5Hz-8Hz interaction
     N = 10001
-    kw = dict(nperseg=N // 10, noverlap=N // 20, nfft=next_fast_len(N // 2))
+    kw = dict(nperseg=N // 4, noverlap=N // 20, nfft=next_fast_len(N // 2))
     t = np.linspace(0, 100, N)
     fs = 1 / (t[1] - t[0])
     s1 = np.cos(2 * np.pi * 5 * t + 0.3)  # 5Hz
@@ -93,7 +93,7 @@ def test_coherence(norm, show=True):
     if norm is not None:
         print(f"coherence for f1=0.02Hz, f2=1Hz, f3=7Hz: {p02_1_8:.2f}")
         print(f"coherence for f1=0.02Hz (synthetic), f2=1Hz, f3=7Hz: {p02_1_8s:.2f}")
-        assert p02_1_8s > 0.8 > p02_1_8
+        assert p02_1_8s > 0.9 > p02_1_8
 
     result = polycoherence_2d(signal, fs, [0.02], synthetic=synthetic, norm=norm, **kw)
 
@@ -120,7 +120,7 @@ def test_coherence(norm, show=True):
         plt.tight_layout()
         plt.show()
 
-@pytest.mark.parametrize("shape", [(10001,), (3, 10001), (17, 3, 10001)])
+@pytest.mark.parametrize("shape", [(1001,), (3, 1001), (17, 3, 1001)])
 def test_coherence_shapes(shape):
     """Test coherence functions with 1D, 2D or 3D input data."""
     rng = np.random.default_rng(54326)

@@ -58,17 +58,8 @@ def cross_coherence(x1, x2, sfreq, norm=2, **kwargs):
     .. [2] https://stackoverflow.com/a/36725871
 
     """
-    N = x1.shape[-1]
-    kwargs.setdefault("nperseg", N // 20)
-    kwargs.setdefault("nfft", next_fast_len(N // 10))
-
-    # compute the stft
-    f1, _, S1 = spectrogram(x1, fs=sfreq, mode="complex", **kwargs)
-    _, _, S2 = spectrogram(x2, fs=sfreq, mode="complex", **kwargs)
-
-    # transpose (f, t) -> (t, f)
-    S1 = np.swapaxes(S1, -1, -2)
-    S2 = np.swapaxes(S2, -1, -2)
+    f1, _, S1 = compute_spectrogram(x1, sfreq, **kwargs)
+    _, _, S2 = compute_spectrogram(x2, sfreq, **kwargs)
 
     # compute the bicoherence
     ind = np.arange(f1.size // 2)
@@ -113,18 +104,13 @@ def polycoherence_0d(X, sfreq, freqs, norm=2, synthetic=None, **kwargs):
 
     """
     assert isinstance(freqs, Iterable), "freqs must be a list"
-    N = X.shape[-1]
-    kwargs.setdefault("nperseg", N // 20)
-    kwargs.setdefault("nfft", next_fast_len(N // 10))
-
-    freq, t, spec = spectrogram(X, fs=sfreq, mode="complex", **kwargs)
+    freq, t, S = compute_spectrogram(X, sfreq, **kwargs)
 
     ind = _freq_ind(freq, freqs)
     indsum = _freq_ind(freq, np.sum(freqs))
-    spec = np.swapaxes(spec, -1, -2)
 
-    Pi = _product_other_freqs(spec, ind, synthetic, t)
-    Psum = spec[..., indsum]
+    Pi = _product_other_freqs(S, ind, synthetic, t)
+    Psum = S[..., indsum]
 
     B = np.mean(Pi * np.conj(Psum), axis=-1)
 
@@ -165,12 +151,7 @@ def polycoherence_1d(X, sfreq, f2, norm=2, synthetic=None, **kwargs):
     """
     assert isinstance(f2, Iterable), "f2 must be a list"
 
-    N = X.shape[-1]
-    kwargs.setdefault("nperseg", N // 20)
-    kwargs.setdefault("nfft", next_fast_len(N // 10))
-
-    f1, t, S = spectrogram(X, fs=sfreq, mode="complex", **kwargs)
-    S = np.swapaxes(S, -1, -2)  # transpose (f, t) -> (t, f)
+    f1, t, S = compute_spectrogram(X, sfreq, **kwargs)
 
     ind2 = _freq_ind(f1, f2)
     ind1 = np.arange(len(f1) - sum(ind2))
@@ -217,12 +198,7 @@ def polycoherence_1d_sum(X, sfreq, fsum, *ofreqs, norm=2, synthetic=None, **kwar
         Polycoherence for f1+f2=fsum.
 
     """
-    N = X.shape[-1]
-    kwargs.setdefault("nperseg", N // 20)
-    kwargs.setdefault("nfft", next_fast_len(N // 10))
-
-    freq, t, S = spectrogram(X, fs=sfreq, mode="complex", **kwargs)
-    S = np.swapaxes(S, -1, -2)  # transpose (f, t) -> (t, f)
+    freq, t, S = compute_spectrogram(X, sfreq, **kwargs)
 
     indsum = _freq_ind(freq, fsum)
     ind1 = np.arange(np.searchsorted(freq, fsum - np.sum(ofreqs)))
@@ -278,16 +254,7 @@ def polycoherence_2d(X, sfreq, ofreqs=None, norm=2, flim1=None, flim2=None,
         Polycoherence.
 
     """
-    N = X.shape[-1]
-    kwargs.setdefault("nperseg", N // 20)
-    kwargs.setdefault("nfft", next_fast_len(N // 10))
-
-    freq, t, S = spectrogram(X, fs=sfreq, mode="complex", **kwargs)
-    freq = freq[:len(freq) // 2 + 1]  # only positive frequencies
-    S = S[:len(freq) // 2 + 1]  # only positive frequencies
-    S = np.require(S, "complex64")
-
-    S = np.swapaxes(S, -1, -2)  # transpose (f, t) -> (t, f)
+    freq, t, S = compute_spectrogram(X, sfreq, **kwargs)
 
     if ofreqs is None:
         ofreqs = []
@@ -315,6 +282,33 @@ def polycoherence_2d(X, sfreq, ofreqs=None, norm=2, flim1=None, flim2=None,
         B = norm_spectrum(B, P1, P2, P12, time_axis=-3)
 
     return freq[ind1], freq[ind2], B
+
+
+def compute_spectrogram(X, sfreq, **kwargs):
+    """Compute the complex spectrogram of X.
+
+    Simple wrapper around scipy.signal.spectrogram.
+
+    Returns
+    -------
+    f: ndarray, shape=(n_freqs,)
+        Positive frequencies.
+    t: ndarray, shape=(n_timesteps,)
+        Time axis.
+    S: ndarray, shape=(n_chans, n_timesteps, n_freqs)
+        Complex spectrogram (one-sided).
+    """
+    N = X.shape[-1]
+    kwargs.setdefault("nperseg", N // 2)
+    kwargs.setdefault("noverlap", N // 5)
+    kwargs.setdefault("nfft", next_fast_len(N))
+
+    f, t, S = spectrogram(X, fs=sfreq, mode="complex", return_onesided=False, **kwargs)
+    S = S[:len(f) // 2]  # only positive frequencies
+    f = f[:len(f) // 2]  # only positive frequencies
+    S = np.require(S, "complex64")
+    S = np.swapaxes(S, -1, -2)  # transpose (f, t) -> (t, f)
+    return f, t, S
 
 
 def norm_spectrum(spec, P1, P2, P12, time_axis=-2):
