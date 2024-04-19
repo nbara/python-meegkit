@@ -33,10 +33,10 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
         Block covariance.
 
     """
-    from pyriemann.utils.covariance import _check_est
+    from pyriemann.utils.covariance import check_function, cov_est_functions
 
     assert 0 <= overlap < 1, "overlap must be < 1"
-    est = _check_est(estimator)
+    est = check_function(estimator, cov_est_functions)
     cov = []
     n_chans, n_samples = data.shape
     if padding:  # pad data with zeros
