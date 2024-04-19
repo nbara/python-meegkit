@@ -43,7 +43,7 @@ dt = 1 / fs
 time = np.arange(npt) * dt
 
 ###############################################################################
-# Vizualize signal
+# Visualize signal
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Plot the test signal's Fourier spectrum
 f, ax = plt.subplots(2, 1)

@@ -551,7 +551,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
     detrend : bool
         If True, detrend filtered data (default=False).
     method : {'euclid', 'riemann'}
-        Metric to compute the covariance matric average.
+        Metric to compute the covariance matrix average.
 
     Returns
     -------
