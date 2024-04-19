@@ -6,6 +6,7 @@ meegkit.utils
    .. autosummary::
 
     auditory
+    coherence
     covariances
     denoise
     matrix
