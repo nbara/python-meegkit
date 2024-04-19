@@ -28,6 +28,17 @@ Auditory
 
 ----
 
+Coherence
+--------
+.. automodule:: meegkit.utils.coherence
+
+   .. autosummary::
+
+
+|
+
+----
+
 Covariances
 -----------
 .. automodule:: meegkit.utils.covariances

@@ -160,7 +160,7 @@ def polycoherence_1d(X, sfreq, f2, norm=2, synthetic=None, **kwargs):
     freq: ndarray, shape=(n_freqs_f1,)
         Frequencies
     B: ndarray, shape=(n_channels, n_freqs_f1)
-        1D polycoherence
+        1D polycoherence.
 
     """
     assert isinstance(f2, Iterable), "f2 must be a list"
@@ -282,8 +282,11 @@ def polycoherence_2d(X, sfreq, ofreqs=None, norm=2, flim1=None, flim2=None,
     kwargs.setdefault("nperseg", N // 20)
     kwargs.setdefault("nfft", next_fast_len(N // 10))
 
-    freq, t, S = spectrogram(X, fs=sfreq, mode="complex", **kwargs, axis=-1)
+    freq, t, S = spectrogram(X, fs=sfreq, mode="complex", **kwargs)
+    freq = freq[:len(freq) // 2 + 1]  # only positive frequencies
+    S = S[:len(freq) // 2 + 1]  # only positive frequencies
     S = np.require(S, "complex64")
+
     S = np.swapaxes(S, -1, -2)  # transpose (f, t) -> (t, f)
 
     if ofreqs is None:
