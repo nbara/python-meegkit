@@ -6,7 +6,7 @@ from meegkit.utils import fold, rms, unfold
 
 
 def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
-                     n_bad_chans=1, SNR=.1, fline=1, t0=None, show=False):
+                     n_bad_chans=1, SNR=.1, fline=0.1, t0=None, show=False):
     """Create synthetic data.
 
     Parameters
@@ -24,7 +24,7 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
     t0 : int
         Onset sample of artifact.
     fline : float
-        Normalized frequency of artifact (freq/samplerate), (default=1).
+        Normalized frequency of artifact (freq/samplerate), (default=0.1).
 
     Returns
     -------

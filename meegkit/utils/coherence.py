@@ -151,8 +151,8 @@ def polycoherence_1d(X, sfreq, f2, norm=2, synthetic=None, **kwargs):
     """
     assert isinstance(f2, Iterable), "f2 must be a list"
 
-    f1, t, S = compute_spectrogram(X, sfreq, **kwargs)
-
+    f1, t, S = compute_spectrogram(X, sfreq, **kwargs, axis=-1)
+    S = np.require(S, "complex64")
     ind2 = _freq_ind(f1, f2)
     ind1 = np.arange(len(f1) - sum(ind2))
     indsum = ind1 + sum(ind2)
@@ -161,7 +161,7 @@ def polycoherence_1d(X, sfreq, f2, norm=2, synthetic=None, **kwargs):
     Pother = _product_other_freqs(S, ind2, synthetic, t)[..., None]
     Psum = S[..., indsum]
 
-    B = np.mean(P1 * Pother * np.conj(Psum), axis=-2)
+    B = np.nanmean(P1 * Pother * np.conj(Psum), axis=-2)
 
     if norm is not None:
         B = norm_spectrum(B, P1, Pother, Psum, time_axis=-2)
@@ -276,7 +276,7 @@ def polycoherence_2d(X, sfreq, ofreqs=None, norm=2, flim1=None, flim2=None,
     P12 = S[..., indsum]
 
     # Average over time to get the bispectrum
-    B = np.mean(P1 * P2 * np.conj(P12), axis=-3)
+    B = np.nanmean(P1 * P2 * np.conj(P12), axis=-3)
 
     if norm is not None: # Bispectrum -> Bicoherence
         B = norm_spectrum(B, P1, P2, P12, time_axis=-3)
@@ -340,8 +340,8 @@ def norm_spectrum(spec, P1, P2, P12, time_axis=-2):
 
     """
     coh = np.abs(spec) ** 2
-    norm = np.mean(np.abs(P1 * P2) ** 2, axis=time_axis)
-    norm *= np.mean(np.abs(np.conj(P12)) ** 2, axis=time_axis)
+    norm = np.nanmean(np.abs(P1 * P2) ** 2, axis=time_axis)
+    norm *= np.nanmean(np.abs(np.conj(P12)) ** 2, axis=time_axis)
     coh /= norm
     coh **= 0.5
     return coh
