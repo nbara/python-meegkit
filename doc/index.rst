@@ -46,7 +46,6 @@ Here is a list of the methods and techniques available in ``meegkit``:
    ~meegkit.tspca
    ~meegkit.utils
 
-
 Examples gallery
 ----------------
 

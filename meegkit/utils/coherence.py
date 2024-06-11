@@ -6,6 +6,7 @@ Bicoherence is a measure of the degree of phase coupling between different
 frequency components in a signal. It's essentially a normalized form of the
 bispectrum, which itself is a Fourier transform of the third-order cumulant of
 a time series:
+
 - 2D bicoherence is the most common form, where one looks at a
   two-dimensional representation of the phase coupling between different
   frequencies. It's a function of two frequency variables.

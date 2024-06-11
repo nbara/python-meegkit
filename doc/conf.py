@@ -26,7 +26,7 @@ import meegkit # noqa
 # -- Project information -----------------------------------------------------
 
 project = "MEEGkit"
-copyright = "2023, Nicolas Barascud"
+copyright = "2024, Nicolas Barascud"
 author = "Nicolas Barascud"
 release = meegkit.__version__
 version = meegkit.__version__
@@ -63,7 +63,7 @@ autodoc_default_options = {
     "show-inheritance": True,
     "exclude-members": "__weakref__"
 }
-numpydoc_show_class_members = True
+numpydoc_show_class_members = False
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -129,3 +129,5 @@ sphinx_gallery_conf = {
     "ignore_pattern": "config.py",
     "run_stale_examples": False,
 }
+
+suppress_warnings = ["config.cache"]

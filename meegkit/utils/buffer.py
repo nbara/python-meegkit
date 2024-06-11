@@ -22,13 +22,8 @@ class Buffer:
         The number of channels of the buffer.
     counter : int
         The number of samples in the buffer.
-    head : int
-        The index of the most recent sample in the buffer.
-    tail : int
-        The index of the most recent read sample in the buffer.
     _data : ndarray, shape (size, n_channels)
         Data buffer.
-
 
     """
 
@@ -86,6 +81,8 @@ class Buffer:
 
         self._head += n_samples
         self.counter += n_samples
+
+        return self
 
     def get_new_samples(self, n_samples=None):
         """Consume n_samples."""

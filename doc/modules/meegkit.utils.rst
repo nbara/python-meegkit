@@ -6,12 +6,14 @@ meegkit.utils
    .. autosummary::
 
     auditory
+    buffer
     coherence
     covariances
     denoise
     matrix
     sig
     stats
+    trca
 
 |
 
@@ -28,8 +30,19 @@ Auditory
 
 ----
 
+Buffer
+------
+.. automodule:: meegkit.utils.buffer
+
+   .. autosummary::
+
+
+|
+
+----
+
 Coherence
---------
+---------
 .. automodule:: meegkit.utils.coherence
 
    .. autosummary::

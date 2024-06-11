@@ -83,16 +83,16 @@ r_phi_dif = phase_difference(ht_phase, r_phase)
 # Here we reproduce figure 1 from the original paper [1]_.
 
 ###############################################################################
-# The first row shows the test signal $s$ and its Hilbert amplitude $a_H$ ; one
-# can see that ah does not represent a good envelope for $s$. On the contrary,
-# the Hilbert-based phase estimation yields good results, and therefore we take
-# it for the ground truth.
-# Rows 2-4 show the difference between the Hilbert phase and causally
-# estimated phases ($\phi_L$, $\phi_N$, $\phi_R$) are obtained by means of the
+# The first row shows the test signal :math:`s` and its Hilbert amplitude
+# :math:`a_H` ; one can see that ah does not represent a good envelope for
+# :math:`s`. On the contrary, the Hilbert-based phase estimation yields good
+# results, and therefore we take it for the ground truth. Rows 2-4 show the
+# difference between the Hilbert phase and causally estimated phases
+# (:math:`\phi_L`, :math:`\phi_N`, :math:`\phi_R`) are obtained by means of the
 # locking-based technique, non-resonant and resonant oscillator, respectively).
 # These panels demonstrate that the output of the developed causal algorithms
-# is very close to the HT-phase. Notice that we show $\phi_H - \phi_N$
-# modulo $2\pi$, since the phase difference is not bounded.
+# is very close to the HT-phase. Notice that we show :math:`\phi_H - \phi_N`
+# modulo :math:`2\pi`, since the phase difference is not bounded.
 f, ax = plt.subplots(4, 2, sharex=True, sharey=True, figsize=(12, 8))
 ax[0, 0].plot(time, s, time, ht_phase, lw=.75)
 ax[0, 0].set_ylabel(r"$s,\phi_H$")
@@ -113,7 +113,7 @@ ax[2, 0].set_title("Nonresonant oscillator")
 ax[3, 0].plot(time, r_phi_dif, lw=.75)
 ax[3, 0].axhline(0, color="k", ls=":", zorder=-1)
 ax[3, 0].set_ylim([-np.pi, np.pi])
-ax[3, 0].set_ylabel("$\phi_H - \phi_R$")
+ax[3, 0].set_ylabel(r"$\phi_H - \phi_R$")
 ax[3, 0].set_xlabel("Time")
 ax[3, 0].set_title("Resonant oscillator")
 
