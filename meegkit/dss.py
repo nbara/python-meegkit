@@ -48,14 +48,11 @@ def dss1(X, weights=None, keep1=None, keep2=1e-12):
         Power per component (averaged).
 
     """
-    n_trials = theshapeof(X)[-1]
-
     # if demean: # remove weighted mean
     #   X = demean(X, weights)
 
     # weighted mean over trials (--> bias function for DSS)
     xx, ww = mean_over_trials(X, weights)
-    ww /= n_trials
 
     # covariance of raw and biased X
     c0, nc0 = tscov(X, None, weights)

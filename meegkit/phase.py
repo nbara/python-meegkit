@@ -196,7 +196,7 @@ class NonResOscillator:
                 continue # Skip the first two samples
 
             # Amplitude estimation
-            spp, sp, s = self.buffer.view(3)
+            spp, sp, s = self.buffer.view(3)[:, 0]
 
             for ch in range(self.n_channels):
                 self.adevice[ch].step(spp, sp, s)

@@ -47,7 +47,7 @@ def test_dss1(show=True):
     n_samples = 300
     data, source = create_line_data(n_samples=n_samples, fline=.01)
 
-    todss, _, pwr0, pwr1 = dss.dss1(data, weights=None, )
+    todss, _, pwr0, pwr1 = dss.dss1(data, weights=None)
     z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
 
     best_comp = np.mean(z[:, 0, :], -1)
@@ -102,6 +102,7 @@ def test_dss_line(nkeep):
         ax[1].set_title("after")
         plt.show()
 
+
     # 2D case, n_outputs == 1
     out, _ = dss.dss_line(s, fline, sr, nkeep=nkeep)
     _plot(out)
@@ -122,7 +123,7 @@ def test_dss_line(nkeep):
     artifact = artifact ** 3
     s = x + 10 * artifact
     out, _ = dss.dss_line(s, fline, sr, nremove=1)
-
+    plt.close("all")
 
 def test_dss_line_iter():
     """Test line noise removal."""
@@ -171,6 +172,7 @@ def test_dss_line_iter():
     x, _ = create_line_data(n_samples, n_chans=n_chans, n_trials=2,
                             noise_dim=10, SNR=2, fline=fline / sr)
     out, _ = dss.dss_line_iter(x, fline, sr, show=False)
+    plt.close("all")
 
 
 def profile_dss_line(nkeep):
