@@ -14,6 +14,8 @@ oscillator is instantiated for each channel.
        (2021). https://doi.org/10.1038/s41598-021-97560-5
 """
 import numpy as np
+from scipy.fftpack import fft, fftshift, ifft, ifftshift, next_fast_len
+from scipy.signal import butter, freqz
 
 from meegkit.utils.buffer import Buffer
 
@@ -623,3 +625,160 @@ def one_step_integrator(z, edelmu, mu, dt, spp, sp, s):
     C0 = z + d
     z = C0 * edelmu - d + b * dt - 2 * c * mu * dt + c * dt ** 2
     return z
+
+
+class ECHT:
+    """Endpoint Corrected Hilbert Transform (ECHT).
+
+    See [1]_ for details.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_channels)
+        Time domain signal.
+    l_freq : float | None
+        Low-cutoff frequency of a bandpass causal filter. If None, the data is
+        only low-passed.
+    h_freq : float | None
+        High-cutoff frequency of a bandpass causal filter. If None, the data is
+        only high-passed.
+    sfreq : float
+        Sampling rate of time domain signal.
+    n : int, optional
+        Length of analytic signal. If None, it defaults to the length of X.
+    filt_order : int, optional
+        Order of the filter. Default is 2.
+
+    Notes
+    -----
+    One common implementation of the Hilbert Transform uses a DFT (aka FFT)
+    as part of its computation. Inherent to the DFT is the assumption that
+    a finite sample of a signal is replicated infinitely in time, effectively
+    abutting the end of a sample with its replicated start. If the start and
+    end of the sample are not continuous with each other, distortions are
+    introduced by the DFT. Echt effectively smooths out this 'discontinuity'
+    by selectively deforming the start of the sample. It is hence most suited
+    for real-time applications in which the point/s of interest is/are the
+    most recent one/s (i.e. last) in the sample window.
+
+    We found that a filter bandwidth (BW=h_freq-l_freq) of up to half the
+    signal's central frequency works well.
+
+    References
+    ----------
+    .. [1] S. R. Schreglmann, D. Wang, R. Peach, J. Li, X. Zhang, E. Panella,
+       E. S. Boyden, M. Barahona, S. Santaniello, K. P. Bhatia, J. Rothwell,
+       N. Grossman, "Non-invasive Amelioration of Essential Tremor via
+       Phase-Locked Disruption of its Temporal Coherence".
+
+    Examples
+    --------
+    >>> f0 = 2
+    >>> filt_BW = f0 / 2
+    >>> N = 1000
+    >>> sfreq = N / (2 * np.pi)
+    >>> t = np.arange(-2 * np.pi, 0, 1 / sfreq)
+    >>> X = np.cos(2 * np.pi * f0 * t - np.pi / 4)
+    >>> l_freq = f0 - filt_BW / 2
+    >>> h_freq = f0 + filt_BW / 2
+    >>> Xf = echt(X, l_freq, h_freq, sfreq)
+    """
+
+    def __init__(self, l_freq, h_freq, sfreq, n_fft=None, filt_order=2):
+        self.l_freq = l_freq
+        self.h_freq = h_freq
+        self.sfreq = sfreq
+        self.n_fft = n_fft
+        self.filt_order = filt_order
+
+        # attributes
+        self.h_ = None
+        self.coef_ = None
+
+    def fit(self, X, y=None):
+        """Fit the ECHT transform to the input signal."""
+        if self.n_fft is None:
+            self.n_fft = next_fast_len(X.shape[0])
+
+        # Set the amplitude of the negative components of the FFT to zero and
+        # multiply the amplitudes of the positive components, apart from the
+        # zero-frequency component (DC) and Nyquist components, by 2.
+        #
+        # If the signal has an even number of elements n, the frequency components
+        # are:
+        # - n/2-1 negative elements,
+        # - one DC element,
+        # - n/2-1 positive elements and
+        # - one Nyquist element (in order).
+        #
+        # If the signal has an odd number of elements n, the frequency components
+        # are:
+        # - (n-1)/2 negative elements,
+        # - one DC element,
+        # - (n-1)/2 positive elements (in order).
+        # - no positive element corresponding to the Nyquist frequency.
+        self.h_ = np.zeros(self.n_fft)
+        self.h_[0] = 1
+        self.h_[1:(self.n_fft // 2) + 1] = 2
+        if self.n_fft % 2 == 0:
+            self.h_[self.n_fft // 2] = 1
+
+        # The frequency response vector is computed using freqz from the filter's
+        # impulse response function, computed by butter function, and the user
+        # defined low-cutoff frequency, high-cutoff frequency and sampling rate.
+        Wn = [self.l_freq / (self.sfreq / 2), self.h_freq / (self.sfreq / 2)]
+        b, a = butter(self.filt_order, Wn, btype="band")
+        T = 1 / self.sfreq * self.n_fft
+        filt_freq = np.ceil(np.arange(-self.n_fft / 2, self.n_fft / 2) / T)
+
+        self.coef_ = freqz(b, a, filt_freq, fs=self.sfreq)[1]
+        self.coef_ = self.coef_[:, None]
+
+        return self
+
+    def transform(self, X):
+        """Apply the ECHT transform to the input signal.
+
+        Parameters
+        ----------
+        X : ndarray, shape=(n_samples, n_channels)
+            The input signal to be transformed.
+
+        Returns
+        -------
+        Xf : ndarray, shape=(n_samples, n_channels)
+            The transformed signal (complex-valued).
+
+        """
+        if not np.isrealobj(X):
+            X = np.real(X)
+
+        # if not fitted
+        if self.h_ is None or self.coef_ is None:
+            self.fit(X)
+
+        if X.ndim == 1:
+            X = X[:, np.newaxis]
+
+        # Compute the FFT of the signal.
+        Xf = fft(X, self.n_fft, axis=0)
+
+        # In contrast to :meth:`scipy.signal.hilbert()`, the code then
+        # multiplies the array by a frequency response vector of a causal
+        # bandpass filter.
+        Xf = Xf * self.h_[:, None]
+
+        # The array is arranged, using fft_shift function, so that the zero-frequency
+        # component is at the center of the array, before the multiplication, and
+        # rearranged back so that the zero-frequency component is at the left of the
+        # array using ifft_shift(). Finally, the IFFT is computed.
+        Xf = fftshift(Xf)
+        Xf = Xf * self.coef_
+        Xf = ifftshift(Xf)
+        Xf = ifft(Xf, axis=0)
+
+        return Xf
+
+    def fit_transform(self, X, y=None):
+        """Fit the ECHT transform to the input signal and transform it."""
+        return self.fit(X).transform(X)
