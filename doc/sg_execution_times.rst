@@ -6,7 +6,7 @@
 
 Computation times
 =================
-**00:19.783** total execution time for 12 files **from all galleries**:
+**00:26.502** total execution time for 13 files **from all galleries**:
 
 .. container::
 
@@ -33,38 +33,41 @@ Computation times
      - Time
      - Mem (MB)
    * - :ref:`sphx_glr_auto_examples_example_trca.py` (``../examples/example_trca.py``)
-     - 00:07.797
-     - 0.0
-   * - :ref:`sphx_glr_auto_examples_example_phase_estimation.py` (``../examples/example_phase_estimation.py``)
-     - 00:05.022
+     - 00:10.104
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_dss_line.py` (``../examples/example_dss_line.py``)
-     - 00:04.967
+     - 00:06.807
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_example_asr.py` (``../examples/example_asr.py``)
-     - 00:00.375
+   * - :ref:`sphx_glr_auto_examples_example_phase_estimation.py` (``../examples/example_phase_estimation.py``)
+     - 00:06.290
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_mcca.py` (``../examples/example_mcca.py``)
-     - 00:00.319
+     - 00:00.723
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_example_asr.py` (``../examples/example_asr.py``)
+     - 00:00.531
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_mcca_2.py` (``../examples/example_mcca_2.py``)
-     - 00:00.295
+     - 00:00.477
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_ress.py` (``../examples/example_ress.py``)
-     - 00:00.279
+     - 00:00.402
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_detrend.py` (``../examples/example_detrend.py``)
-     - 00:00.221
+     - 00:00.273
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_star_dss.py` (``../examples/example_star_dss.py``)
-     - 00:00.177
+     - 00:00.227
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_star.py` (``../examples/example_star.py``)
-     - 00:00.139
+     - 00:00.192
      - 0.0
-   * - :ref:`sphx_glr_auto_examples_example_dss.py` (``../examples/example_dss.py``)
-     - 00:00.110
+   * - :ref:`sphx_glr_auto_examples_example_echt.py` (``../examples/example_echt.py``)
+     - 00:00.179
      - 0.0
    * - :ref:`sphx_glr_auto_examples_example_dering.py` (``../examples/example_dering.py``)
-     - 00:00.083
+     - 00:00.149
+     - 0.0
+   * - :ref:`sphx_glr_auto_examples_example_dss.py` (``../examples/example_dss.py``)
+     - 00:00.149
      - 0.0

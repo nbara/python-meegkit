@@ -4,14 +4,14 @@ Endpoint-corrected Hilbert transform (ECHT) phase estimation
 
 This example shows how to causally estimate the phase of a signal using
 
-Uses `meegkit.phase.echt()`.
+Uses `meegkit.phase.ECHT()`.
 
 References
 ----------
-.. [1] S. R. Schreglmann, D. Wang, R. Peach, J. Li, X. Zhang, E. Panella,
-       E. S. Boyden, M. Barahona, S. Santaniello, K. P. Bhatia, J. Rothwell,
-       N. Grossman, "Non-invasive Amelioration of Essential Tremor via
-       Phase-Locked Disruption of its Temporal Coherence".
+.. [1] Schreglmann, S. R., Wang, D., Peach, R. L., Li, J., Zhang, X., Latorre,
+    A., ... & Grossman, N. (2021). Non-invasive suppression of essential tremor
+    via phase-locked disruption of its temporal coherence. Nature
+    communications, 12(1), 363.
 
 """
 import matplotlib.pyplot as plt

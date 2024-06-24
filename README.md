@@ -154,13 +154,19 @@ and was adapted to python by [Giuseppe Ferraro](mailto:giuseppe.ferraro@isae-sup
     2022 Sep 27;22(19):7314. https://doi.org/10.3390/s22197314.
 ```
 
-### 6. Real-Time Phase Estimation
+### 6. Phase Estimation
 
-This code is based on the Matlab implementation from [Michael Rosenblum](http://www.stat.physik.uni-potsdam.de/~mros), and its corresponding paper [1].
+The oscillator code is based on the Matlab implementation from [Michael
+Rosenblum](http://www.stat.physik.uni-potsdam.de/~mros), and its corresponding
+paper [1]. The Endpoint Corrected Hilbert Transform (ECHT) method was adapted
+from [2].
 
 ```sql
 [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation of phase 
     and amplitude with application to neural data. Sci Rep 11, 18037 (2021). 
     https://doi.org/10.1038/s41598-021-97560-5
+[2] Schreglmann, S. R., Wang, D., Peach, R. L., Li, J., Zhang, X., Latorre, A., 
+    ... & Grossman, N. (2021). Non-invasive suppression of essential tremor via
+    phase-locked disruption of its temporal coherence. Nature communications, 12(1), 363.
 
 ```
