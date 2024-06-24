@@ -3,6 +3,15 @@ meegkit.phase
 
 .. automodule:: meegkit.phase
 
+    .. rubric:: Classes
+
+    .. autosummary::
+
+       NonResOscillator
+       ResOscillator
+       Device
+       ECHT
+
     .. rubric:: Functions
 
     .. autosummary::
@@ -12,11 +21,3 @@ meegkit.phase
        init_coefs
        one_step_oscillator
        one_step_integrator
-
-    .. rubric:: Classes
-
-    .. autosummary::
-
-       Device
-       NonResOscillator
-       ResOscillator

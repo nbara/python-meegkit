@@ -644,7 +644,7 @@ class ECHT:
         only high-passed.
     sfreq : float
         Sampling rate of time domain signal.
-    n : int, optional
+    n_fft : int, optional
         Length of analytic signal. If None, it defaults to the length of X.
     filt_order : int, optional
         Order of the filter. Default is 2.
@@ -696,7 +696,14 @@ class ECHT:
         self.coef_ = None
 
     def fit(self, X, y=None):
-        """Fit the ECHT transform to the input signal."""
+        """Fit the ECHT transform to the input signal.
+
+        Parameters
+        ----------
+        X : ndarray, shape=(n_samples, n_channels)
+            The input signal to be transformed.
+
+        """
         if self.n_fft is None:
             self.n_fft = next_fast_len(X.shape[0])
 

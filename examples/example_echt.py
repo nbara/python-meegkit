@@ -2,7 +2,8 @@
 Endpoint-corrected Hilbert transform (ECHT) phase estimation
 ============================================================
 
-This example shows how to causally estimate the phase of a signal using
+This example shows how to causally estimate the phase of a signal using the
+Endpoint-corrected Hilbert transform (ECHT) [1]_.
 
 Uses `meegkit.phase.ECHT()`.
 
@@ -58,7 +59,9 @@ phase_echt = np.angle(Xf)
 ###############################################################################
 # Visualize signal
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Plot the results
+# Here we plot the original signal, its Fourier spectrum, and the phase obtained
+# with the Hilbert transform and the ECHT filter. The ECHT filter provides a
+# much smoother phase estimate than the Hilbert transform
 fig, ax = plt.subplots(3, 1, figsize=(8, 6))
 ax[0].plot(time, X)
 ax[0].set_xlabel("Time (s)")

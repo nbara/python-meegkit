@@ -54,8 +54,7 @@ def test_stcmb(show=True):
     np.testing.assert_allclose(h, hh, rtol=2)  # equal to 2%
 
 
-
-def test_echt(show=True):
+def test_echt(show=False):
     """Test Endpoint-corrected Hilbert transform (ECHT) phase estimation."""
     rng = np.random.default_rng(38872)
 
@@ -111,6 +110,30 @@ def test_echt(show=True):
     mae =  (np.abs(np.unwrap(phase_true - phase_echt.squeeze())) > np.pi / 6).sum() / N
     assert mae < 0.1, mae
 
+def test_echt_nd():
+    """Test ECHT with ndim > 1."""
+    rng = np.random.default_rng(38872)
+
+    # Build data
+    # -------------------------------------------------------------------------
+    # First, we generate a multi-component signal with amplitude and phase
+    # modulations, as described in the paper [1]_.
+    f0 = 2
+    filt_BW = f0 / 2
+    N = 500
+    sfreq = 200
+    time = np.linspace(0, N / sfreq, N)
+    X = np.cos(2 * np.pi * f0 * time - np.pi / 4)[:, None]
+    X = X + rng.normal(0, 0.5, (N, 2))  # Add noise
+
+    l_freq = f0 - filt_BW / 2
+    h_freq = f0 + filt_BW / 2
+    echt = ECHT(l_freq, h_freq, sfreq)
+
+    Xf = echt.fit_transform(X)
+    phase_echt = np.angle(Xf)
+
+    assert phase_echt.shape == (N, 2)
 
 
 if __name__ == "__main__":
