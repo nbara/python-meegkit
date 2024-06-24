@@ -75,7 +75,7 @@ def mean_over_trials(X, weights=None):
 
     if not weights.any():
         y = np.mean(X, 2)
-        tw = np.ones((n_samples, n_chans, 1)) * n_trials
+        tw = np.ones((n_samples, n_chans, 1))
     else:
         m, n, o = theshapeof(weights)
         if m != n_samples:

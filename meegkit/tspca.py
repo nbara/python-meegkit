@@ -34,7 +34,7 @@ def tspca(X, shifts=None, keep=None, threshold=None, weights=None,
     weights : array
         Sample weights.
     demean : bool
-        If True, Epochs are centered before comuting PCA (default=0).
+        If True, Epochs are centered before computing PCA (default=0).
 
     Returns
     -------

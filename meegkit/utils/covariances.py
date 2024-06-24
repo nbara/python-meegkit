@@ -33,10 +33,10 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
         Block covariance.
 
     """
-    from pyriemann.utils.covariance import _check_est
+    from pyriemann.utils.covariance import check_function, cov_est_functions
 
     assert 0 <= overlap < 1, "overlap must be < 1"
-    est = _check_est(estimator)
+    est = check_function(estimator, cov_est_functions)
     cov = []
     n_chans, n_samples = data.shape
     if padding:  # pad data with zeros
@@ -212,18 +212,18 @@ def tscov(X, shifts=None, weights=None, assume_centered=True):
     shifts, n_shifts = _check_shifts(shifts)
 
     if not assume_centered:
-        X = X - X.mean(0, keepdims=1)
+        X = X - X.mean(0, keepdims=True)
 
     if weights.any():  # weights
         X = np.einsum("ijk,ilk->ijk", X, weights)  # element-wise mult
-        tw = np.sum(weights[:])
+        tw = np.sum(weights[:]) - 1
     else:  # no weights
         N = 0
         if len(shifts[shifts < 0]):
             N -= np.min(shifts)
         if len(shifts[shifts >= 0]):
             N += np.max(shifts)
-        tw = (n_chans * n_shifts - N) * n_trials
+        tw = n_trials * (n_times - N - 1)
 
     C = np.zeros((n_chans * n_shifts, n_chans * n_shifts))
     for trial in range(n_trials):

@@ -276,18 +276,17 @@ def spectral_envelope(x, sfreq, lowpass=32):
     return y[len(a):-len(b)]
 
 
-def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False, show=False):
+def gaussfilt(data, sfreq, f, fwhm, n_harm=1, shift=0, return_empvals=False, show=False):
     """Narrow-band filter via frequency-domain Gaussian.
 
-    Empirical frequency and FWHM depend on the sampling rate and the
-    number of time points, and may thus be slightly different from
-    the requested values.
+    Empirical frequency and FWHM depend on the sampling rate and the number of
+    time points, and may thus be slightly different from the requested values.
 
     Parameters
     ----------
     data : ndarray
         EEG data, shape=(n_samples, n_channels[, ...])
-    srate : int
+    sfreq : int
         Sampling rate in Hz.
     f : float
         Break frequency of filter.
@@ -318,7 +317,7 @@ def gaussfilt(data, srate, f, fwhm, n_harm=1, shift=0, return_empvals=False, sho
     assert (fwhm >= 0), "FWHM must be greater than 0"
 
     # frequencies
-    hz = np.fft.fftfreq(data.shape[0], 1. / srate)
+    hz = np.fft.fftfreq(data.shape[0], 1. / sfreq)
     empVals = np.zeros((2,))
 
     # compute empirical frequency and standard deviation

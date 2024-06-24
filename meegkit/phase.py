@@ -9,11 +9,13 @@ algorithm is not optimized for this purpose. Therefore, this code is likely to
 be slow for large input arrays (n_channels >> 10), since an individual
 oscillator is instantiated for each channel.
 
-.. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
-       of phase and amplitude with application to neural data. Sci Rep 11, 18037
+.. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation of
+       phase and amplitude with application to neural data. Sci Rep 11, 18037
        (2021). https://doi.org/10.1038/s41598-021-97560-5
 """
 import numpy as np
+from scipy.fftpack import fft, fftshift, ifft, ifftshift, next_fast_len
+from scipy.signal import butter, freqz
 
 from meegkit.utils.buffer import Buffer
 
@@ -104,13 +106,14 @@ class Device:
 class NonResOscillator:
     """Real-time measurement of phase and amplitude using non-resonant oscillator.
 
-    This estimator relies on the resonance effect. The measuring “device” consists
-    of two linear damped oscillators. The oscillators' frequency is much larger
-    than the frequency of the signal, i.e., the system is far from resonance.
-    We choose the damping parameters to ensure that (i) the phase of the first
-    linear oscillator equals that of the input and that (ii) amplitude of the
-    second one and the input relate by a known constant multiplicator. The
-    technique yields both phase and amplitude of the input signal.
+    This estimator relies on the resonance effect. The measuring “device”
+    consists of two linear damped oscillators. The oscillators' frequency is
+    much larger than the frequency of the signal, i.e., the system is far from
+    resonance. We choose the damping parameters to ensure that (i) the phase of
+    the first linear oscillator equals that of the input and that (ii)
+    amplitude of the second one and the input relate by a known constant
+    multiplicator. The technique yields both phase and amplitude of the input
+    signal.
 
     This estimator includes an automated frequency-tuning algorithm to adjust
     to the a priori unknown signal frequency.
@@ -127,24 +130,23 @@ class NonResOscillator:
     References
     ----------
     .. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
-        of phase and amplitude with application to neural data. Sci Rep 11, 18037
-        (2021). https://doi.org/10.1038/s41598-021-97560-5
+        of phase and amplitude with application to neural data. Sci Rep 11,
+        18037 (2021). https://doi.org/10.1038/s41598-021-97560-5
     """
 
-    def __init__(self, fs=250, nu=1.1):
+    def __init__(self, fs=250, nu=1.1, alpha_a=6.0, alpha_p=0.2, update_factor=5):
 
         # Parameters of the measurement "devices"
         self.dt = 1 / fs  # Sampling interval
         self.nu = nu  # Rough estimate of the tremor frequency
         self.om0 = 5 * nu  # Oscillator frequency (estimation)
-        self.alpha_a = 6.0  # Damping parameter for the "amplitude device"
-        self.gamma_a = self.alpha_a / 2
-        self.alpha_p = 0.2  # Damping parameter for the "phase device"
-        self.gamma_p = self.alpha_p / 2
+        self.alpha_a = alpha_a  # Damping parameter for the "amplitude device"
+        self.gamma_a = alpha_a / 2
+        self.alpha_p = alpha_p  # Damping parameter for the "phase device"
+        self.gamma_p = alpha_p / 2
         self.factor = np.sqrt((self.om0 ** 2 - nu ** 2) ** 2 + (self.alpha_a * nu) ** 2)
 
         # Update parameters, and precomputed quantities
-        update_factor = 5
         self.memory = round(2 * np.pi / self.om0 / self.dt)
         self.update_point = 2 * self.memory
         self.update_step = round(self.memory / update_factor)
@@ -196,7 +198,7 @@ class NonResOscillator:
                 continue # Skip the first two samples
 
             # Amplitude estimation
-            spp, sp, s = self.buffer.view(3)
+            spp, sp, s = self.buffer.view(3)[:, 0]
 
             for ch in range(self.n_channels):
                 self.adevice[ch].step(spp, sp, s)
@@ -261,11 +263,12 @@ class ResOscillator:
        (2021). https://doi.org/10.1038/s41598-021-97560-5
     """
 
-    def __init__(self, fs=1000, nu=4.5, freq_adaptation=True):
+    def __init__(self, fs=1000, nu=4.5, update_factor=5, freq_adaptation=True,
+                 assume_centered=False):
 
         # Parameters of the measurement "device"
         self.dt = 1 / fs  # Sampling interval
-        self.om0 = 1.1  # Angular frequency
+        self.om0 = nu  # Angular frequency
         self.alpha = 0.3 * self.om0
         self.gamma = self.alpha / 2
 
@@ -273,7 +276,7 @@ class ResOscillator:
         nperiods = 1  # Number of previous periods for frequency correction
         npt_period = round(2 * np.pi / self.om0 / self.dt)  # Number of points per period
         self.memory = nperiods * npt_period  # M points for frequency correction buffer
-        self.update_factor = 5  # Number of frequency updates per period
+        self.update_factor = update_factor  # Number of frequency updates per period
         self.update_step = round(npt_period / self.update_factor)
         self.updatepoint = 2 * self.memory
 
@@ -287,6 +290,7 @@ class ResOscillator:
         self.buffer = None
         self.runav = 0.  # Initial guess for the dc-component
         self.freq_adaptation = freq_adaptation
+        self.assume_centered = assume_centered
 
     def _set_devices(self, n_channels):
         # Set up the phase and amplitude "devices"
@@ -362,7 +366,9 @@ class ResOscillator:
                     self.osc[ch].init_coefs(om0, self.dt, self.gamma)
 
                 # Update running average
-                self.runav = np.mean(self.buffer.view(self.memory), axis=0, keepdims=True)
+                if self.assume_centered is False:
+                    self.runav = np.mean(self.buffer.view(self.memory), axis=0,
+                                         keepdims=True)
                 self.updatepoint += self.update_step  # Point for the next update
 
         return phase, ampl
@@ -619,3 +625,167 @@ def one_step_integrator(z, edelmu, mu, dt, spp, sp, s):
     C0 = z + d
     z = C0 * edelmu - d + b * dt - 2 * c * mu * dt + c * dt ** 2
     return z
+
+
+class ECHT:
+    """Endpoint Corrected Hilbert Transform (ECHT).
+
+    See [1]_ for details.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_channels)
+        Time domain signal.
+    l_freq : float | None
+        Low-cutoff frequency of a bandpass causal filter. If None, the data is
+        only low-passed.
+    h_freq : float | None
+        High-cutoff frequency of a bandpass causal filter. If None, the data is
+        only high-passed.
+    sfreq : float
+        Sampling rate of time domain signal.
+    n_fft : int, optional
+        Length of analytic signal. If None, it defaults to the length of X.
+    filt_order : int, optional
+        Order of the filter. Default is 2.
+
+    Notes
+    -----
+    One common implementation of the Hilbert Transform uses a DFT (aka FFT)
+    as part of its computation. Inherent to the DFT is the assumption that
+    a finite sample of a signal is replicated infinitely in time, effectively
+    abutting the end of a sample with its replicated start. If the start and
+    end of the sample are not continuous with each other, distortions are
+    introduced by the DFT. Echt effectively smooths out this 'discontinuity'
+    by selectively deforming the start of the sample. It is hence most suited
+    for real-time applications in which the point/s of interest is/are the
+    most recent one/s (i.e. last) in the sample window.
+
+    We found that a filter bandwidth (BW=h_freq-l_freq) of up to half the
+    signal's central frequency works well.
+
+    References
+    ----------
+    .. [1] Schreglmann, S. R., Wang, D., Peach, R. L., Li, J., Zhang, X.,
+        Latorre, A., ... & Grossman, N. (2021). Non-invasive suppression of
+        essential tremor via phase-locked disruption of its temporal coherence.
+        Nature communications, 12(1), 363.
+
+    Examples
+    --------
+    >>> f0 = 2
+    >>> filt_BW = f0 / 2
+    >>> N = 1000
+    >>> sfreq = N / (2 * np.pi)
+    >>> t = np.arange(-2 * np.pi, 0, 1 / sfreq)
+    >>> X = np.cos(2 * np.pi * f0 * t - np.pi / 4)
+    >>> l_freq = f0 - filt_BW / 2
+    >>> h_freq = f0 + filt_BW / 2
+    >>> Xf = echt(X, l_freq, h_freq, sfreq)
+    """
+
+    def __init__(self, l_freq, h_freq, sfreq, n_fft=None, filt_order=2):
+        self.l_freq = l_freq
+        self.h_freq = h_freq
+        self.sfreq = sfreq
+        self.n_fft = n_fft
+        self.filt_order = filt_order
+
+        # attributes
+        self.h_ = None
+        self.coef_ = None
+
+    def fit(self, X, y=None):
+        """Fit the ECHT transform to the input signal.
+
+        Parameters
+        ----------
+        X : ndarray, shape=(n_samples, n_channels)
+            The input signal to be transformed.
+
+        """
+        if self.n_fft is None:
+            self.n_fft = next_fast_len(X.shape[0])
+
+        # Set the amplitude of the negative components of the FFT to zero and
+        # multiply the amplitudes of the positive components, apart from the
+        # zero-frequency component (DC) and Nyquist components, by 2.
+        #
+        # If the signal has an even number of elements n, the frequency components
+        # are:
+        # - n/2-1 negative elements,
+        # - one DC element,
+        # - n/2-1 positive elements and
+        # - one Nyquist element (in order).
+        #
+        # If the signal has an odd number of elements n, the frequency components
+        # are:
+        # - (n-1)/2 negative elements,
+        # - one DC element,
+        # - (n-1)/2 positive elements (in order).
+        # - no positive element corresponding to the Nyquist frequency.
+        self.h_ = np.zeros(self.n_fft)
+        self.h_[0] = 1
+        self.h_[1:(self.n_fft // 2) + 1] = 2
+        if self.n_fft % 2 == 0:
+            self.h_[self.n_fft // 2] = 1
+
+        # The frequency response vector is computed using freqz from the filter's
+        # impulse response function, computed by butter function, and the user
+        # defined low-cutoff frequency, high-cutoff frequency and sampling rate.
+        Wn = [self.l_freq / (self.sfreq / 2), self.h_freq / (self.sfreq / 2)]
+        b, a = butter(self.filt_order, Wn, btype="band")
+        T = 1 / self.sfreq * self.n_fft
+        filt_freq = np.ceil(np.arange(-self.n_fft / 2, self.n_fft / 2) / T)
+
+        self.coef_ = freqz(b, a, filt_freq, fs=self.sfreq)[1]
+        self.coef_ = self.coef_[:, None]
+
+        return self
+
+    def transform(self, X):
+        """Apply the ECHT transform to the input signal.
+
+        Parameters
+        ----------
+        X : ndarray, shape=(n_samples, n_channels)
+            The input signal to be transformed.
+
+        Returns
+        -------
+        Xf : ndarray, shape=(n_samples, n_channels)
+            The transformed signal (complex-valued).
+
+        """
+        if not np.isrealobj(X):
+            X = np.real(X)
+
+        # if not fitted
+        if self.h_ is None or self.coef_ is None:
+            self.fit(X)
+
+        if X.ndim == 1:
+            X = X[:, np.newaxis]
+
+        # Compute the FFT of the signal.
+        Xf = fft(X, self.n_fft, axis=0)
+
+        # In contrast to :meth:`scipy.signal.hilbert()`, the code then
+        # multiplies the array by a frequency response vector of a causal
+        # bandpass filter.
+        Xf = Xf * self.h_[:, None]
+
+        # The array is arranged, using fft_shift function, so that the zero-frequency
+        # component is at the center of the array, before the multiplication, and
+        # rearranged back so that the zero-frequency component is at the left of the
+        # array using ifft_shift(). Finally, the IFFT is computed.
+        Xf = fftshift(Xf)
+        Xf = Xf * self.coef_
+        Xf = ifftshift(Xf)
+        Xf = ifft(Xf, axis=0)
+
+        return Xf
+
+    def fit_transform(self, X, y=None):
+        """Fit the ECHT transform to the input signal and transform it."""
+        return self.fit(X).transform(X)

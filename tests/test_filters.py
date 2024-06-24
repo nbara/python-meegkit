@@ -43,15 +43,15 @@ def test_noisy_signal(show=True):
         ax[0, 0].set_title("Signal and its Hilbert phase")
 
         ax[1, 0].plot(time, gtp, lw=.75, label="Ground truth")
-        ax[1, 0].plot(time, nrp, lw=.75, label=r"$\phi_N$")
+        ax[1, 0].plot(time, nrp, lw=.75, label=r"$\\phi_N$")
         ax[1, 0].set_ylabel(r"$\phi_N$")
         ax[1, 0].set_ylim([-np.pi, np.pi])
         ax[1, 0].set_title("Nonresonant oscillator")
 
         ax[2, 0].plot(time, gtp, lw=.75, label="Ground truth")
-        ax[2, 0].plot(time, rp, lw=.75, label=r"$\phi_N$")
+        ax[2, 0].plot(time, rp, lw=.75, label=r"$\\phi_N$")
         ax[2, 0].set_ylim([-np.pi, np.pi])
-        ax[2, 0].set_ylabel("$\phi_H - \phi_R$")
+        ax[2, 0].set_ylabel(r"$\phi_H - \phi_R$")
         ax[2, 0].set_xlabel("Time")
         ax[2, 0].set_title("Resonant oscillator")
 
@@ -132,7 +132,7 @@ def test_all_alg(show=False):
         ax[3, 0].plot(time, r_phi_dif, lw=.75)
         ax[3, 0].axhline(0, color="k", ls=":", zorder=-1)
         ax[3, 0].set_ylim([-np.pi, np.pi])
-        ax[3, 0].set_ylabel("$\phi_H - \phi_R$")
+        ax[3, 0].set_ylabel(r"$\phi_H - \phi_R$")
         ax[3, 0].set_xlabel("Time")
         ax[3, 0].set_title("Resonant oscillator")
 
@@ -216,5 +216,5 @@ def generate_noisy_signal(npt=40000, fs=100, noise=0.1):
 
 if __name__ == "__main__":
     # Run the model_data_all_alg function
-    test_all_alg()
-    # test_noisy_signal()
+    test_all_alg(True)
+    # test_noisy_signal(True)

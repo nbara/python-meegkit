@@ -93,7 +93,7 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     # we can generally skip the tail below the lower quantile
     lower_min = np.min(quants)
     # maximum width is the fit interval if all data is clean
-    max_width = np.diff(quants)
+    max_width = np.diff(quants)[0]
     # minimum width of the fit interval, as fraction of data
     min_width = min_clean_fraction * max_width
 

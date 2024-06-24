@@ -637,7 +637,7 @@ def _check_shifts(shifts, allow_floats=False):
     """Check shifts."""
     types = (int, np.int_)
     if allow_floats:
-        types += (float, np.float_)
+        types += (float, np.float64)
     if not isinstance(shifts, (np.ndarray, list, type(None)) + types):
         raise AttributeError("shifts should be a list, an array or an int")
     if isinstance(shifts, (list, ) + types):

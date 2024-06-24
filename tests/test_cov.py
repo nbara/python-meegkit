@@ -12,7 +12,7 @@ def test_tscov():
 
     # Compare 0-lag case with numpy.cov()
     c1, n1 = tscov(x, [0])
-    c2 = np.cov(x, bias=True)
+    c2 = np.cov(x, bias=False)
     assert_almost_equal(c1 / n1, c2)
 
     # Compare 0-lag case with numpy.cov()
@@ -89,6 +89,7 @@ def test_convmtx():
     )
 
 if __name__ == "__main__":
-    # import pytest
-    # pytest.main([__file__])
-    test_convmtx()
+    import pytest
+    pytest.main([__file__])
+    # test_tscov()
+    # test_convmtx()
