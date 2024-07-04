@@ -337,7 +337,7 @@ def geometric_median(X, tol=1e-5, max_iter=500):
     X : array, shape=(n_observations, n_variables)
         The data.
     tol : float
-        Tolerance (default=1.e-5)
+        Tolerance (default=1e-5)
     max_iter : int
         Max number of iterations (default=500):
 

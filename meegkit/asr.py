@@ -407,7 +407,7 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     return clean, sample_mask
 
 
-def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
+def asr_calibrate(X, sfreq, cutoff=10, blocksize=100, win_len=0.5,
                   win_overlap=0.66, max_dropout_fraction=0.1,
                   min_clean_fraction=0.25, method="euclid", estimator="scm"):
     """Calibration function for the Artifact Subspace Reconstruction method.
@@ -490,46 +490,53 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
 
     U = block_covariance(X, window=blocksize, overlap=win_overlap,
                          estimator=estimator)
-    if method == "euclid":
-        Uavg = geometric_median(U.reshape((-1, nc * nc)))
-        Uavg = Uavg.reshape((nc, nc))
-    else:  # method == 'riemann'
-        Uavg = pyriemann.utils.mean.mean_covariance(U, metric="riemann")
+    Uavg = pyriemann.utils.mean.mean_covariance(U, metric=method)
 
     # get the mixing matrix M
     M = linalg.sqrtm(np.real(Uavg))
-    D, Vtmp = linalg.eigh(M)
-    # D, Vtmp = nonlinear_eigenspace(M, nc)  TODO
-    V = Vtmp[:, np.argsort(D)]
+
+    if method == "euclid":
+        D, Vtmp = linalg.eigh(M)
+    elif method == "riemann":
+        D, V = nonlinear_eigenspace(M, nc)  # TODO
+        # D, V = linalg.eigh(M)
+
+    V = V[:, np.argsort(D)]
 
     # get the threshold matrix T
-    x = np.abs(np.dot(V.T, X))
+    x = np.abs(V.T @ X)
     offsets = np.arange(0, ns - N, np.round(N * (1 - win_overlap))).astype(int)
 
     # go through all the channels and fit the EEG distribution
     mu = np.zeros(nc)
     sig = np.zeros(nc)
-    for ichan in reversed(range(nc)):
-        rms = x[ichan, :] ** 2
+    for ch in reversed(range(nc)):
+        rms = x[ch, :] ** 2
         Y = []
         for o in offsets:
             Y.append(np.sqrt(np.sum(rms[o:o + N]) / N))
 
-        mu[ichan], sig[ichan], alpha, beta = fit_eeg_distribution(
+        mu[ch], sig[ch], _, _ = fit_eeg_distribution(
             Y, min_clean_fraction, max_dropout_fraction)
 
-    T = np.dot(np.diag(mu + cutoff * sig), V.T)
+    T = np.diag(mu + cutoff * sig) @ V.T
     logging.debug("[ASR] Calibration done.")
     return M, T
 
 
-def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
-                sample_weight=None):
+def asr_process(X, X_filt, state, cov=None, block_size=100, detrend=False,
+                method="riemann", sample_weight=None, max_dims=0.66):
     """Apply Artifact Subspace Reconstruction method.
 
     This function is used to clean multi-channel signal using the ASR method.
     The required inputs are the data matrix, the sampling rate of the data, and
     the filter state.
+
+    **Important note:** this function differs from the matlab ASR
+    implementation, as it does not perform windowed processing. Instead, it
+    processes the whole data at once. This is because the python implementation
+    is intended to be used in an online fashion, where the data is already
+    processed in chunks.
 
     Parameters
     ----------
@@ -548,10 +555,19 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
         Covariance. If None (default), then it is computed from ``X_filt``. If
         a 3D array is provided, the average covariance is computed from all the
         elements in it.
+    block_size : int
+        Block size for calculating the robust data covariance and thresholds,
+        in samples; allows to reduce the memory and time requirements of the
+        robust estimators by this factor (down to n_chans x n_chans x n_samples
+        x 16 / block_size bytes) (default=100).
     detrend : bool
         If True, detrend filtered data (default=False).
     method : {'euclid', 'riemann'}
         Metric to compute the covariance matrix average.
+    max_dims : float
+        Maximum dimensionality of artifacts to remove. This parameter
+        describes a fraction of total dimensions that can be removed for each
+        segment (default=0.66).
 
     Returns
     -------
@@ -567,7 +583,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
     if cov is None:
         if detrend:
             X_filt = signal.detrend(X_filt, axis=1, type="constant")
-        cov = block_covariance(X_filt, window=nc ** 2)
+        cov = block_covariance(X_filt, window=block_size, overlap=0.66)
 
     cov = cov.squeeze()
     if cov.ndim == 3:
@@ -575,30 +591,33 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
             cov = pyriemann.utils.mean.mean_covariance(
                 cov, metric="riemann", sample_weight=sample_weight)
         else:
-            cov = geometric_median(cov.reshape((-1, nc * nc)))
-            cov = cov.reshape((nc, nc))
+            cov = pyriemann.utils.mean.mean_covariance(
+                cov, metric="euclid", sample_weight=sample_weight)
 
-    maxdims = int(np.fix(0.66 * nc))  # constant TODO make param
+    max_dims = int(np.fix(max_dims * nc))
 
     # do a PCA to find potential artifacts
     if method == "riemann":
-        D, Vtmp = nonlinear_eigenspace(cov, nc)  # TODO
+        D, V = nonlinear_eigenspace(cov, nc)  # TODO
     else:
-        D, Vtmp = linalg.eigh(cov)
+        D, V = linalg.eigh(cov)
 
-    V = np.real(Vtmp[:, np.argsort(D)])
+    V = np.real(V[:, np.argsort(D)])
     D = np.real(D[np.argsort(D)])
 
     # determine which components to keep (variance below directional threshold
     # or not admissible for rejection)
-    keep = (D < np.sum(np.dot(T, V)**2, axis=0))
-    keep += (np.arange(nc) < nc - maxdims)
+    keep = np.logical_or(
+        (D < np.sum((T @ V)**2, axis=0)),
+        (np.arange(1, nc + 1) < nc - max_dims)
+    )
 
     # update the reconstruction matrix R (reconstruct artifact components using
     # the mixing matrix)
     if keep.all():
         R = np.eye(nc)  # trivial case
     else:
+        print("removing stuff")
         VT = np.dot(V.T, M)
         demux = VT * keep[:, None]
         R = np.dot(np.dot(M, linalg.pinv(demux)), V.T)
