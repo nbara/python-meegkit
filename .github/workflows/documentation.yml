@@ -33,3 +33,4 @@ jobs:
       - name: Run ghp-import
         run: |
           ghp-import -n -p -f doc/_build/html
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
