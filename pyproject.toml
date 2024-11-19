@@ -44,7 +44,7 @@ version = {attr = "meegkit.__version__"}
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
-exclude = ["tests*", "examples*", "doc*"]
+exclude = ["tests*", "examples*", "doc*", "dist*"]
 
 ##################################
 #          Codespell             #
