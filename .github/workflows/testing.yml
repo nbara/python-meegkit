@@ -37,4 +37,4 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         fail_ci_if_error: false # optional (default = false)
-        token: TBD
+        token: ${{ secrets.CODECOV_TOKEN }}
