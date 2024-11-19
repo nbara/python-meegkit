@@ -8,8 +8,9 @@ Uses meegkit.dss_line().
 
 References
 ----------
-.. [1] de Cheveigné, A. (2019). ZapLine: A simple and effective method to
-    remove power line artifacts [Preprint]. https://doi.org/10.1101/782029
+.. [1] de Cheveigné, A. (2019). ZapLine: A simple and effective method to remove
+   power line artifacts. NeuroImage, 116356.
+   https://doi.org/10.1016/j.neuroimage.2019.116356
 
 """
 # Authors: Maciej Szul <maciej.szul@isc.cnrs.fr>
