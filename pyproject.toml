@@ -15,6 +15,7 @@ readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.8"
 
 [project.urls]
+homepage = "https://nbara.github.io/python-meegkit"
 repository = "https://github.com/nbara/python-meegkit"
 documentation = "https://nbara.github.io/python-meegkit/"
 tracker = "https://github.com/nbara/python-meegkit/issues/"
