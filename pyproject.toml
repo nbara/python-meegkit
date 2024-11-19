@@ -15,9 +15,10 @@ readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.8"
 
 [project.urls]
+homepage = "https://nbara.github.io/python-meegkit"
 repository = "https://github.com/nbara/python-meegkit"
-documentation = "https://nbara.github.io/python-meegkit/"
-tracker = "https://github.com/nbara/python-meegkit/issues/"
+documentation = "https://nbara.github.io/python-meegkit"
+tracker = "https://github.com/nbara/python-meegkit/issues"
 
 [project.optional-dependencies]
 extra = ["pymanopt"]
@@ -31,7 +32,7 @@ tests = ["pytest", "pytest-cov", "codecov", "codespell", "ruff", "meegkit[extra]
 ##################################
 
 [build-system]
-requires = ["setuptools>=62.0.0", "wheel", "pybind11~=2.10.3"]
+requires = ["setuptools>=62.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
