@@ -17,8 +17,8 @@ requires-python = ">=3.8"
 [project.urls]
 homepage = "https://nbara.github.io/python-meegkit"
 repository = "https://github.com/nbara/python-meegkit"
-documentation = "https://nbara.github.io/python-meegkit/"
-tracker = "https://github.com/nbara/python-meegkit/issues/"
+documentation = "https://nbara.github.io/python-meegkit"
+tracker = "https://github.com/nbara/python-meegkit/issues"
 
 [project.optional-dependencies]
 extra = ["pymanopt"]
