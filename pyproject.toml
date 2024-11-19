@@ -31,7 +31,7 @@ tests = ["pytest", "pytest-cov", "codecov", "codespell", "ruff", "meegkit[extra]
 ##################################
 
 [build-system]
-requires = ["setuptools>=62.0.0", "wheel", "pybind11~=2.10.3"]
+requires = ["setuptools>=62.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
