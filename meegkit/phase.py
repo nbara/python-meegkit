@@ -17,7 +17,7 @@ import numpy as np
 from scipy.fftpack import fft, fftshift, ifft, ifftshift, next_fast_len
 from scipy.signal import butter, freqz
 
-from meegkit.utils.buffer import Buffer
+from .utils.buffer import Buffer
 
 
 class Device:
