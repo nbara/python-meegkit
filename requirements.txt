@@ -6,4 +6,4 @@ pandas
 joblib
 tqdm
 statsmodels
-pyriemann=0.3
+pyriemann==0.3
