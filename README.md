@@ -3,7 +3,8 @@
 [![codecov](https://codecov.io/gh/nbara/python-meegkit/branch/master/graph/badge.svg)](https://codecov.io/gh/nbara/python-meegkit)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/nbara/python-meegkit/master)
 [![DOI](https://zenodo.org/badge/117451752.svg)](https://zenodo.org/badge/latestdoi/117451752)
-[![twitter](https://img.shields.io/twitter/follow/lebababa?style=flat&logo=Twitter)](https://twitter.com/intent/follow?screen_name=lebababa)
+[![Bluesky](https://img.shields.io/badge/Bluesky-0285FF?logo=bluesky&logoColor=fff&label=Follow%20me%20on&color=0285FF)](https://bsky.app/profile/nbara.bsky.social)
+
 
 # `MEEGkit`
 
