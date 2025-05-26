@@ -2,6 +2,7 @@
 # Authors:  Nicolas Barascud <nicolas.barascud@gmail.com>
 #           Maciej Szul <maciej.szul@isc.cnrs.fr>
 import numpy as np
+from pathlib import Path
 from numpy.lib.stride_tricks import sliding_window_view
 from scipy import linalg
 from scipy.signal import welch
@@ -264,7 +265,7 @@ def dss_line(X, fline, sfreq, nremove=1, nfft=1024, nkeep=None, blocksize=None,
 
 
 def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
-                  nfft=512, show=False, prefix="dss_iter", n_iter_max=100):
+                  nfft=512, show=False, dirname=None, extension=".png", n_iter_max=100):
     """Remove power line artifact iteratively.
 
     This method applies dss_line() until the artifact has been smoothed out
@@ -288,9 +289,12 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         FFT size for the internal PSD calculation (default=512).
     show: bool
         Produce a visual output of each iteration (default=False).
-    prefix : str
-        Path and first part of the visualisation output file
-        "{prefix}_{iteration number}.png" (default="dss_iter").
+    dirname: str
+        Path to the directory where visual outputs are saved when show is 'True'. 
+        If 'None', does not save the outputs. (default=None)
+    extension: str
+        Extension of the images filenames. Must be compatible with plt.savefig() 
+        function. (default=".png")
     n_iter_max : int
         Maximum number of iterations (default=100).
 
@@ -357,26 +361,36 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             y = mean_sens[freq_rn_ix]
             ax.flat[0].plot(freq_used, y)
             ax.flat[0].set_title("Mean PSD across trials")
+            ax.flat[0].set_xlabel("Frequency (Hz)")
+            ax.flat[0].set_ylabel("Power")
 
-            ax.flat[1].plot(freq_used, mean_psd_tf, c="gray")
-            ax.flat[1].plot(freq_used, mean_psd, c="blue")
-            ax.flat[1].plot(freq_used, clean_fit_line, c="red")
+            ax.flat[1].plot(freq_used, mean_psd_tf, c="gray", label="Interpolated mean PSD")
+            ax.flat[1].plot(freq_used, mean_psd, c="blue", label="Mean PSD")
+            ax.flat[1].plot(freq_used, clean_fit_line, c="red", label="Fitted polynomial")
             ax.flat[1].set_title("Mean PSD across trials and sensors")
+            ax.flat[1].set_xlabel("Frequency (Hz)")
+            ax.flat[1].set_ylabel("Power")
+            ax.flat[1].legend()
 
             tf_ix = np.where(freq_used <= fline)[0][-1]
-            ax.flat[2].plot(residuals, freq_used)
+            ax.flat[2].plot(freq_used, residuals)
             color = "green"
             if mean_score <= 0:
                 color = "red"
-            ax.flat[2].scatter(residuals[tf_ix], freq_used[tf_ix], c=color)
+            ax.flat[2].scatter(freq_used[tf_ix], residuals[tf_ix], c=color)
             ax.flat[2].set_title("Residuals")
+            ax.flat[2].set_xlabel("Frequency (Hz)")
+            ax.flat[2].set_ylabel("Power")
 
             ax.flat[3].plot(np.arange(iterations + 1), aggr_resid, marker="o")
-            ax.flat[3].set_title("Iterations")
+            ax.flat[3].set_title("Aggregated residuals")
+            ax.flat[3].set_xlabel("Iteration")
+            ax.flat[3].set_ylabel("Power")
 
             plt.tight_layout()
-            plt.savefig(f"{prefix}_{iterations:03}.png")
-            plt.close("all")
+            if dirname is not None:
+                plt.savefig(Path(dirname) / f"dss_iter_{iterations:03}{extension}")
+            plt.show()      
 
         if mean_score <= 0:
             break
