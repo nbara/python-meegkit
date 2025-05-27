@@ -68,12 +68,12 @@ sfreq = 200
 print(data.shape)  # n_samples, n_chans, n_trials
 
 # Apply dss_line(), removing only one component
-out1, _ = dss.dss_line(data, fline, sfreq, nremove=1, nfft=400)
+out1, _ = dss.dss_line_iter(data, fline, sfreq, nfft=400, nremove=1, show=True)
 
 ###############################################################################
 # Now try dss_line_iter(). This applies dss_line() repeatedly until the
 # artifact is gone
-out2, iterations = dss.dss_line_iter(data, fline, sfreq, nfft=400)
+out2, iterations = dss.dss_line_iter(data, fline, sfreq, nfft=400, nremove=1, show=True)
 print(f"Removed {iterations} components")
 
 ###############################################################################
