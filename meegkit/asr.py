@@ -474,6 +474,9 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         estimation (default=0.25).
     method : {'euclid', 'riemann'}
         Metric to compute the covariance matrix average.
+    estimator : {'scm', 'lwf', 'oas', 'mcd'}
+        Covariance estimator (default: 'scm' which computes the sample
+        covariance). Use 'lwf' if you need regularization (requires pyriemann).
 
     Returns
     -------
