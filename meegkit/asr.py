@@ -139,10 +139,10 @@ class ASR:
         """Calibration for the Artifact Subspace Reconstruction method.
 
         The input to this data is a multi-channel time series of calibration
-        data. In typical uses the calibration data is clean resting EEG data of
-        data if the fraction of artifact content is below the breakdown point
+        data. In typical uses the calibration data is clean resting EEG data.
+        The fraction of artifact content should be below the breakdown point
         of the robust statistics used for estimation (50% theoretical, ~30%
-        practical). If the data has a proportion of more than 30-50% artifacts
+        practical). If the data has a proportion of more than 30-50% artifacts,
         then bad time windows should be removed beforehand. This data is used
         to estimate the thresholds that are used by the ASR processing function
         to identify and remove artifact components.
