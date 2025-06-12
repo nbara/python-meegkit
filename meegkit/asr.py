@@ -166,6 +166,12 @@ class ASR:
             reasonably clean not less than 30 seconds (this method is typically
             used with 1 minute or more).
 
+        Returns
+        -------
+        clean : array, shape=(n_channels, n_samples)
+            Dataset with bad time periods removed.
+        sample_mask : boolean array, shape=(1, n_samples)
+            Mask of retained samples (logical array).
         """
         if X.ndim == 3:
             X = X.squeeze()
