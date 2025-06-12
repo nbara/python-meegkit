@@ -65,8 +65,6 @@ class ASR:
 
     Attributes
     ----------
-    ``state_`` : dict
-        Initial state of the ASR filter.
     ``zi_``: array, shape=(n_channels, filter_order)
         Filter initial conditions.
     ``ab_``: 2-tuple
