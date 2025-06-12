@@ -21,14 +21,12 @@ class ASR:
     component-based artifact removal method for removing transient or
     large-amplitude artifacts in multi-channel EEG recordings [1]_.
 
+    The key parameter of the method is ``cutoff``.
+
     Parameters
     ----------
     sfreq : float
         Sampling rate of the data, in Hz.
-
-    The following are optional parameters (the key parameter of the method is
-    the ``cutoff``):
-
     cutoff: float
         Standard deviation cutoff for rejection. X portions whose variance
         is larger than this threshold relative to the calibration data are
@@ -60,7 +58,7 @@ class ASR:
         ASR [2]_.
     memory : float
         Memory size (s), regulates the number of covariance matrices to store.
-    estimator : str in {'scm', 'lwf', 'oas', 'mcd'}
+    estimator : {'scm', 'lwf', 'oas', 'mcd'}
         Covariance estimator (default: 'scm' which computes the sample
         covariance). Use 'lwf' if you need regularization (requires pyriemann).
 
