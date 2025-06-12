@@ -56,8 +56,9 @@ class ASR:
     method : {'riemann', 'euclid'}
         Method to use. If riemann, use the riemannian-modified version of
         ASR [2]_.
-    memory : float
+    memory : float | None
         Memory size (s), regulates the number of covariance matrices to store.
+        If None (default), will use twice the sampling frequency.
     estimator : {'scm', 'lwf', 'oas', 'mcd'}
         Covariance estimator (default: 'scm' which computes the sample
         covariance). Use 'lwf' if you need regularization (requires pyriemann).
@@ -96,9 +97,9 @@ class ASR:
 
     """
 
-    def __init__(self, sfreq=250, cutoff=5, blocksize=100, win_len=0.5,
+    def __init__(self, *, sfreq=250, cutoff=5, blocksize=100, win_len=0.5,
                  win_overlap=0.66, max_dropout_fraction=0.1,
-                 min_clean_fraction=0.25, name="asrfilter", method="euclid",
+                 min_clean_fraction=0.25, method="euclid", memory=None,
                  estimator="scm", **kwargs):
 
         if pyriemann is None and method == "riemann":
@@ -113,7 +114,10 @@ class ASR:
         self.min_clean_fraction = min_clean_fraction
         self.max_bad_chans = 0.3
         self.method = method
-        self.memory = int(2 * sfreq)  # smoothing window for covariances
+        if memory is None:
+            self.memory = int(2 * sfreq)  # smoothing window for covariances
+        else:
+            self.memory = memory
         self.sample_weight = np.geomspace(0.05, 1, num=self.memory + 1)
         self.sfreq = sfreq
         self.estimator = estimator
