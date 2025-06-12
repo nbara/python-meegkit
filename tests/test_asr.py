@@ -193,7 +193,7 @@ def test_asr_class(method, reref, show=False):
                 blah = ASR(method=method, estimator="scm")
                 blah.fit(raw2[:, train_idx])
 
-        asr = ASR(method=method, estimator="lwf")
+        asr = ASR(method=method, estimator="lwf", memory=int(2 * sfreq))
         asr.fit(raw2[:, train_idx])
     else:
         asr = ASR(method=method, estimator="scm")
