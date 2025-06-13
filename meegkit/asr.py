@@ -57,7 +57,8 @@ class ASR:
         Method to use. If riemann, use the riemannian-modified version of
         ASR [2]_.
     memory : float | None
-        Memory size (s), regulates the number of covariance matrices to store.
+        Memory size (samples), regulates the number of covariance matrices to 
+        store.
         If None (default), will use twice the sampling frequency.
     estimator : {'scm', 'lwf', 'oas', 'mcd'}
         Covariance estimator (default: 'scm' which computes the sample
