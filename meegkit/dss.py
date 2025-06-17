@@ -1,8 +1,9 @@
 """Denoising source separation."""
 # Authors:  Nicolas Barascud <nicolas.barascud@gmail.com>
 #           Maciej Szul <maciej.szul@isc.cnrs.fr>
-import numpy as np
 from pathlib import Path
+
+import numpy as np
 from numpy.lib.stride_tricks import sliding_window_view
 from scipy import linalg
 from scipy.signal import welch
@@ -316,7 +317,8 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     freq_sp = [fline - spot_sz, fline + spot_sz]
     freq, psd = welch(data, fs=sfreq, nfft=nfft, axis=0)
 
-    freq_rn_ix = np.logical_and(freq >= freq_rn[0], freq <= freq_rn[1])
+    freq_rn_ix = np.logical_and(freq >= freq_rn[0], 
+                                freq <= freq_rn[1])
     freq_used = freq[freq_rn_ix]
     freq_sp_ix = np.logical_and(freq_used >= freq_sp[0],
                                 freq_used <= freq_sp[1])
@@ -364,7 +366,8 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             ax.flat[0].set_xlabel("Frequency (Hz)")
             ax.flat[0].set_ylabel("Power")
 
-            ax.flat[1].plot(freq_used, mean_psd_tf, c="gray", label="Interpolated mean PSD")
+            ax.flat[1].plot(freq_used, mean_psd_tf, c="gray", 
+                            label="Interpolated mean PSD")
             ax.flat[1].plot(freq_used, mean_psd, c="blue", label="Mean PSD")
             ax.flat[1].plot(freq_used, clean_fit_line, c="red", label="Fitted polynomial")
             ax.flat[1].set_title("Mean PSD across trials and sensors")
@@ -390,7 +393,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             plt.tight_layout()
             if dirname is not None:
                 plt.savefig(Path(dirname) / f"dss_iter_{iterations:03}{extension}")
-            plt.show()      
+            plt.show()
 
         if mean_score <= 0:
             break
