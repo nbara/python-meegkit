@@ -140,7 +140,6 @@ def test_dss_line_iter():
     x, _ = create_line_data(n_samples, n_chans=n_chans, n_trials=1,
                             noise_dim=10, SNR=2, fline=fline / sr)
     x = x[..., 0]
-    # x = data
 
     # RuntimeError when max iterations has been reached
     with pytest.raises(RuntimeError):
