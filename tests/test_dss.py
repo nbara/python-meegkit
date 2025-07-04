@@ -132,7 +132,7 @@ def test_dss_line_iter():
     # # time x channel x trial sf=200 fline=50
 
     sr = 200
-    fline = 25
+    fline = 50
     n_samples = 9000
     n_chans = 10
 
@@ -147,9 +147,8 @@ def test_dss_line_iter():
                                    show=False, n_iter_max=2)
 
     with TemporaryDirectory() as tmpdir:
-        out, _ = dss.dss_line_iter(x, fline + .5, sr,
-                                   prefix=os.path.join(tmpdir, "dss_iter_"),
-                                   show=True)
+        out, _ = dss.dss_line_iter(x, fline + 1, sr,
+                                   show=True, dirname=tmpdir)
 
     def _plot(before, after):
         f, ax = plt.subplots(1, 2, sharey=True)
@@ -171,7 +170,9 @@ def test_dss_line_iter():
     # # Test n_trials > 1 TODO
     x, _ = create_line_data(n_samples, n_chans=n_chans, n_trials=2,
                             noise_dim=10, SNR=2, fline=fline / sr)
-    out, _ = dss.dss_line_iter(x, fline, sr, show=False)
+    with TemporaryDirectory() as tmpdir:
+        out, _ = dss.dss_line_iter(x, fline, sr,
+                                   show=True, dirname=tmpdir)
     plt.close("all")
 
 
