@@ -291,10 +291,10 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     show: bool
         Produce a visual output of each iteration (default=False).
     dirname: str
-        Path to the directory where visual outputs are saved when show is 'True'. 
+        Path to the directory where visual outputs are saved when show is 'True'.
         If 'None', does not save the outputs. (default=None)
     extension: str
-        Extension of the images filenames. Must be compatible with plt.savefig() 
+        Extension of the images filenames. Must be compatible with plt.savefig()
         function. (default=".png")
     n_iter_max : int
         Maximum number of iterations (default=100).
@@ -317,7 +317,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     freq_sp = [fline - spot_sz, fline + spot_sz]
     freq, psd = welch(data, fs=sfreq, nfft=nfft, axis=0)
 
-    freq_rn_ix = np.logical_and(freq >= freq_rn[0], 
+    freq_rn_ix = np.logical_and(freq >= freq_rn[0],
                                 freq <= freq_rn[1])
     freq_used = freq[freq_rn_ix]
     freq_sp_ix = np.logical_and(freq_used >= freq_sp[0],
@@ -366,7 +366,7 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             ax.flat[0].set_xlabel("Frequency (Hz)")
             ax.flat[0].set_ylabel("Power")
 
-            ax.flat[1].plot(freq_used, mean_psd_tf, c="gray", 
+            ax.flat[1].plot(freq_used, mean_psd_tf, c="gray",
                             label="Interpolated mean PSD")
             ax.flat[1].plot(freq_used, mean_psd, c="blue", label="Mean PSD")
             ax.flat[1].plot(freq_used, clean_fit_line, c="red", label="Fitted polynomial")
