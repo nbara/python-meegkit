@@ -313,6 +313,8 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         array[nans] = np.interp(ix(nans), ix(~nans), array[~nans])
         return array
 
+    data_clean = data.copy()
+
     freq_rn = [fline - win_sz, fline + win_sz]
     freq_sp = [fline - spot_sz, fline + spot_sz]
     freq, psd = welch(data, fs=sfreq, nfft=nfft, axis=0)
@@ -338,8 +340,8 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
     aggr_resid = []
     iterations = 0
     while iterations < n_iter_max:
-        data, _ = dss_line(data, fline, sfreq, nfft=nfft, nremove=1)
-        freq, psd = welch(data, fs=sfreq, nfft=nfft, axis=0)
+        data_clean, _ = dss_line(data_clean, fline, sfreq, nfft=nfft, nremove=1)
+        freq, psd = welch(data_clean, fs=sfreq, nfft=nfft, axis=0)
         if psd.ndim == 3:
             mean_psd = np.mean(psd, axis=(1, 2))[freq_rn_ix]
         elif psd.ndim == 2:
@@ -396,6 +398,9 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
             plt.show()
 
         if mean_score <= 0:
+            # Return original data if score is negative on first iteration
+            if iterations == 0:
+                return data, 0
             break
 
         iterations += 1
@@ -404,4 +409,4 @@ def dss_line_iter(data, fline, sfreq, win_sz=10, spot_sz=2.5,
         raise RuntimeError("Could not converge. Consider increasing the "
                            "maximum number of iterations")
 
-    return data, iterations
+    return data_clean, iterations
