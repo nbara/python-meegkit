@@ -189,7 +189,7 @@ def test_asr_class(method, reref, show=False):
 
     if reref:
         if method == "riemann":
-            with pytest.raises(ValueError, match="Add regularization"):
+            with pytest.raises(ValueError, match="add regularization"):
                 blah = ASR(method=method, estimator="scm")
                 blah.fit(raw2[:, train_idx])
 

@@ -612,6 +612,7 @@ def prony(h, nb, na):
 
     # K-M by N
     a_right = np.linalg.lstsq(-H2, h1, rcond=None)[0]
-    a = np.r_[(np.array([1]), a_right)][None, :]
+    a = np.r_[(np.array([1]), a_right)]
     b = np.dot(np.dot(c, a), H1.T)
-    return b, a
+    # Ensure 1D arrays are returned
+    return np.atleast_1d(b.squeeze()), np.atleast_1d(a.squeeze())
