@@ -158,6 +158,11 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     # calculate the distribution's standard deviation from alpha and beta
     sig = np.sqrt((alpha ** 2) * gamma(3 / beta) / gamma(1 / beta))
 
+    # Ensure scalar values are returned (extract from arrays if needed)
+    alpha = float(np.asarray(alpha).squeeze())
+    mu = float(np.asarray(mu).squeeze())
+    sig = float(np.asarray(sig).squeeze())
+
     return mu, sig, alpha, beta
 
 
@@ -432,7 +437,8 @@ def numf(h, a, nb):
         toeplitz(impr, np.concatenate((1, np.zeros((1, nb))), axis=None)),
         h.T, rcond=None)[0].T
 
-    return b
+    # Ensure 1D array is returned
+    return np.atleast_1d(b.squeeze())
 
 
 def denf(R, na):

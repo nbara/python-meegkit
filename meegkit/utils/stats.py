@@ -385,7 +385,7 @@ def snr_spectrum(X, freqs, n_avg=1, n_harm=1, skipbins=1):
 
             # Ratio
             with np.errstate(divide="ignore", invalid="ignore"):
-                SNR[i_bin, i_trial] = np.sqrt(A) / np.sqrt(B)
+                SNR[i_bin, i_trial] = np.sqrt(A) / np.sqrt(np.mean(B))
 
             del A
             del B
