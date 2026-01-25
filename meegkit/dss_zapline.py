@@ -14,19 +14,14 @@ de Cheveigné, A. (2020). ZapLine: A simple and effective method to remove
 power line artifacts. NeuroImage, 207, 116356.
 
 
-Differences from Matlab implementation:
+Differences from Matlab implementation
+--------------------------------------
 
 Finding noise frequencies:
 - one iteration returning all frequencies
 
-Adaptive chunking:
-- merged chunks at edges if too short
-
 Plotting:
 - only once per frequency after cleaning
-
-
-
 """
 
 import logging
@@ -38,7 +33,7 @@ from scipy import signal
 from meegkit.dss import dss_line
 
 
-def zapline_plus(
+def dss_line_plus(
     data: np.ndarray,
     sfreq: float,
     fline: float | list[float] | None = None,
@@ -71,78 +66,78 @@ def zapline_plus(
     Parameters
     ----------
         data : array, shape=(n_times, n_chans)
-        Input data.
+        Input data. Note that data is expected in time x channels format.
     sfreq : float
         Sampling frequency in Hz.
     fline : float | list of float | None
         Noise frequency or frequencies to remove. If None, frequencies are
         detected automatically. Defaults to None.
-    nkeep : int
+    nkeep : int | None
         Number of principal components to keep in DSS. If 0, no dimensionality
         reduction is applied. Defaults to 0.
-    adaptiveNremove : bool
+    adaptiveNremove : bool | None
         If True, automatically detect the number of components to remove.
         If False, use fixedNremove for all chunks. Defaults to True.
-    fixedNremove : int
+    fixedNremove : int | None
         Fixed number of components to remove per chunk. Used when
         adaptiveNremove=False, or as minimum when adaptiveNremove=True.
         Defaults to 1.
-    minfreq : float
+    minfreq : float | None
         Minimum frequency (Hz) to consider when detecting noise automatically.
         Defaults to 17.0.
-    maxfreq : float
+    maxfreq : float | None
         Maximum frequency (Hz) to consider when detecting noise automatically.
         Defaults to 99.0.
-    chunkLength : float
+    chunkLength : float | None
         Length of chunks (seconds) for cleaning. If 0, adaptive chunking based
         on noise covariance stability is used. Set to -1 via vanilla_mode to
         process the entire recording as a single chunk. Defaults to 0.0.
-    minChunkLength : float
+    minChunkLength : float | None
         Minimum chunk length (seconds) when using adaptive chunking.
         Defaults to 30.0.
-    noiseCompDetectSigma : float
+    noiseCompDetectSigma : float | None
         Initial SD threshold for iterative outlier detection of noise components.
         Defaults to 3.0.
-    adaptiveSigma : bool
+    adaptiveSigma : bool | None
         If True, automatically adapt noiseCompDetectSigma and fixedNremove
         based on cleaning results. Defaults to True.
-    minsigma : float
+    minsigma : float | None
         Minimum SD threshold when adapting noiseCompDetectSigma.
         Defaults to 2.5.
-    maxsigma : float
+    maxsigma : float | None
         Maximum SD threshold when adapting noiseCompDetectSigma.
         Defaults to 4.0.
-    detectionWinsize : float
+    detectionWinsize : float | None
         Window size (Hz) for noise frequency detection. Defaults to 6.0.
-    coarseFreqDetectPowerDiff : float
+    coarseFreqDetectPowerDiff : float | None
         Threshold (10*log10) above center power to detect a peak as noise.
         Defaults to 4.0.
-    coarseFreqDetectLowerPowerDiff : float
+    coarseFreqDetectLowerPowerDiff : float | None
         Threshold (10*log10) above center power to detect end of noise peak.
         Defaults to 1.76.
-    searchIndividualNoise : bool
+    searchIndividualNoise : bool | None
         If True, search for individual noise peaks in each chunk.
         Defaults to True.
-    freqDetectMultFine : float
+    freqDetectMultFine : float | None
         Multiplier for fine noise frequency detection threshold. Defaults to 2.0.
-    detailedFreqBoundsUpper : tuple of float
+    detailedFreqBoundsUpper : tuple of float | None
         Frequency boundaries (Hz) for fine threshold of too weak cleaning.
         Defaults to (0.05, 0.05).
-    detailedFreqBoundsLower : tuple of float
+    detailedFreqBoundsLower : tuple of float | None
         Frequency boundaries (Hz) for fine threshold of too strong cleaning.
         Defaults to (0.4, 0.1).
-    maxProportionAboveUpper : float
+    maxProportionAboveUpper : float | None
         Maximum proportion of samples above upper threshold before adapting.
         Defaults to 0.005.
-    maxProportionBelowLower : float
+    maxProportionBelowLower : float | None
         Maximum proportion of samples below lower threshold before adapting.
         Defaults to 0.005.
-    plotResults : bool
+    plotResults : bool | None
         If True, generate diagnostic plots for each cleaned frequency.
         Defaults to False.
     figsize : tuple of int
         Figure size for diagnostic plots. Defaults to (14, 10).
-    vanilla_mode : bool
+    vanilla_mode : bool | None
         If True, disable all Zapline-plus features and use vanilla Zapline behavior:
         - Process entire dataset as single chunk
         - Use fixed component removal (no adaptive detection)
@@ -169,10 +164,10 @@ def zapline_plus(
     Examples
     --------
     Remove 50 Hz line noise automatically:
-    >>> clean_data, config = zapline_plus(data, sfreq=500, fline=50)
+    >>> clean_data, config = dss_line_plus(data, sfreq=500, fline=50)
 
     Remove line noise with automatic frequency detection:
-    >>> clean_data, config = zapline_plus(data, sfreq=500)
+    >>> clean_data, config = dss_line_plus(data, sfreq=500)
 
     """
     n_times, n_chans = data.shape
@@ -672,6 +667,10 @@ def _detect_chunk_noise_frequency(
 
 def _detect_noise_components(data, sfreq, target_freq, sigma, nkeep):
     """Detect number of noise components to remove using outlier detection."""
+    # Convert nkeep=0 to None for dss_line (0 means no reduction)
+    if nkeep == 0:
+        nkeep = None
+
     # Apply DSS to get component scores
     _, scores = dss_line(data, target_freq, sfreq, nkeep=nkeep)
 
@@ -702,6 +701,10 @@ def _detect_noise_components(data, sfreq, target_freq, sigma, nkeep):
 def _apply_zapline_to_chunk(chunk_data, sfreq, chunk_freq, n_remove, nkeep):
     """Apply Zapline to a single chunk, handling flat channels."""
     n_samples, n_chans = chunk_data.shape
+
+    # Convert nkeep=0 to None for dss_line (0 means no reduction)
+    if nkeep == 0:
+        nkeep = None
 
     # Detect flat channels (zero variance)
     diff_chunk = np.diff(chunk_data, axis=0)
@@ -957,40 +960,3 @@ def _plot_cleaning_results(original, cleaned, sfreq, target_freq, analytics, fig
     plt.show()
 
     return fig
-
-
-# Convenience function with simpler interface
-def remove_line_noise(
-    data: np.ndarray,
-    sfreq: float,
-    fline: float | None = None,
-    **kwargs,
-) -> np.ndarray:
-    """Remove line noise from data using Zapline-plus.
-
-    This is a simplified interface to zapline_plus() that returns only
-    the cleaned data.
-
-    Parameters
-    ----------
-    data : array, shape=(n_times, n_chans)
-        Input data.
-    sfreq : float
-        Sampling frequency in Hz.
-    fline : float | None
-        Line noise frequency. If None, automatically detected.
-    **kwargs
-        Additional arguments passed to zapline_plus().
-
-    Returns
-    -------
-    clean_data : array, shape=(n_times, n_chans)
-        Cleaned data.
-
-    Examples
-    --------
-    >>> clean = remove_line_noise(data, sfreq=500, fline=50)
-
-    """
-    clean_data, _ = zapline_plus(data, sfreq, fline=fline, **kwargs)
-    return clean_data
