@@ -17,30 +17,31 @@ power line artifacts. NeuroImage, 207, 116356.
 Differences from Matlab implementation:
 
 Finding noise frequencies:
-  - one iteration returning all frequencies
+- one iteration returning all frequencies
 
 Adaptive chunking:
-  - merged chunks at edges if too short
+- merged chunks at edges if too short
 
+Plotting:
+- only once per frequency after cleaning
 
 
 
 """
 
 import logging
-from typing import dict, list, optional, tuple, union
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
-from .dss import dss_line
+from meegkit.dss import dss_line
 
 
 def zapline_plus(
     data: np.ndarray,
     sfreq: float,
-    fline: optional[union[float, list[float]]] = None,
+    fline: float | list[float] | None = None,
     nkeep: int = 0,
     adaptiveNremove: bool = True,
     fixedNremove: int = 1,
@@ -69,7 +70,7 @@ def zapline_plus(
 
     Parameters
     ----------
-        data : array, shape=(n_chans, n_times)
+        data : array, shape=(n_times, n_chans)
         Input data.
     sfreq : float
         Sampling frequency in Hz.
@@ -151,7 +152,7 @@ def zapline_plus(
 
     Returns
     -------
-    clean_data : array, shape=(n_chans, n_times)
+    clean_data : array, shape=(n_times, n_chans)
         Cleaned data.
     config : dict
         Configuration dictionary containing all parameters and analytics.
@@ -174,9 +175,9 @@ def zapline_plus(
     >>> clean_data, config = zapline_plus(data, sfreq=500)
 
     """
-    n_chans, n_times = data.shape
+    n_times, n_chans = data.shape
 
-    # Handle vanilla mode
+    # Handle vanilla mode (ZapLine without plus)
     if vanilla_mode:
         logging.warning(
             "vanilla_mode=True: Using vanilla Zapline behavior. "
@@ -199,23 +200,27 @@ def zapline_plus(
         searchIndividualNoise = False
         chunkLength = -1  # Zapline vanilla deals with single chunk
 
-    # check for globally flat channels
-    diff_data = np.diff(data, axis=1)
-    global_flat = np.where(np.all(diff_data == 0, axis=1))[0]
+    # if nothing is adaptive, only one iteration per frequency
+    if not (adaptiveNremove and adaptiveSigma):
+        max_iterations = 1
 
+    # check for globally flat channels
+    # will be omitted during processing and reintroduced later
+    diff_data = np.diff(data, axis=0)
+    global_flat = np.where(np.all(diff_data == 0, axis=0))[0]
     if len(global_flat) > 0:
         logging.warning(
             f"Detected {len(global_flat)} globally flat channels: {global_flat}. "
             f"Removing for processing, will add back after."
         )
-        flat_data = data[global_flat, :]
+        flat_data = data[:, global_flat]
         active_channels = np.setdiff1d(np.arange(n_chans), global_flat)
-        data = data[active_channels, :]
+        data = data[:, active_channels]
     else:
         active_channels = np.arange(n_chans)
         flat_data = None
 
-    # Initialize configuration
+    # initialize configuration
     config = {
         "sfreq": sfreq,
         "fline": fline,
@@ -242,7 +247,7 @@ def zapline_plus(
         "analytics": {},
     }
 
-    # Detect noise frequencies if not provided
+    # detect noise frequencies if not provided
     if fline is None:
         fline = _detect_noise_frequencies(
             data,
@@ -257,7 +262,7 @@ def zapline_plus(
         fline = [fline]
 
     if len(fline) == 0:
-        logging.warning("No noise frequencies detected. Returning original data.")
+        logging.info("No noise frequencies detected. Returning original data.")
         return data.copy(), config
 
     config["detected_fline"] = fline
@@ -269,20 +274,21 @@ def zapline_plus(
     for freq_idx, target_freq in enumerate(fline):
         print(f"Processing noise frequency: {target_freq:.2f} Hz")
 
-        # Adaptive chunking or fixed chunks
         if chunkLength == -1:
             # single chunk
             chunks = [(0, n_times)]
         elif chunkLength == 0:
+            # adaptive chunking
             chunks = _adaptive_chunking(clean_data, sfreq, target_freq, minChunkLength)
         else:
+            # fixed-length chunks
             chunk_samples = int(chunkLength * sfreq)
             chunks = [
                 (i, min(i + chunk_samples, n_times))
                 for i in range(0, n_times, chunk_samples)
             ]
 
-        # Initialize tracking variables
+        # initialize tracking variables
         current_sigma = noiseCompDetectSigma
         current_fixed = fixedNremove
         too_strong_once = False
@@ -295,7 +301,7 @@ def zapline_plus(
             # Clean each chunk
             chunk_results = []
             for chunk_start, chunk_end in chunks:
-                chunk_data = clean_data[:, chunk_start:chunk_end]
+                chunk_data = clean_data[chunk_start:chunk_end, :]
 
                 # Detect chunk-specific noise frequency
                 if searchIndividualNoise:
@@ -305,6 +311,7 @@ def zapline_plus(
                         target_freq,
                         detectionWinsize,
                         freqDetectMultFine,
+                        detailed_freq_bounds=detailedFreqBoundsUpper,
                     )
                 else:
                     chunk_freq = target_freq
@@ -341,12 +348,12 @@ def zapline_plus(
                     }
                 )
 
-            # Reconstruct cleaned data
+            # reconstruct cleaned data
             temp_clean = clean_data.copy()
             for result in chunk_results:
-                temp_clean[:, result["start"] : result["end"]] = result["data"]
+                temp_clean[result["start"] : result["end"], :] = result["data"]
 
-            # Check if cleaning is optimal
+            # check if cleaning is optimal
             cleaning_status = _check_cleaning_quality(
                 data,
                 temp_clean,
@@ -360,7 +367,7 @@ def zapline_plus(
                 maxProportionBelowLower,
             )
 
-            # Store analytics
+            # store analytics
             config["analytics"][f"freq_{freq_idx}"] = {
                 "target_freq": target_freq,
                 "iteration": iteration,
@@ -371,25 +378,38 @@ def zapline_plus(
                 "cleaning_status": cleaning_status,
             }
 
-            # Check if we need to adapt
+            # check if we need to adapt
             if cleaning_status == "good":
                 clean_data = temp_clean
                 break
+
             elif cleaning_status == "too_weak" and not too_strong_once:
-                current_sigma = max(current_sigma - 0.25, minsigma)
-                current_fixed += 1
-                print(
-                    f"  Cleaning too weak. Adjusting sigma to {current_sigma:.2f}, "
-                    f"fixed removal to {current_fixed}"
-                )
+                if current_sigma > minsigma:
+                    current_sigma = max(current_sigma - 0.25, minsigma)
+                    current_fixed += 1
+                    logging.info(
+                        f"Cleaning too weak. Adjusting sigma to {current_sigma:.2f}, "
+                        f"fixed removal to {current_fixed}"
+                    )
+                else:
+                    logging.info("At minimum sigma, accepting result")
+                    clean_data = temp_clean
+                    break
+
             elif cleaning_status == "too_strong":
                 too_strong_once = True
-                current_sigma = min(current_sigma + 0.25, maxsigma)
-                current_fixed = max(current_fixed - 1, fixedNremove)
-                print(
-                    f"  Cleaning too strong. Adjusting sigma to {current_sigma:.2f}, "
-                    f"fixed removal to {current_fixed}"
-                )
+                if current_sigma < maxsigma:
+                    current_sigma = min(current_sigma + 0.25, maxsigma)
+                    current_fixed = max(current_fixed - 1, fixedNremove)
+                    logging.info(
+                        f"Cleaning too strong. Adjusting sigma to {current_sigma:.2f}, "
+                        f"fixed removal to {current_fixed}"
+                    )
+                else:
+                    logging.info("At maximum sigma, accepting result")
+                    clean_data = temp_clean
+                    break
+
             else:
                 # Too strong takes precedence, or we can't improve further
                 clean_data = temp_clean
@@ -408,9 +428,9 @@ def zapline_plus(
 
     # add flat channels back to data, if present
     if flat_data is not None:
-        full_clean = np.zeros((n_chans, n_times))
-        full_clean[active_channels, :] = clean_data
-        full_clean[global_flat, :] = flat_data
+        full_clean = np.zeros((n_times, n_chans))
+        full_clean[:, active_channels] = clean_data
+        full_clean[:, global_flat] = flat_data
         clean_data = full_clean
 
     return clean_data, config
@@ -440,7 +460,7 @@ def _detect_noise_frequencies(
     """
     # Compute PSD
     freqs, psd = _compute_psd(data, sfreq)
-    log_psd = 10 * np.log10(np.mean(psd, axis=0))
+    log_psd = 10 * np.log10(np.mean(psd, axis=1))
 
     # State machine variables
     in_peak = False
@@ -516,13 +536,11 @@ def _adaptive_chunking(
     prominence_quantile=0.95,
 ):
     """Segment data into chunks with stable noise topography."""
-    n_chans, n_times = data.shape
+    n_times, n_chans = data.shape
 
     if n_times < sfreq * min_chunk_length:
         logging.warning("Data too short for adaptive chunking. Using single chunk.")
         return [(0, n_times)]
-
-    n_chans, n_times = data.shape
 
     # Narrow-band filter around target frequency
     bandwidth = detection_winsize / 2.0
@@ -538,8 +556,8 @@ def _adaptive_chunking(
     for i in range(n_epochs):
         start = i * epoch_length
         end = start + epoch_length
-        epoch = filtered[:, start:end]
-        cov = np.cov(epoch)
+        epoch = filtered[start:end, :]
+        cov = np.cov(epoch, rowvar=False)
 
         if prev_cov is not None:
             # Frobenius norm of difference
@@ -603,25 +621,35 @@ def _adaptive_chunking(
     return chunks
 
 
-def _detect_chunk_noise_frequency(data, sfreq, target_freq, winsize, mult_fine):
+def _detect_chunk_noise_frequency(
+    data,
+    sfreq,
+    target_freq,
+    winsize,
+    mult_fine,
+    detailed_freq_bounds=(-0.05, 0.05),  # ← Add this parameter
+):
     """Detect chunk-specific noise frequency around target."""
     freqs, psd = _compute_psd(data, sfreq)
-    log_psd = 10 * np.log10(np.mean(psd, axis=0))
+    log_psd = 10 * np.log10(np.mean(psd, axis=1))
 
-    # Search in ±0.05 Hz range
-    search_mask = (freqs >= target_freq - 0.05) & (freqs <= target_freq + 0.05)
+    # get frequency mask
+    search_mask = (freqs >= target_freq + detailed_freq_bounds[0]) & (
+        freqs <= target_freq + detailed_freq_bounds[1]
+    )
+
     if not np.any(search_mask):
         return target_freq, False
 
     search_freqs = freqs[search_mask]
     search_psd = log_psd[search_mask]
 
-    # Find peak
+    # find peak
     peak_idx = np.argmax(search_psd)
     peak_freq = search_freqs[peak_idx]
     peak_power = search_psd[peak_idx]
 
-    # Compute threshold
+    # Compute threshold (uses broader window)
     win_mask = (freqs >= target_freq - winsize / 2) & (freqs <= target_freq + winsize / 2)
     win_psd = log_psd[win_mask]
 
@@ -673,11 +701,11 @@ def _detect_noise_components(data, sfreq, target_freq, sigma, nkeep):
 
 def _apply_zapline_to_chunk(chunk_data, sfreq, chunk_freq, n_remove, nkeep):
     """Apply Zapline to a single chunk, handling flat channels."""
-    n_chans, n_samples = chunk_data.shape
+    n_samples, n_chans = chunk_data.shape
 
     # Detect flat channels (zero variance)
-    diff_chunk = np.diff(chunk_data, axis=1)
-    flat_channels = np.where(np.all(diff_chunk == 0, axis=1))[0]
+    diff_chunk = np.diff(chunk_data, axis=0)
+    flat_channels = np.where(np.all(diff_chunk == 0, axis=0))[0]
 
     if len(flat_channels) > 0:
         logging.warning(
@@ -686,11 +714,11 @@ def _apply_zapline_to_chunk(chunk_data, sfreq, chunk_freq, n_remove, nkeep):
         )
 
         # store flat channel data
-        flat_channel_data = chunk_data[flat_channels, :]
+        flat_channel_data = chunk_data[:, flat_channels]
 
         # remove flat channels from processing
         active_channels = np.setdiff1d(np.arange(n_chans), flat_channels)
-        chunk_data_active = chunk_data[active_channels, :]
+        chunk_data_active = chunk_data[:, active_channels]
 
         # process only active channels
         cleaned_active, _ = dss_line(
@@ -703,8 +731,8 @@ def _apply_zapline_to_chunk(chunk_data, sfreq, chunk_freq, n_remove, nkeep):
 
         # Reconstruct full data with flat channels
         cleaned_chunk = np.zeros_like(chunk_data)
-        cleaned_chunk[active_channels, :] = cleaned_active
-        cleaned_chunk[flat_channels, :] = (
+        cleaned_chunk[:, active_channels] = cleaned_active
+        cleaned_chunk[:, flat_channels] = (
             flat_channel_data  # Add flat channels back unchanged
         )
 
@@ -736,7 +764,7 @@ def _check_cleaning_quality(
     """Check if cleaning is too weak, too strong, or good."""
     # Compute PSDs
     freqs, psd_clean = _compute_psd(cleaned_data, sfreq)
-    log_psd_clean = 10 * np.log10(np.mean(psd_clean, axis=0))
+    log_psd_clean = 10 * np.log10(np.mean(psd_clean, axis=1))
 
     # Compute fine thresholds
     win_mask = (freqs >= target_freq - winsize / 2) & (freqs <= target_freq + winsize / 2)
@@ -786,7 +814,7 @@ def _compute_psd(data, sfreq, nperseg=None):
         fs=sfreq,
         window="hann",
         nperseg=nperseg,
-        axis=-1,
+        axis=0,
     )
 
     return freqs, psd
@@ -803,7 +831,7 @@ def _narrowband_filter(data, sfreq, center_freq, bandwidth=3.0):
     high = min(high, 0.999)
 
     sos = signal.butter(4, [low, high], btype="band", output="sos")
-    filtered = signal.sosfiltfilt(sos, data, axis=-1)
+    filtered = signal.sosfiltfilt(sos, data, axis=0)
 
     return filtered
 
@@ -817,8 +845,8 @@ def _plot_cleaning_results(original, cleaned, sfreq, target_freq, analytics, fig
     freqs, psd_orig = _compute_psd(original, sfreq)
     _, psd_clean = _compute_psd(cleaned, sfreq)
 
-    log_psd_orig = 10 * np.log10(np.mean(psd_orig, axis=0))
-    log_psd_clean = 10 * np.log10(np.mean(psd_clean, axis=0))
+    log_psd_orig = 10 * np.log10(np.mean(psd_orig, axis=1))
+    log_psd_clean = 10 * np.log10(np.mean(psd_clean, axis=1))
 
     # 1. Zoomed spectrum around noise frequency
     ax1 = fig.add_subplot(gs[0, 0])
@@ -886,8 +914,8 @@ def _plot_cleaning_results(original, cleaned, sfreq, target_freq, analytics, fig
     # 7. Removed power (ratio)
     ax7 = fig.add_subplot(gs[1, 2])
     noise_mask = (freqs >= target_freq - 0.05) & (freqs <= target_freq + 0.05)
-    ratio_orig = np.mean(psd_orig[:, noise_mask]) / np.mean(psd_orig)
-    ratio_clean = np.mean(psd_clean[:, noise_mask]) / np.mean(psd_clean)
+    ratio_orig = np.mean(psd_orig[noise_mask, :]) / np.mean(psd_orig)
+    ratio_clean = np.mean(psd_clean[noise_mask, :]) / np.mean(psd_clean)
 
     ax7.text(
         0.5,
@@ -933,7 +961,10 @@ def _plot_cleaning_results(original, cleaned, sfreq, target_freq, analytics, fig
 
 # Convenience function with simpler interface
 def remove_line_noise(
-    data: np.ndarray, sfreq: float, fline: optional[float] = None, **kwargs
+    data: np.ndarray,
+    sfreq: float,
+    fline: float | None = None,
+    **kwargs,
 ) -> np.ndarray:
     """Remove line noise from data using Zapline-plus.
 
@@ -942,7 +973,7 @@ def remove_line_noise(
 
     Parameters
     ----------
-    data : array, shape=(n_chans, n_times)
+    data : array, shape=(n_times, n_chans)
         Input data.
     sfreq : float
         Sampling frequency in Hz.
@@ -953,7 +984,7 @@ def remove_line_noise(
 
     Returns
     -------
-    clean_data : array, shape=(n_chans, n_times)
+    clean_data : array, shape=(n_times, n_chans)
         Cleaned data.
 
     Examples
