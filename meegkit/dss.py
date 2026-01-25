@@ -436,6 +436,7 @@ def dss_line_plus(
     plotResults: bool = False,
     figsize: tuple[int, int] = (14, 10),
     vanilla_mode: bool = False,
+    dirname: str = None
 ) -> tuple[np.ndarray, dict]:
     """Remove line noise and other frequency-specific artifacts using Zapline-plus.
 
@@ -520,6 +521,9 @@ def dss_line_plus(
         - No individual chunk frequency detection
         - No adaptive parameter tuning
         Requires fline to be specified (not None). Defaults to False.
+    dirname: str
+        Path to the directory where visual outputs are saved when show is 'True'.
+        If 'None', does not save the outputs. Defaults to None.
 
     Returns
     -------
@@ -795,6 +799,7 @@ def dss_line_plus(
                 target_freq,
                 config["analytics"][f"freq_{freq_idx}"],
                 figsize,
+                dirname,
             )
 
     # add flat channels back to data, if present
@@ -1215,7 +1220,15 @@ def _narrowband_filter(data, sfreq, center_freq, bandwidth=3.0):
     return filtered
 
 
-def _plot_cleaning_results(original, cleaned, sfreq, target_freq, analytics, figsize):
+def _plot_cleaning_results(
+    original,
+    cleaned,
+    sfreq,
+    target_freq,
+    analytics,
+    figsize,
+    dirname,
+):
     """Generate diagnostic plots for cleaning results."""
     fig = plt.figure(figsize=figsize)
     gs = fig.add_gridspec(2, 4, hspace=0.3, wspace=0.3)
@@ -1334,5 +1347,8 @@ def _plot_cleaning_results(original, cleaned, sfreq, target_freq, analytics, fig
     )
 
     plt.show()
+
+    if dirname is not None:
+        plt.savefig(f"{dirname}/dss_line_plus_results.png")
 
     return fig
