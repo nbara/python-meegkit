@@ -1,5 +1,4 @@
 """Test DSS functions."""
-import os
 from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
@@ -125,6 +124,7 @@ def test_dss_line(nkeep):
     out, _ = dss.dss_line(s, fline, sr, nremove=1)
     plt.close("all")
 
+
 def test_dss_line_iter():
     """Test line noise removal."""
 
@@ -199,6 +199,78 @@ def profile_dss_line(nkeep):
     ps.print_stats()
     print(s.getvalue())
 
+
+@pytest.mark.parametrize("mode", ["vanilla", "adaptive"])
+def test_dss_line_plus(mode):
+    """Test zapline-plus line noise removal."""
+
+    sfreq = 250
+    freq = 50
+    fline = freq / sfreq
+
+    n_samples = 30 * sfreq
+    n_chans = 16
+
+    # create synthetic data (time × chan × trial)
+    data, _ = create_line_data(
+        n_samples=n_samples,
+        n_chans=n_chans,
+        n_trials=1,
+        fline=fline,
+        SNR=1.0,
+        noise_dim=20,
+    )
+
+    # zapline-plus expects 2D
+    data = data[..., 0]
+
+    if mode == "vanilla":
+        with TemporaryDirectory() as tmpdir:
+            clean, _ = dss.dss_line_plus(
+                data,
+                sfreq,
+                fline=freq,
+                vanilla_mode=True,
+                fixedNremove=1,
+                plotResults=True,
+                dirname=tmpdir,
+            )
+    else:
+        with TemporaryDirectory() as tmpdir:
+            clean, _ = dss.dss_line_plus(
+                data,
+                sfreq,
+                fline=None,
+                adaptiveNremove=True,
+                adaptiveSigma=True,
+                chunkLength=0,
+                minChunkLength=10,
+                plotResults=True,
+                dirname=tmpdir,
+            )
+
+    assert clean.shape == data.shape
+
+    # PSD comparison
+    freqs, psd_orig = signal.welch(data, fs=sfreq, nperseg=sfreq * 2, axis=0)
+    _, psd_clean = signal.welch(clean, fs=sfreq, nperseg=sfreq * 2, axis=0)
+
+    psd_orig = psd_orig.mean(axis=1)
+    psd_clean = psd_clean.mean(axis=1)
+
+    idx = np.argmin(np.abs(freqs - freq))
+
+    reduction = 1 - psd_clean[idx] / psd_orig[idx]
+
+    # Zapline should remove the vast majority of line noise
+    assert reduction > 0.85
+
+    # Broadband signal should be preserved
+    band = (freqs > 5) & (freqs < 40)
+    ratio = psd_clean[band].mean() / psd_orig[band].mean()
+
+    assert 0.7 < ratio < 1.3
+
 if __name__ == "__main__":
     pytest.main([__file__])
     # create_data(SNR=5, show=True)
@@ -206,3 +278,4 @@ if __name__ == "__main__":
     # test_dss_line(2)
     # test_dss_line_iter()
     # profile_dss_line(None)
+    # test_dss_line_plus("adaptive")
