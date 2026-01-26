@@ -176,6 +176,30 @@ def test_dss_line_iter():
     plt.close("all")
 
 
+def test_dss_line_iter_no_noise():
+    """
+    Test that dss_line_iter returns original data unchanged when DSS
+    cannot improve the signal.
+    """
+    sr = 200
+    fline = 50
+    n_samples = 9000
+    n_chans = 10
+    rng = np.random.RandomState(42)
+
+    # create data without line noise at target frequency
+    x = rng.randn(n_samples, n_chans)
+    x_original = x.copy()
+
+    x_out, n_iters = dss.dss_line_iter(x, fline, sr, n_iter_max=10)
+
+    assert n_iters == 0, f"Expected 0 iterations (no improvement), got {n_iters}"
+    assert np.allclose(x_out, x_original), (
+        "When DSS cannot improve signal, should return original data unchanged"
+    )
+    assert np.allclose(x, x_original), "Input data should never be mutated"
+
+
 def profile_dss_line(nkeep):
     """Test line noise removal."""
     import cProfile
