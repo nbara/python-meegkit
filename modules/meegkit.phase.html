@@ -1,0 +1,1001 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>meegkit.phase &#8212; MEEGkit 0.1.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=8618f531"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'modules/meegkit.phase';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.9" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="../_static/logo-dark.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">meegkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Examples gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">
+    GitHub
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/nbara/python-meegkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/lebababa" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitter fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Twitter</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../auto_examples/index.html">
+    Examples gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">
+    GitHub
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/nbara/python-meegkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/lebababa" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitter fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Twitter</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">meegkit.phase</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="module-meegkit.phase">
+<span id="meegkit-phase"></span><h1>meegkit.phase<a class="headerlink" href="#module-meegkit.phase" title="Link to this heading">#</a></h1>
+<p>Real-time phase and amplitude estimation using resonant oscillators.</p>
+<p class="rubric">Notes</p>
+<p>While the original paper <a class="reference internal" href="#r07bacadbf605-1" id="id1">[1]</a> only describes the algorithm for a single
+channel, this implementation can handle multiple channels. However, the
+algorithm is not optimized for this purpose. Therefore, this code is likely to
+be slow for large input arrays (n_channels &gt;&gt; 10), since an individual
+oscillator is instantiated for each channel.</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r07bacadbf605-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation of
+phase and amplitude with application to neural data. Sci Rep 11, 18037
+(2021). <a class="reference external" href="https://doi.org/10.1038/s41598-021-97560-5">https://doi.org/10.1038/s41598-021-97560-5</a></p>
+</div>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.phase.NonResOscillator" title="meegkit.phase.NonResOscillator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NonResOscillator</span></code></a>([fs, nu, alpha_a, alpha_p, ...])</p></td>
+<td><p>Real-time measurement of phase and amplitude using non-resonant oscillator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.phase.ResOscillator" title="meegkit.phase.ResOscillator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ResOscillator</span></code></a>([fs, nu, update_factor, ...])</p></td>
+<td><p>Real-time measurement of phase and amplitude using a resonant oscillator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.phase.Device" title="meegkit.phase.Device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Device</span></code></a>(om0, dt, damping, type[, mu])</p></td>
+<td><p>Measurement device.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.phase.ECHT" title="meegkit.phase.ECHT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ECHT</span></code></a>(l_freq, h_freq, sfreq[, n_fft, filt_order])</p></td>
+<td><p>Endpoint Corrected Hilbert Transform (ECHT).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.phase.locking_based_phase" title="meegkit.phase.locking_based_phase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">locking_based_phase</span></code></a>(s, dt, npt)</p></td>
+<td><p>Compute the locking-based phase.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.phase.rk" title="meegkit.phase.rk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rk</span></code></a>(phi, dt, n_steps, omega, epsilon, s_prev, ...)</p></td>
+<td><p>Runge-Kutta method for phase calculation.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.phase.init_coefs" title="meegkit.phase.init_coefs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_coefs</span></code></a>(om0, dt, alpha)</p></td>
+<td><p>Compute coefficients for solving oscillator's equations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#meegkit.phase.one_step_oscillator" title="meegkit.phase.one_step_oscillator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">one_step_oscillator</span></code></a>(x, xd, alpha, eta, ...)</p></td>
+<td><p>Perform one step of the oscillator equations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#meegkit.phase.one_step_integrator" title="meegkit.phase.one_step_integrator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">one_step_integrator</span></code></a>(z, edelmu, mu, dt, spp, ...)</p></td>
+<td><p>Perform one step of the integrator in the oscillator equations.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="meegkit.phase.Device">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">Device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">om0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.Device" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Measurement device.</p>
+<p>This class implements a measurement device, as describes by Rosenblum et al.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>om0</strong> (<em>float</em>) – Oscillator frequency (estimation).</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Sampling interval.</p></li>
+<li><p><strong>damping</strong> (<em>float</em>) – Damping parameter.</p></li>
+<li><p><strong>type</strong> (<em>str in {&quot;integrator&quot;</em><em>, </em><em>&quot;oscillator&quot;}</em>) – Type of the device.</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – Integrator parameter (only for type=”integrator”). Should be &gt;&gt; target
+frequency of interest.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.Device.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">om0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">500</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.Device.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.Device.init_coefs">
+<span class="sig-name descname"><span class="pre">init_coefs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">om0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">damping</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.Device.init_coefs" title="Link to this definition">#</a></dt>
+<dd><p>Initialize coefficients for solving oscillator’s equations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.Device.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sprev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">snew</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.Device.step" title="Link to this definition">#</a></dt>
+<dd><p>Perform one step of the oscillator equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>float</em>) – State variable x.</p></li>
+<li><p><strong>y</strong> (<em>float</em>) – State variable y.</p></li>
+<li><p><strong>sprev</strong> (<em>float</em>) – Previous measurement.</p></li>
+<li><p><strong>s</strong> (<em>float</em>) – Current measurement.</p></li>
+<li><p><strong>snew</strong> (<em>float</em>) – New measurement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>x</strong> (<em>float</em>) – Updated state variable x.</p></li>
+<li><p><strong>y</strong> (<em>float</em>) – Updated state variable y.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meegkit.phase.ECHT">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">ECHT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_fft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ECHT" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Endpoint Corrected Hilbert Transform (ECHT).</p>
+<p>See <a class="reference internal" href="#r62a5d9e8c817-1" id="id2">[1]</a> for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_channels</em><em>)</em>) – Time domain signal.</p></li>
+<li><p><strong>l_freq</strong> (<em>float</em><em> | </em><em>None</em>) – Low-cutoff frequency of a bandpass causal filter. If None, the data is
+only low-passed.</p></li>
+<li><p><strong>h_freq</strong> (<em>float</em><em> | </em><em>None</em>) – High-cutoff frequency of a bandpass causal filter. If None, the data is
+only high-passed.</p></li>
+<li><p><strong>sfreq</strong> (<em>float</em>) – Sampling rate of time domain signal.</p></li>
+<li><p><strong>n_fft</strong> (<em>int</em><em>, </em><em>optional</em>) – Length of analytic signal. If None, it defaults to the length of X.</p></li>
+<li><p><strong>filt_order</strong> (<em>int</em><em>, </em><em>optional</em>) – Order of the filter. Default is 2.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>One common implementation of the Hilbert Transform uses a DFT (aka FFT)
+as part of its computation. Inherent to the DFT is the assumption that
+a finite sample of a signal is replicated infinitely in time, effectively
+abutting the end of a sample with its replicated start. If the start and
+end of the sample are not continuous with each other, distortions are
+introduced by the DFT. Echt effectively smooths out this ‘discontinuity’
+by selectively deforming the start of the sample. It is hence most suited
+for real-time applications in which the point/s of interest is/are the
+most recent one/s (i.e. last) in the sample window.</p>
+<p>We found that a filter bandwidth (BW=h_freq-l_freq) of up to half the
+signal’s central frequency works well.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r62a5d9e8c817-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
+<p>Schreglmann, S. R., Wang, D., Peach, R. L., Li, J., Zhang, X.,
+Latorre, A., … &amp; Grossman, N. (2021). Non-invasive suppression of
+essential tremor via phase-locked disruption of its temporal coherence.
+Nature communications, 12(1), 363.</p>
+</div>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f0</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">filt_BW</span> <span class="o">=</span> <span class="n">f0</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">N</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sfreq</span> <span class="o">=</span> <span class="n">N</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">sfreq</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">f0</span> <span class="o">*</span> <span class="n">t</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mi">4</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">l_freq</span> <span class="o">=</span> <span class="n">f0</span> <span class="o">-</span> <span class="n">filt_BW</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">h_freq</span> <span class="o">=</span> <span class="n">f0</span> <span class="o">+</span> <span class="n">filt_BW</span> <span class="o">/</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Xf</span> <span class="o">=</span> <span class="n">echt</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">l_freq</span><span class="p">,</span> <span class="n">h_freq</span><span class="p">,</span> <span class="n">sfreq</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.ECHT.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">h_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sfreq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_fft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filt_order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ECHT.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.ECHT.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ECHT.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the ECHT transform to the input signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_channels</em><em>)</em>) – The input signal to be transformed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.ECHT.fit_transform">
+<span class="sig-name descname"><span class="pre">fit_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ECHT.fit_transform" title="Link to this definition">#</a></dt>
+<dd><p>Fit the ECHT transform to the input signal and transform it.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.ECHT.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ECHT.transform" title="Link to this definition">#</a></dt>
+<dd><p>Apply the ECHT transform to the input signal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_channels</em><em>)</em>) – The input signal to be transformed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Xf</strong> – The transformed signal (complex-valued).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray, shape=(n_samples, n_channels)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meegkit.phase.NonResOscillator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">NonResOscillator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.NonResOscillator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Real-time measurement of phase and amplitude using non-resonant oscillator.</p>
+<p>This estimator relies on the resonance effect. The measuring “device”
+consists of two linear damped oscillators. The oscillators’ frequency is
+much larger than the frequency of the signal, i.e., the system is far from
+resonance. We choose the damping parameters to ensure that (i) the phase of
+the first linear oscillator equals that of the input and that (ii)
+amplitude of the second one and the input relate by a known constant
+multiplicator. The technique yields both phase and amplitude of the input
+signal.</p>
+<p>This estimator includes an automated frequency-tuning algorithm to adjust
+to the a priori unknown signal frequency.</p>
+<p>For a detailed description, refer to <a class="reference internal" href="#r6d16f38ee823-1" id="id3">[1]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency in Hz.</p></li>
+<li><p><strong>nu</strong> (<em>float</em>) – Rough estimate of the main frequency of interest.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r6d16f38ee823-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">1</a><span class="fn-bracket">]</span></span>
+<p>Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
+of phase and amplitude with application to neural data. Sci Rep 11,
+18037 (2021). <a class="reference external" href="https://doi.org/10.1038/s41598-021-97560-5">https://doi.org/10.1038/s41598-021-97560-5</a></p>
+</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.NonResOscillator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">250</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.NonResOscillator.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.NonResOscillator.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.NonResOscillator.transform" title="Link to this definition">#</a></dt>
+<dd><p>Transform the input signal into phase and amplitude estimates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>shape=</em><em>(</em><em>n_samples</em><em>, </em><em>n_channels</em><em>)</em>) – The input signal to be transformed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>phase</strong> (<em>ndarray, shape=(n_samples, n_channels)</em>) – Current phase estimate.</p></li>
+<li><p><strong>ampl</strong> (<em>ndarray, shape=(n_samples, n_channels)</em>) – Current amplitude estimate.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="meegkit.phase.ResOscillator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">ResOscillator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_adaptation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assume_centered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ResOscillator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Real-time measurement of phase and amplitude using a resonant oscillator.</p>
+<p>In this version, the corresponding “device” consists of a linear oscillator
+in resonance with the measured signal and of an integrating unit. It also
+provides both phase and amplitude of the input signal. The method exploits
+the known relation between the resonant oscillator’s phase and amplitude
+and those of the input. Additionally, the resonant oscillator acts as a
+bandpass filter for experimental data.</p>
+<p>This filter also includes a frequency-adaptation algorithm, and removes
+low-frequency trend (baseline fluctuations). For a detailed description,
+refer to <a class="reference internal" href="#r300625542a57-1" id="id4">[1]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>npt</strong> (<em>int</em>) – Number of points to be measured and processed</p></li>
+<li><p><strong>fs</strong> (<em>float</em>) – Sampling frequency in Hz.</p></li>
+<li><p><strong>nu</strong> (<em>float</em>) – Rough estimate of the tremor frequency.</p></li>
+<li><p><strong>freq_adaptation</strong> (<em>bool</em>) – Whether to use the frequency adaptation algorithm (default=True).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>Dphase</strong> (<em>numpy.ndarray</em>) – Array containing the phase values.</p></li>
+<li><p><strong>Dampl</strong> (<em>numpy.ndarray</em>) – Array containing the amplitude values.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r300625542a57-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">1</a><span class="fn-bracket">]</span></span>
+<p>Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
+of phase and amplitude with application to neural data. Sci Rep 11, 18037
+(2021). <a class="reference external" href="https://doi.org/10.1038/s41598-021-97560-5">https://doi.org/10.1038/s41598-021-97560-5</a></p>
+</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.ResOscillator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">update_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_adaptation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assume_centered</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ResOscillator.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="meegkit.phase.ResOscillator.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.ResOscillator.transform" title="Link to this definition">#</a></dt>
+<dd><p>Transform the input signal into phase and amplitude estimates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>ndarray</em><em>, </em><em>shape</em><em> (</em><em>n_samples</em><em>, </em><em>n_channels</em><em>)</em>) – The input signal to be transformed.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>phase</strong> (<em>float</em>) – Current phase estimate.</p></li>
+<li><p><strong>ampl</strong> (<em>float</em>) – Current amplitude estimate.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meegkit.phase.init_coefs">
+<span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">init_coefs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">om0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.init_coefs" title="Link to this definition">#</a></dt>
+<dd><p>Compute coefficients for solving oscillator’s equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>om0</strong> (<em>float</em>) – Oscillator frequency (estimation).</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Sampling interval.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Half of the damping.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>C1</strong> (<em>float</em>) – Coefficient C1.</p></li>
+<li><p><strong>C2</strong> (<em>float</em>) – Coefficient C2.</p></li>
+<li><p><strong>C3</strong> (<em>float</em>) – Coefficient C3.</p></li>
+<li><p><strong>eetadel</strong> (<em>complex</em>) – Exponential term for amplitude device.</p></li>
+<li><p><strong>ealdel</strong> (<em>float</em>) – Exponential term for amplitude device.</p></li>
+<li><p><strong>eta</strong> (<em>float</em>) – Square root of the difference of oscillator frequency squared and
+damping squared.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meegkit.phase.locking_based_phase">
+<span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">locking_based_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npt</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.locking_based_phase" title="Link to this definition">#</a></dt>
+<dd><p>Compute the locking-based phase.</p>
+<p>This technique exploits the ideas from the synchronization theory. It is
+well-known that a force s(t) acting on a limit-cycle oscillator can entrain
+it. It means that the oscillator’s frequency becomes equal to that of the
+force, and their phases differ by a constant. Thus, the phase of the locked
+limit-cycle oscillator will correspond to the phase of the signal. For our
+purposes, it is helpful to use the simplest oscillator model, the so-called
+phase oscillator. To ensure the phase-locking to the force, we have to
+adjust the oscillator’s frequency to the signal’s frequency. We assume that
+we do not know the latter a priori, but can only roughly estimate it. We
+propose a simple approach that starts with this estimate and automatically
+tunes the “device’s” frequency to ensure the locking and thus provides the
+instantaneous phase.</p>
+<p>Note that the amplitude is not determined with this approach. Technically,
+the algorithm reduces to solving differential equation incorporating
+measured data given at discrete time points; for details, see <a class="reference internal" href="#r0d7196e4d239-1" id="id5">[1]</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>s</strong> (<em>array-like</em>) – Input signal.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Time step.</p></li>
+<li><p><strong>npt</strong> (<em>int</em>) – Number of points.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>lb_phase</strong> – Locking-based phase.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r0d7196e4d239-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">1</a><span class="fn-bracket">]</span></span>
+<p>Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
+of phase and amplitude with application to neural data. Sci Rep 11, 18037
+(2021). <a class="reference external" href="https://doi.org/10.1038/s41598-021-97560-5">https://doi.org/10.1038/s41598-021-97560-5</a></p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meegkit.phase.one_step_integrator">
+<span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">one_step_integrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edelmu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.one_step_integrator" title="Link to this definition">#</a></dt>
+<dd><p>Perform one step of the integrator in the oscillator equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>float</em>) – State variable z.</p></li>
+<li><p><strong>edelmu</strong> (<em>float</em>) – Exponential term for integrator.</p></li>
+<li><p><strong>mu</strong> (<em>float</em>) – Integrator parameter.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Sampling interval.</p></li>
+<li><p><strong>spp</strong> (<em>float</em>) – Second previous measurement.</p></li>
+<li><p><strong>sp</strong> (<em>float</em>) – Previous measurement.</p></li>
+<li><p><strong>s</strong> (<em>float</em>) – Current measurement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>z</strong> – Updated state variable z.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meegkit.phase.one_step_oscillator">
+<span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">one_step_oscillator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eeta_del</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eal_del</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">C3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.one_step_oscillator" title="Link to this definition">#</a></dt>
+<dd><p>Perform one step of the oscillator equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>float</em>) – State variable x.</p></li>
+<li><p><strong>xd</strong> (<em>float</em>) – Derivative of state variable x.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Damping parameter.</p></li>
+<li><p><strong>eta</strong> (<em>float</em>) – Square root of the difference of oscillator frequency squared and
+damping squared.</p></li>
+<li><p><strong>eeta_del</strong> (<em>complex</em>) – Exponential term for time step.</p></li>
+<li><p><strong>eal_del</strong> (<em>float</em>) – Exponential term for time step.</p></li>
+<li><p><strong>C1</strong> (<em>float</em>) – Coefficient C1.</p></li>
+<li><p><strong>C2</strong> (<em>float</em>) – Coefficient C2.</p></li>
+<li><p><strong>C3</strong> (<em>float</em>) – Coefficient C3.</p></li>
+<li><p><strong>spp</strong> (<em>float</em>) – Second orevious measurement.</p></li>
+<li><p><strong>sp</strong> (<em>float</em>) – Previous measurement.</p></li>
+<li><p><strong>s</strong> (<em>float</em>) – Current measurement.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>x</strong> (<em>float</em>) – Updated state variable x.</p></li>
+<li><p><strong>xd</strong> (<em>float</em>) – Updated derivative of state variable x.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="meegkit.phase.rk">
+<span class="sig-prename descclassname"><span class="pre">meegkit.phase.</span></span><span class="sig-name descname"><span class="pre">rk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_steps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epsilon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_prev</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_new</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#meegkit.phase.rk" title="Link to this definition">#</a></dt>
+<dd><p>Runge-Kutta method for phase calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>phi</strong> (<em>float</em>) – Initial phase value.</p></li>
+<li><p><strong>dt</strong> (<em>float</em>) – Time step size.</p></li>
+<li><p><strong>n_steps</strong> (<em>int</em>) – Number of steps to iterate.</p></li>
+<li><p><strong>omega</strong> (<em>float</em>) – Angular frequency.</p></li>
+<li><p><strong>epsilon</strong> (<em>float</em>) – Amplitude of the oscillation.</p></li>
+<li><p><strong>s_prev</strong> (<em>float</em>) – Previous phase value.</p></li>
+<li><p><strong>s</strong> (<em>float</em>) – Current phase value.</p></li>
+<li><p><strong>s_new</strong> (<em>float</em>) – New phase value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>phi</strong> – The calculated phase value.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.Device.__init__"><code class="docutils literal notranslate"><span class="pre">Device.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.Device.init_coefs"><code class="docutils literal notranslate"><span class="pre">Device.init_coefs()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.Device.step"><code class="docutils literal notranslate"><span class="pre">Device.step()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ECHT"><code class="docutils literal notranslate"><span class="pre">ECHT</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ECHT.__init__"><code class="docutils literal notranslate"><span class="pre">ECHT.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ECHT.fit"><code class="docutils literal notranslate"><span class="pre">ECHT.fit()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ECHT.fit_transform"><code class="docutils literal notranslate"><span class="pre">ECHT.fit_transform()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ECHT.transform"><code class="docutils literal notranslate"><span class="pre">ECHT.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.NonResOscillator"><code class="docutils literal notranslate"><span class="pre">NonResOscillator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.NonResOscillator.__init__"><code class="docutils literal notranslate"><span class="pre">NonResOscillator.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.NonResOscillator.transform"><code class="docutils literal notranslate"><span class="pre">NonResOscillator.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ResOscillator"><code class="docutils literal notranslate"><span class="pre">ResOscillator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ResOscillator.__init__"><code class="docutils literal notranslate"><span class="pre">ResOscillator.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.ResOscillator.transform"><code class="docutils literal notranslate"><span class="pre">ResOscillator.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.init_coefs"><code class="docutils literal notranslate"><span class="pre">init_coefs()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.locking_based_phase"><code class="docutils literal notranslate"><span class="pre">locking_based_phase()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.one_step_integrator"><code class="docutils literal notranslate"><span class="pre">one_step_integrator()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.one_step_oscillator"><code class="docutils literal notranslate"><span class="pre">one_step_oscillator()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#meegkit.phase.rk"><code class="docutils literal notranslate"><span class="pre">rk()</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  
+  <div class="tocsection editthispage">
+    <a href="https://github.com/nbara/python-meegkit/edit/master/doc/modules/meegkit.phase.rst">
+      <i class="fa-solid fa-pencil"></i>
+      
+      
+        
+          Edit on GitHub
+        
+      
+    </a>
+  </div>
+</div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/modules/meegkit.phase.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Nicolas Barascud.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

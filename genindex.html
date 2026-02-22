@@ -1,0 +1,1123 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index &#8212; MEEGkit 0.1.9 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/jupyter-sphinx.css" />
+    <link rel="stylesheet" type="text/css" href="_static/thebelab.css" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery.css?v=d2d258e8" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-binder.css?v=f4aeca0c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-dataframe.css?v=2082cf3c" />
+    <link rel="stylesheet" type="text/css" href="_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="_static/documentation_options.js?v=8618f531"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/thebelab-helper.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
+    <link rel="index" title="Index" href="#" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.1.9" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="_static/logo.png" class="logo__image only-light" alt=""/>
+    <img src="_static/logo-dark.png" class="logo__image only-dark pst-js-only" alt=""/>
+  
+  
+    <p class="title logo__title">meegkit</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">
+    GitHub
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/nbara/python-meegkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/lebababa" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitter fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Twitter</span></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="auto_examples/index.html">
+    Examples gallery
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-external" href="https://github.com/nbara/python-meegkit">
+    GitHub
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/nbara/python-meegkit" title="GitHub" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-github fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">GitHub</span></a>
+        </li>
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://twitter.com/lebababa" title="Twitter" class="nav-link pst-navbar-icon" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><i class="fa-brands fa-twitter fa-lg" aria-hidden="true"></i>
+            <span class="sr-only">Twitter</span></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none"></div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+
+<h1 id="index">Index</h1>
+
+<div class="genindex-jumpbox">
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
+ | <a href="#B"><strong>B</strong></a>
+ | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
+ | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
+ | <a href="#H"><strong>H</strong></a>
+ | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
+ | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
+ | <a href="#O"><strong>O</strong></a>
+ | <a href="#P"><strong>P</strong></a>
+ | <a href="#R"><strong>R</strong></a>
+ | <a href="#S"><strong>S</strong></a>
+ | <a href="#T"><strong>T</strong></a>
+ | <a href="#U"><strong>U</strong></a>
+ | <a href="#V"><strong>V</strong></a>
+ | <a href="#W"><strong>W</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
+ 
+</div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.ASR.__init__">__init__() (meegkit.asr.ASR method)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.lof.html#meegkit.lof.LOF.__init__">(meegkit.lof.LOF method)</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.Device.__init__">(meegkit.phase.Device method)</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.ECHT.__init__">(meegkit.phase.ECHT method)</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.NonResOscillator.__init__">(meegkit.phase.NonResOscillator method)</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.ResOscillator.__init__">(meegkit.phase.ResOscillator method)</a>
+</li>
+        <li><a href="modules/meegkit.ress.html#meegkit.ress.RESS.__init__">(meegkit.ress.RESS method)</a>
+</li>
+        <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.__init__">(meegkit.trca.TRCA method)</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.AuditoryFilterbank.__init__">(meegkit.utils.auditory.AuditoryFilterbank method)</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.GammatoneFilterbank.__init__">(meegkit.utils.auditory.GammatoneFilterbank method)</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.__init__">(meegkit.utils.buffer.Buffer method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer._data">_data (meegkit.utils.buffer.Buffer attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="A">A</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.ASR">ASR (class in meegkit.asr)</a>
+</li>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.asr_calibrate">asr_calibrate() (in module meegkit.asr)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.asr_process">asr_process() (in module meegkit.asr)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.AuditoryFilterbank">AuditoryFilterbank (class in meegkit.utils.auditory)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="B">B</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.trca.bandpass">bandpass() (in module meegkit.utils.trca)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.block_covariance">block_covariance() (in module meegkit.utils.covariances)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.bootstrap_ci">bootstrap_ci() (in module meegkit.utils.stats)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.bootstrap_snr">bootstrap_snr() (in module meegkit.utils.stats)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer">Buffer (class in meegkit.utils.buffer)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="C">C</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.cca_crossvalidate">cca_crossvalidate() (in module meegkit.cca)</a>
+</li>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.classes">classes (meegkit.trca.TRCA attribute)</a>
+</li>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.clean_windows">clean_windows() (in module meegkit.asr)</a>
+</li>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.coef_">coef_ (meegkit.trca.TRCA attribute)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.compute_spectrogram">compute_spectrogram() (in module meegkit.utils.coherence)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.convmtx">convmtx() (in module meegkit.utils.covariances)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.counter">counter (meegkit.utils.buffer.Buffer attribute)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.cov_lags">cov_lags() (in module meegkit.utils.covariances)</a>
+</li>
+      <li><a href="modules/meegkit.detrend.html#meegkit.detrend.create_masked_weight">create_masked_weight() (in module meegkit.detrend)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.cronbach">cronbach() (in module meegkit.utils.stats)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.cross_coherence">cross_coherence() (in module meegkit.utils.coherence)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.denoise.demean">demean() (in module meegkit.utils.denoise)</a>
+</li>
+      <li><a href="modules/meegkit.detrend.html#meegkit.detrend.detrend">detrend() (in module meegkit.detrend)</a>
+</li>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.Device">Device (class in meegkit.phase)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.dss.html#meegkit.dss.dss0">dss0() (in module meegkit.dss)</a>
+</li>
+      <li><a href="modules/meegkit.dss.html#meegkit.dss.dss1">dss1() (in module meegkit.dss)</a>
+</li>
+      <li><a href="modules/meegkit.dss.html#meegkit.dss.dss_line">dss_line() (in module meegkit.dss)</a>
+</li>
+      <li><a href="modules/meegkit.dss.html#meegkit.dss.dss_line_iter">dss_line_iter() (in module meegkit.dss)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.ECHT">ECHT (class in meegkit.phase)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.erb2hz">erb2hz() (in module meegkit.utils.auditory)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.erb_bandwidth">erb_bandwidth() (in module meegkit.utils.auditory)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.erbspace">erbspace() (in module meegkit.utils.auditory)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="F">F</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.GammatoneFilterbank.filter">filter() (meegkit.utils.auditory.GammatoneFilterbank method)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.denoise.find_outlier_samples">find_outlier_samples() (in module meegkit.utils.denoise)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.denoise.find_outlier_trials">find_outlier_trials() (in module meegkit.utils.denoise)</a>
+</li>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.ASR.fit">fit() (meegkit.asr.ASR method)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.ECHT.fit">(meegkit.phase.ECHT method)</a>
+</li>
+        <li><a href="modules/meegkit.ress.html#meegkit.ress.RESS.fit">(meegkit.ress.RESS method)</a>
+</li>
+        <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.fit">(meegkit.trca.TRCA method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.ECHT.fit_transform">fit_transform() (meegkit.phase.ECHT method)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.ress.html#meegkit.ress.RESS.fit_transform">(meegkit.ress.RESS method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.fold">fold() (in module meegkit.utils.matrix)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.GammatoneFilterbank">GammatoneFilterbank (class in meegkit.utils.auditory)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.gaussfilt">gaussfilt() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.get_new_samples">get_new_samples() (meegkit.utils.buffer.Buffer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="H">H</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.head">head (meegkit.utils.buffer.Buffer property)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.hilbert_envelope">hilbert_envelope() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.auditory.hz2erb">hz2erb() (in module meegkit.utils.auditory)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="I">I</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.init_coefs">init_coefs() (in module meegkit.phase)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.Device.init_coefs">(meegkit.phase.Device method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.ress.html#meegkit.ress.RESS.inverse_transform">inverse_transform() (meegkit.ress.RESS method)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.trca.itr">itr() (in module meegkit.utils.trca)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.locking_based_phase">locking_based_phase() (in module meegkit.phase)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.lof.html#meegkit.lof.LOF">LOF (class in meegkit.lof)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.lowpass_env_filtering">lowpass_env_filtering() (in module meegkit.utils.sig)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="M">M</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.matmul3d">matmul3d() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.mcca">mcca() (in module meegkit.cca)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.denoise.mean_over_trials">mean_over_trials() (in module meegkit.utils.denoise)</a>
+</li>
+      <li>
+    meegkit.asr
+
+      <ul>
+        <li><a href="modules/meegkit.asr.html#module-meegkit.asr">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.cca
+
+      <ul>
+        <li><a href="modules/meegkit.cca.html#module-meegkit.cca">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.detrend
+
+      <ul>
+        <li><a href="modules/meegkit.detrend.html#module-meegkit.detrend">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.dss
+
+      <ul>
+        <li><a href="modules/meegkit.dss.html#module-meegkit.dss">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.lof
+
+      <ul>
+        <li><a href="modules/meegkit.lof.html#module-meegkit.lof">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.phase
+
+      <ul>
+        <li><a href="modules/meegkit.phase.html#module-meegkit.phase">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.ress
+
+      <ul>
+        <li><a href="modules/meegkit.ress.html#module-meegkit.ress">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.sns
+
+      <ul>
+        <li><a href="modules/meegkit.sns.html#module-meegkit.sns">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.star
+
+      <ul>
+        <li><a href="modules/meegkit.star.html#module-meegkit.star">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.trca
+
+      <ul>
+        <li><a href="modules/meegkit.trca.html#module-meegkit.trca">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.tspca
+
+      <ul>
+        <li><a href="modules/meegkit.tspca.html#module-meegkit.tspca">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.auditory
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.auditory">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.buffer
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.buffer">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.coherence
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.coherence">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.covariances
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.covariances">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    meegkit.utils.denoise
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.denoise">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.matrix
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.matrix">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.sig
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.sig">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.stats
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.stats">module</a>
+</li>
+      </ul></li>
+      <li>
+    meegkit.utils.trca
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.trca">module</a>
+</li>
+      </ul></li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.modulation_index">modulation_index() (in module meegkit.utils.sig)</a>
+</li>
+      <li>
+    module
+
+      <ul>
+        <li><a href="modules/meegkit.asr.html#module-meegkit.asr">meegkit.asr</a>
+</li>
+        <li><a href="modules/meegkit.cca.html#module-meegkit.cca">meegkit.cca</a>
+</li>
+        <li><a href="modules/meegkit.detrend.html#module-meegkit.detrend">meegkit.detrend</a>
+</li>
+        <li><a href="modules/meegkit.dss.html#module-meegkit.dss">meegkit.dss</a>
+</li>
+        <li><a href="modules/meegkit.lof.html#module-meegkit.lof">meegkit.lof</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#module-meegkit.phase">meegkit.phase</a>
+</li>
+        <li><a href="modules/meegkit.ress.html#module-meegkit.ress">meegkit.ress</a>
+</li>
+        <li><a href="modules/meegkit.sns.html#module-meegkit.sns">meegkit.sns</a>
+</li>
+        <li><a href="modules/meegkit.star.html#module-meegkit.star">meegkit.star</a>
+</li>
+        <li><a href="modules/meegkit.trca.html#module-meegkit.trca">meegkit.trca</a>
+</li>
+        <li><a href="modules/meegkit.tspca.html#module-meegkit.tspca">meegkit.tspca</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils">meegkit.utils</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.auditory">meegkit.utils.auditory</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.buffer">meegkit.utils.buffer</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.coherence">meegkit.utils.coherence</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.covariances">meegkit.utils.covariances</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.denoise">meegkit.utils.denoise</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.matrix">meegkit.utils.matrix</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.sig">meegkit.utils.sig</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.stats">meegkit.utils.stats</a>
+</li>
+        <li><a href="modules/meegkit.utils.html#module-meegkit.utils.trca">meegkit.utils.trca</a>
+</li>
+      </ul></li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.multishift">multishift() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.multismooth">multismooth() (in module meegkit.utils.matrix)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.n_bands">n_bands (meegkit.trca.TRCA attribute)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.n_channels">n_channels (meegkit.utils.buffer.Buffer attribute)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.nonlinear_eigenspace">nonlinear_eigenspace() (in module meegkit.utils.covariances)</a>
+</li>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.NonResOscillator">NonResOscillator (class in meegkit.phase)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.norm_spectrum">norm_spectrum() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.normcol">normcol() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.trca.normfit">normfit() (in module meegkit.utils.trca)</a>
+</li>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.nt_cca">nt_cca() (in module meegkit.cca)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="O">O</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.one_step_integrator">one_step_integrator() (in module meegkit.phase)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.one_step_oscillator">one_step_oscillator() (in module meegkit.phase)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="P">P</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.pca">pca() (in module meegkit.utils.covariances)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.plot_polycoherence">plot_polycoherence() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.plot_polycoherence_1d">plot_polycoherence_1d() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.plot_signal">plot_signal() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.polycoherence_0d">polycoherence_0d() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.polycoherence_1d">polycoherence_1d() (in module meegkit.utils.coherence)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.polycoherence_1d_sum">polycoherence_1d_sum() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.polycoherence_2d">polycoherence_2d() (in module meegkit.utils.coherence)</a>
+</li>
+      <li><a href="modules/meegkit.lof.html#meegkit.lof.LOF.predict">predict() (meegkit.lof.LOF method)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.predict">(meegkit.trca.TRCA method)</a>
+</li>
+      </ul></li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.prony">prony() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.push">push() (meegkit.utils.buffer.Buffer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="R">R</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.detrend.html#meegkit.detrend.reduce_ringing">reduce_ringing() (in module meegkit.detrend)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.regcov">regcov() (in module meegkit.utils.covariances)</a>
+</li>
+      <li><a href="modules/meegkit.detrend.html#meegkit.detrend.regress">regress() (in module meegkit.detrend)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.relshift">relshift() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.ASR.reset">reset() (meegkit.asr.ASR method)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.reset">(meegkit.utils.buffer.Buffer method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.ResOscillator">ResOscillator (class in meegkit.phase)</a>
+</li>
+      <li><a href="modules/meegkit.ress.html#meegkit.ress.RESS">RESS (class in meegkit.ress)</a>
+</li>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.rk">rk() (in module meegkit.phase)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.rms">rms() (in module meegkit.utils.stats)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.robust_mean">robust_mean() (in module meegkit.utils.stats)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.rolling_corr">rolling_corr() (in module meegkit.utils.stats)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.trca.round_half_up">round_half_up() (in module meegkit.utils.trca)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="S">S</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.trca.schaefer_strimmer_cov">schaefer_strimmer_cov() (in module meegkit.utils.trca)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.shift">shift() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.shiftnd">shiftnd() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.size">size (meegkit.utils.buffer.Buffer attribute)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.sliding_window">sliding_window() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.slope_sum">slope_sum() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.smooth">smooth() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.stats.snr_spectrum">snr_spectrum() (in module meegkit.utils.stats)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.sns.html#meegkit.sns.sns">sns() (in module meegkit.sns)</a>
+</li>
+      <li><a href="modules/meegkit.sns.html#meegkit.sns.sns0">sns0() (in module meegkit.sns)</a>
+</li>
+      <li><a href="modules/meegkit.sns.html#meegkit.sns.sns1">sns1() (in module meegkit.sns)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.spectral_envelope">spectral_envelope() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.star.html#meegkit.star.star">star() (in module meegkit.star)</a>
+</li>
+      <li><a href="modules/meegkit.phase.html#meegkit.phase.Device.step">step() (meegkit.phase.Device method)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.stmcb">stmcb() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.coherence.synthetic_signal">synthetic_signal() (in module meegkit.utils.coherence)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="T">T</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.tail">tail (meegkit.utils.buffer.Buffer property)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.sig.teager_kaiser">teager_kaiser() (in module meegkit.utils.sig)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.theshapeof">theshapeof() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.traindata">traindata (meegkit.trca.TRCA attribute)</a>
+</li>
+      <li><a href="modules/meegkit.asr.html#meegkit.asr.ASR.transform">transform() (meegkit.asr.ASR method)</a>
+
+      <ul>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.ECHT.transform">(meegkit.phase.ECHT method)</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.NonResOscillator.transform">(meegkit.phase.NonResOscillator method)</a>
+</li>
+        <li><a href="modules/meegkit.phase.html#meegkit.phase.ResOscillator.transform">(meegkit.phase.ResOscillator method)</a>
+</li>
+        <li><a href="modules/meegkit.ress.html#meegkit.ress.RESS.transform">(meegkit.ress.RESS method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA">TRCA (class in meegkit.trca)</a>
+</li>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.trca">trca() (in module meegkit.trca)</a>
+</li>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.trca_regul">trca_regul() (in module meegkit.trca)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.tscov">tscov() (in module meegkit.utils.covariances)</a>
+</li>
+      <li><a href="modules/meegkit.tspca.html#meegkit.tspca.tspca">tspca() (in module meegkit.tspca)</a>
+</li>
+      <li><a href="modules/meegkit.tspca.html#meegkit.tspca.tsr">tsr() (in module meegkit.tspca)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.covariances.tsxcov">tsxcov() (in module meegkit.utils.covariances)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.unfold">unfold() (in module meegkit.utils.matrix)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.unsqueeze">unsqueeze() (in module meegkit.utils.matrix)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="V">V</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.buffer.Buffer.view">view() (meegkit.utils.buffer.Buffer method)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="W">W</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.whiten">whiten() (in module meegkit.cca)</a>
+</li>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.whiten_nt">whiten_nt() (in module meegkit.cca)</a>
+</li>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.whiten_svd">whiten_svd() (in module meegkit.cca)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.cca.html#meegkit.cca.whiten_zca">whiten_zca() (in module meegkit.cca)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.matrix.widen_mask">widen_mask() (in module meegkit.utils.matrix)</a>
+</li>
+      <li><a href="modules/meegkit.utils.html#meegkit.utils.denoise.wpwr">wpwr() (in module meegkit.utils.denoise)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Y">Y</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="modules/meegkit.trca.html#meegkit.trca.TRCA.y_train">y_train (meegkit.trca.TRCA attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, Nicolas Barascud.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

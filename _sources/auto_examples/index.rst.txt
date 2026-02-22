@@ -1,0 +1,301 @@
+:orphan:
+
+Examples gallery
+================
+
+Below is a list of example scripts showing basic usage for most methods in
+MEEGkit.
+
+The examples can be browsed directly on `Github <https://github.com/nbara/python-meegkit/tree/master/examples>`_.
+
+
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Execute all notebooks in the `./examples directory.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_run_all_notebooks_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/run_all_notebooks`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Execute all notebooks in the `./examples directory.</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to subtract the impulse response from a filter to reduce ringing artifacts.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_dering_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_dering`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Ringing artifact reduction example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example is similar to test_nt_star.m in Noisetools. Results are equivalent (within numerical precision) to the Matlab code.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_star_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_star`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Sparse time artifact removal on simulated data</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to causally estimate the phase of a signal using the Endpoint-corrected Hilbert transform (ECHT) [1]_.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_echt_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_echt`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Endpoint-corrected Hilbert transform (ECHT) phase estimation</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find the linear combinations of multichannel data that maximize repeatability over trials.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">DSS example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Denoise data using Artifact Subspace Reconstruction.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_asr_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_asr`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">ASR example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find a spatial filter to get rid of line noise [1]_.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_dss_line_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_dss_line`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Remove line noise with ZapLine</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Some toy examples to showcase usage for meegkit.detrend module.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_detrend_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_detrend`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Robust detrending examples</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how one can effectively combine STAR and DSS to recover signal components which would not have been discoverable with either these two techniques alone, due to the presence of strong artifacts.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_star_dss_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_star_dss`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Example demonstrating STAR + DSS</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find a set of components which are shared between different datasets.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_mcca_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_mcca`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Multiway canonical correlation analysis (mCCA)</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Find the linear combinations of multichannel data that maximize the signal-to-noise ratio of the narrow-band steady-state response in the frequency domain.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_ress_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_ress`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Rhythmic Entrainment Source Separation (RESS) example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Reproduced from de Cheveigné et al. (2018).">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_mcca_2_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_mcca_2`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">mCCA example: Sinusoidal target in separable noise</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="This example shows how to causally estimate the phase of a signal using two oscillator models, as described in [1]_.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_phase_estimation_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_phase_estimation`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Causal phase estimation example</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Sample code for the task-related component analysis (TRCA)-based steady -state visual evoked potential (SSVEP) detection method [1]_. The filter bank analysis can also be combined to the TRCA-based algorithm [2]_ [3]_.">
+
+.. only:: html
+
+  .. image:: /auto_examples/images/thumb/sphx_glr_example_trca_thumb.png
+    :alt:
+
+  :doc:`/auto_examples/example_trca`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Task-related component analysis for SSVEP detection</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/run_all_notebooks
+   /auto_examples/example_dering
+   /auto_examples/example_star
+   /auto_examples/example_echt
+   /auto_examples/example_dss
+   /auto_examples/example_asr
+   /auto_examples/example_dss_line
+   /auto_examples/example_detrend
+   /auto_examples/example_star_dss
+   /auto_examples/example_mcca
+   /auto_examples/example_ress
+   /auto_examples/example_mcca_2
+   /auto_examples/example_phase_estimation
+   /auto_examples/example_trca
+
+
+.. only:: html
+
+  .. container:: sphx-glr-footer sphx-glr-footer-gallery
+
+    .. container:: sphx-glr-download sphx-glr-download-python
+
+      :download:`Download all examples in Python source code: auto_examples_python.zip </auto_examples/auto_examples_python.zip>`
+
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
+
+      :download:`Download all examples in Jupyter notebooks: auto_examples_jupyter.zip </auto_examples/auto_examples_jupyter.zip>`
+
+
+.. only:: html
+
+ .. rst-class:: sphx-glr-signature
+
+    `Gallery generated by Sphinx-Gallery <https://sphinx-gallery.github.io>`_
