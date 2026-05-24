@@ -510,5 +510,10 @@ def nonlinear_eigenspace(L, k, alpha=1):
     problem = Problem(manifold=manifold, cost=cost, euclidean_gradient=egrad,
                       euclidean_hessian=ehess)
     Xsol = solver.run(problem, initial_point=U0)
+    X = Xsol.point
 
-    return S0, Xsol.point
+    # Keep eigpairs consistent: compute each optimized vector's Rayleigh
+    # quotient against L instead of returning the random-init eigenvalues S0.
+    S = np.real(np.diag(X.T @ L @ X))
+
+    return S, X

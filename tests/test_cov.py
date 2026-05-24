@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_almost_equal
 
 from meegkit.utils import convmtx, tscov, tsxcov
@@ -97,6 +98,25 @@ def test_convmtx():
                   [0.,  0.,  0.,  0.,  0.,  1.,  2.],
                   [0.,  0.,  0.,  0.,  0.,  0.,  1.],
                   ])
+    )
+
+
+def test_nonlinear_eigenspace_consistent_eigpairs():
+    """Returned eigenvalues must match returned eigenvectors."""
+    pytest.importorskip("pymanopt")
+    from meegkit.utils.covariances import nonlinear_eigenspace
+
+    A = rng.standard_normal((6, 6))
+    L = A.T @ A + np.eye(6) * 1e-6
+
+    S, X = nonlinear_eigenspace(L, 6)
+    rayleigh = np.real(np.diag(X.T @ L @ X))
+
+    np.testing.assert_allclose(
+        np.sort(np.real(S)),
+        np.sort(rayleigh),
+        rtol=1e-3,
+        atol=1e-6,
     )
 
 if __name__ == "__main__":
