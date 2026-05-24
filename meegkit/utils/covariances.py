@@ -512,8 +512,13 @@ def nonlinear_eigenspace(L, k, alpha=1):
     Xsol = solver.run(problem, initial_point=U0)
     X = Xsol.point
 
-    # Keep eigpairs consistent: compute each optimized vector's Rayleigh
-    # quotient against L instead of returning the random-init eigenvalues S0.
-    S = np.real(np.diag(X.T @ L @ X))
+    # The Grassmann manifold only fixes the *subspace* spanned by X, so X carries
+    # an arbitrary internal rotation.  Diagonalise the k×k projected matrix to
+    # obtain proper Ritz pairs: after rotation, X.T @ L @ X is diagonal and each
+    # column of X is a genuine approximate eigenvector of L.
+    T = X.T @ L @ X
+    T = (T + T.T) / 2  # symmetrise against numerical noise
+    S, R = linalg.eigh(T)
+    X = X @ R
 
-    return S, X
+    return np.real(S), np.real(X)
