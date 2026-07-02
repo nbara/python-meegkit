@@ -339,12 +339,14 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     offsets = offsets.astype(int)
     logging.debug("[ASR] Determining channel-wise rejection thresholds")
 
+    # compute root mean squared amplitude (windowed sums via cumulative sum)
+    csum = np.zeros((nc, ns + 1))
+    np.cumsum(X ** 2, axis=1, out=csum[:, 1:])
+    rms = np.sqrt((csum[:, offsets + N] - csum[:, offsets]) / N)
+
     wz = np.zeros((nc, len(offsets)))
     for ichan in range(nc):
-
-        # compute root mean squared amplitude
-        x = X[ichan, :] ** 2
-        Y = np.array([np.sqrt(np.sum(x[o:o + N]) / N) for o in offsets])
+        Y = rms[ichan]
 
         # fit a distribution to the clean EEG part
         mu, sig, alpha, beta = fit_eeg_distribution(
@@ -513,20 +515,20 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     V = Vtmp[:, np.argsort(D)]
 
     # get the threshold matrix T
-    x = np.abs(np.dot(V.T, X))
+    xsq = np.dot(V.T, X) ** 2
     offsets = np.arange(0, ns - N, np.round(N * (1 - win_overlap))).astype(int)
+
+    # root mean squared amplitude per channel (windowed sums via cumulative sum)
+    csum = np.zeros((nc, ns + 1))
+    np.cumsum(xsq, axis=1, out=csum[:, 1:])
+    rms = np.sqrt((csum[:, offsets + N] - csum[:, offsets]) / N)
 
     # go through all the channels and fit the EEG distribution
     mu = np.zeros(nc)
     sig = np.zeros(nc)
     for ichan in reversed(range(nc)):
-        rms = x[ichan, :] ** 2
-        Y = []
-        for o in offsets:
-            Y.append(np.sqrt(np.sum(rms[o:o + N]) / N))
-
         mu[ichan], sig[ichan], alpha, beta = fit_eeg_distribution(
-            Y, min_clean_fraction, max_dropout_fraction)
+            rms[ichan], min_clean_fraction, max_dropout_fraction)
 
     T = np.dot(np.diag(mu + cutoff * sig), V.T)
     logging.debug("[ASR] Calibration done.")
