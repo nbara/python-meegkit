@@ -374,23 +374,13 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     removed_wins = np.where(remove_mask)[0]
 
     # reconstruct the samples to remove
-    sample_maskidx = []
-    for i, win in enumerate(removed_wins):
-        if i == 0:
-            sample_maskidx = np.arange(offsets[win], offsets[win] + N)
-        else:
-            sample_maskidx = np.r_[(sample_maskidx,
-                                    np.arange(offsets[win], offsets[win] + N))]
+    remove = np.zeros(ns, dtype=bool)
+    for win in removed_wins:
+        remove[offsets[win]:offsets[win] + N] = True
 
     # delete the bad chunks from the data
-    sample_mask2remove = np.unique(sample_maskidx)
-    if sample_mask2remove.size:
-        clean = np.delete(X, sample_mask2remove, axis=1)
-        sample_mask = np.ones((1, ns), dtype=bool)
-        sample_mask[0, sample_mask2remove] = False
-    else:
-        clean = X
-        sample_mask = np.ones((1, ns), dtype=bool)
+    sample_mask = ~remove[None, :]
+    clean = X[:, ~remove] if remove.any() else X
 
     if show:
         import matplotlib.pyplot as plt
