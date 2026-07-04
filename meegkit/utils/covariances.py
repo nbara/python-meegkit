@@ -33,7 +33,10 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
         Block covariance.
 
     """
-    from pyriemann.utils.covariance import check_function, cov_est_functions
+    try:  # pyriemann >= 0.11 moved covariance utils to geometry.covariance
+        from pyriemann.geometry.covariance import check_function, cov_est_functions
+    except ImportError:  # older pyriemann
+        from pyriemann.utils.covariance import check_function, cov_est_functions
 
     assert 0 <= overlap < 1, "overlap must be < 1"
     est = check_function(estimator, cov_est_functions)

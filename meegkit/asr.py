@@ -10,8 +10,13 @@ from .utils.asr import fit_eeg_distribution, geometric_median, yulewalk, yulewal
 
 try:
     import pyriemann
+    try:  # pyriemann >= 0.11 renamed mean_covariance to gmean
+        from pyriemann.geometry.mean import gmean as mean_covariance
+    except ImportError:  # older pyriemann
+        from pyriemann.utils.mean import mean_covariance
 except ImportError:
     pyriemann = None
+    mean_covariance = None
 
 
 class ASR:
@@ -506,7 +511,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         Uavg = geometric_median(U.reshape((-1, nc * nc)))
         Uavg = Uavg.reshape((nc, nc))
     else:  # method == 'riemann'
-        Uavg = pyriemann.utils.mean.mean_covariance(U, metric="riemann")
+        Uavg = mean_covariance(U, metric="riemann")
 
     # get the mixing matrix M
     M = linalg.sqrtm(np.real(Uavg))
@@ -584,7 +589,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
     cov = cov.squeeze()
     if cov.ndim == 3:
         if method == "riemann":
-            cov = pyriemann.utils.mean.mean_covariance(
+            cov = mean_covariance(
                 cov, metric="riemann", sample_weight=sample_weight)
         else:
             cov = geometric_median(cov.reshape((-1, nc * nc)))
