@@ -387,8 +387,9 @@ def geometric_median(X, tol=1e-5, max_iter=500):
         y = y1
         i += 1
     else:
-        print(f"Geometric median could converge in {i} iterations "
+        print(f"Geometric median could not converge in {i} iterations "
               f"with a tolerance of {tol}")
+        return y
 
 
 def polystab(a):
