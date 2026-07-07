@@ -2,21 +2,13 @@
 import logging
 
 import numpy as np
+import pyriemann
+from pyriemann.geometry.mean import gmean as mean_covariance
 from scipy import linalg, signal
 from statsmodels.robust.scale import mad
 
 from .utils import block_covariance, nonlinear_eigenspace
 from .utils.asr import fit_eeg_distribution, geometric_median, yulewalk, yulewalk_filter
-
-try:
-    import pyriemann
-    try:  # pyriemann >= 0.11 renamed mean_covariance to gmean
-        from pyriemann.geometry.mean import gmean as mean_covariance
-    except ImportError:  # older pyriemann
-        from pyriemann.utils.mean import mean_covariance
-except ImportError:
-    pyriemann = None
-    mean_covariance = None
 
 
 class ASR:
@@ -105,10 +97,6 @@ class ASR:
                  win_overlap=0.66, max_dropout_fraction=0.1,
                  min_clean_fraction=0.25, method="euclid", memory=None,
                  estimator="scm", **kwargs):
-
-        if pyriemann is None and method == "riemann":
-            logging.warning("Need pyriemann to use riemannian ASR flavor.")
-            method = "euclid"
 
         self.cutoff = cutoff
         self.blocksize = blocksize
