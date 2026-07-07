@@ -8,7 +8,7 @@
 
 # `MEEGkit`
 
-Denoising tools for M/EEG processing in Python 3.8+.
+Denoising tools for M/EEG processing in Python 3.10+.
 
 ![meegkit-ERP](https://user-images.githubusercontent.com/10333715/176754293-eaa35071-94f8-40dd-a487-9f8103c92571.png)
 
