@@ -1,5 +1,6 @@
 """Covariance calculation."""
 import numpy as np
+from pyriemann.geometry.covariance import covariances
 from scipy import linalg
 
 from .base import mldivide
@@ -33,11 +34,8 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
         Block covariance.
 
     """
-    from pyriemann.utils.covariance import check_function, cov_est_functions
-
     assert 0 <= overlap < 1, "overlap must be < 1"
-    est = check_function(estimator, cov_est_functions)
-    cov = []
+    blocks = []
     n_chans, n_samples = data.shape
     if padding:  # pad data with zeros
         pad = np.zeros((n_chans, int(window / 2)))
@@ -46,10 +44,10 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
     jump = int(window * overlap)
     ix = 0
     while (ix + window < n_samples):
-        cov.append(est(data[:, ix:ix + window]))
+        blocks.append(data[:, ix:ix + window])
         ix = ix + jump
 
-    return np.array(cov)
+    return covariances(np.array(blocks), estimator=estimator)
 
 
 def cov_lags(X, Y, shifts=None):

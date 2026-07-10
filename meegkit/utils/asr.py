@@ -103,9 +103,7 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
                      step_sizes[0])
     cols = np.round(n * cols).astype(int)
     rows = np.arange(0, int(np.round(n * max_width)))
-    newX = np.zeros((len(rows), len(cols)))
-    for i, c in enumerate(range(len(rows))):
-        newX[i] = X[c + cols]
+    newX = X[rows[:, None] + cols[None, :]]
 
     # subtract baseline value for each interval
     X1 = newX[0, :]
@@ -123,12 +121,13 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
         cols = nbins / newX[mcurr]
         H = newX[:m] * cols
 
-        hist_all = []
-        for ih in range(len(cols)):
-            histcurr = np.histogram(H[:, ih], bins=np.arange(0, nbins + 1))
-            hist_all.append(histcurr[0])
-        hist_all = np.array(hist_all, dtype=int).T
-        hist_all = np.vstack((hist_all, np.zeros(len(cols), dtype=int)))
+        # per-column histogram over integer bins [0, 1, ..., nbins]
+        ncol = H.shape[1]
+        binidx = np.minimum(H.astype(int), nbins - 1)
+        flat = binidx + np.arange(ncol) * nbins
+        hist_all = np.bincount(
+            flat.ravel(), minlength=nbins * ncol).reshape(ncol, nbins).T
+        hist_all = np.vstack((hist_all, np.zeros(ncol, dtype=int)))
         logq = np.log(hist_all + 0.01)
 
         # for each shape value...
