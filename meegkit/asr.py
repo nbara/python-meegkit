@@ -2,16 +2,13 @@
 import logging
 
 import numpy as np
+import pyriemann
+from pyriemann.geometry.mean import gmean as mean_covariance
 from scipy import linalg, signal
 from statsmodels.robust.scale import mad
 
 from .utils import block_covariance, nonlinear_eigenspace
 from .utils.asr import fit_eeg_distribution, geometric_median, yulewalk, yulewalk_filter
-
-try:
-    import pyriemann
-except ImportError:
-    pyriemann = None
 
 
 class ASR:
@@ -100,10 +97,6 @@ class ASR:
                  win_overlap=0.66, max_dropout_fraction=0.1,
                  min_clean_fraction=0.25, method="euclid", memory=None,
                  estimator="scm", **kwargs):
-
-        if pyriemann is None and method == "riemann":
-            logging.warning("Need pyriemann to use riemannian ASR flavor.")
-            method = "euclid"
 
         self.cutoff = cutoff
         self.blocksize = blocksize
@@ -506,7 +499,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         Uavg = geometric_median(U.reshape((-1, nc * nc)))
         Uavg = Uavg.reshape((nc, nc))
     else:  # method == 'riemann'
-        Uavg = pyriemann.utils.mean.mean_covariance(U, metric="riemann")
+        Uavg = mean_covariance(U, metric="riemann")
 
     # get the mixing matrix M
     M = linalg.sqrtm(np.real(Uavg))
@@ -584,7 +577,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
     cov = cov.squeeze()
     if cov.ndim == 3:
         if method == "riemann":
-            cov = pyriemann.utils.mean.mean_covariance(
+            cov = mean_covariance(
                 cov, metric="riemann", sample_weight=sample_weight)
         else:
             cov = geometric_median(cov.reshape((-1, nc * nc)))
