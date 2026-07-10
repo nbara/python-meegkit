@@ -4,7 +4,7 @@
 import numpy as np
 import scipy.linalg as linalg
 from pyriemann.estimation import Covariances
-from pyriemann.utils.mean import mean_covariance
+from pyriemann.geometry.mean import gmean as mean_covariance
 
 from .utils import theshapeof
 from .utils.trca import bandpass, schaefer_strimmer_cov
