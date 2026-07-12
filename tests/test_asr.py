@@ -418,6 +418,39 @@ def test_clean_windows_offset_phase_drift():
     assert abs(int(offsets_raw[-1]) - int(offsets_truncated[-1])) >= 10
 
 
+def test_fit_eeg_distribution_default_step_sizes():
+    """Default step_sizes matches the documented [0.01, 0.01].
+
+    The old default [0.022, 0.6] (copied from fit_quantiles) collapses the
+    grid search, so callers that omit step_sizes get a degenerate fit.
+    """
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+
+    # windowed-RMS vector for one channel, as asr_calibrate builds it
+    # internally (full recording so there are enough windows to matter)
+    N = int(np.round(0.5 * sfreq))
+    step = int(np.round(N * (1 - 0.66)))
+    x = raw[0]
+    offsets = np.arange(0, len(x) - N, step).astype(int)
+    csum = np.zeros(len(x) + 1)
+    np.cumsum(x ** 2, out=csum[1:])
+    rms = np.sqrt((csum[offsets + N] - csum[offsets]) / N)
+
+    mu_default, sig_default, _, _ = fit_eeg_distribution(rms)
+    mu_explicit, sig_explicit, _, _ = fit_eeg_distribution(
+        rms, step_sizes=[0.01, 0.01])
+
+    # default must match the documented [0.01, 0.01] grid
+    np.testing.assert_allclose(mu_default, mu_explicit, rtol=1e-9)
+    np.testing.assert_allclose(sig_default, sig_explicit, rtol=1e-9)
+
+    # the old [0.022, 0.6] default is degenerate -> materially different fit
+    mu_old, sig_old, _, _ = fit_eeg_distribution(rms, step_sizes=[0.022, 0.6])
+    assert not np.allclose(mu_old, mu_explicit, rtol=1e-9)
+    assert not np.allclose(sig_old, sig_explicit, rtol=1e-9)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
     # test_yulewalk(250, True)
