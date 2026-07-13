@@ -170,6 +170,50 @@ def test_round_half_away():
     np.testing.assert_array_equal(_round_half_away(ties), expected)
 
 
+def test_fit_eeg_distribution_flat_run():
+    """fit_eeg_distribution must not crash on a run of tied values."""
+    vec = np.r_[np.zeros(700), np.linspace(0, 1, 300)]
+    mu, sig, alpha, beta = fit_eeg_distribution(vec)
+    assert np.isfinite(mu)
+    assert np.isfinite(sig)
+    assert np.isfinite(alpha)
+    assert np.isfinite(beta)
+
+
+def test_fit_eeg_distribution_clean_data():
+    """fit_eeg_distribution result on clean data is unchanged."""
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+    train_idx = np.arange(5 * sfreq, 45 * sfreq, dtype=int)
+    X = raw[:, train_idx]
+
+    win_len, win_overlap = 0.5, 0.66
+    N = int(win_len * sfreq)
+    ns = X.shape[1]
+    offsets = np.round(
+        np.arange(0, ns - N, (N * (1 - win_overlap)))).astype(int)
+    csum = np.zeros((1, ns + 1))
+    np.cumsum(X[0:1] ** 2, axis=1, out=csum[:, 1:])
+    rms = np.sqrt((csum[:, offsets + N] - csum[:, offsets]) / N)[0]
+
+    mu, sig, alpha, beta = fit_eeg_distribution(rms)
+    assert np.isfinite(mu) and np.isfinite(sig)
+    expected = (8.001450519084575, 0.5339755761243605, 0.8942468424981882, 3.35)
+    np.testing.assert_allclose((mu, sig, alpha, beta), expected)
+
+
+def test_asr_fit_dead_channel():
+    """ASR.fit must not crash when a channel is flatlined."""
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+    train_idx = np.arange(5 * sfreq, 45 * sfreq, dtype=int)
+    X = raw[:, train_idx].copy()
+    X[0] = 0.0  # dead channel
+
+    asr = ASR(sfreq=sfreq)
+    asr.fit(X)
+
+
 def test_asr_functions(show=False, method="riemann"):
     """Test ASR functions (offline use).
 
