@@ -10,6 +10,7 @@ from scipy import signal
 
 from meegkit.asr import ASR, asr_calibrate, asr_process, clean_windows
 from meegkit.utils.asr import SHAPE_RANGE, fit_eeg_distribution, yulewalk, yulewalk_filter
+from meegkit.utils.covariances import block_covariance
 from meegkit.utils.matrix import sliding_window
 
 # Data files
@@ -449,6 +450,82 @@ def test_fit_eeg_distribution_default_step_sizes():
     mu_old, sig_old, _, _ = fit_eeg_distribution(rms, step_sizes=[0.022, 0.6])
     assert not np.allclose(mu_old, mu_explicit, rtol=1e-9)
     assert not np.allclose(sig_old, sig_explicit, rtol=1e-9)
+
+
+def test_block_covariance_uncentered_scm():
+    """scm blocks use the uncentered second moment, not the mean-subtracted cov.
+
+    A large per-channel DC offset makes the two estimates diverge strongly.
+    """
+    W = 50
+    data = rng.standard_normal((4, 250)) + np.arange(1, 5)[:, None] * 100.0
+
+    cov = block_covariance(data, window=W, overlap=0.5, padding=False,
+                           estimator="scm")
+
+    # Reference: same block start indices the function uses.
+    jump = max(int(round(W * (1 - 0.5))), 1)
+    n_samples = data.shape[1]
+    ref, centered = [], []
+    ix = 0
+    while ix + W < n_samples:
+        B = data[:, ix:ix + W]
+        ref.append(B @ B.T / W)          # uncentered second moment
+        centered.append(np.cov(B, bias=True))  # mean-subtracted
+        ix += jump
+    ref = np.array(ref)
+    centered = np.array(centered)
+
+    assert cov.shape == ref.shape
+    assert np.allclose(cov, ref, rtol=1e-10)
+    # Must NOT be the centered (mean-subtracted) version.
+    assert not np.allclose(cov, centered)
+
+
+def test_block_covariance_overlap_semantics():
+    """Higher overlap yields more blocks."""
+    W = 50
+    data = rng.standard_normal((4, 500))
+    n_hi = block_covariance(data, window=W, overlap=0.8).shape[0]
+    n_lo = block_covariance(data, window=W, overlap=0.2).shape[0]
+    assert n_hi > n_lo
+
+
+def test_block_covariance_padding_bound():
+    """Padding adds blocks (loop bound uses the padded length)."""
+    W = 100
+    data = rng.standard_normal((8, 300))
+    n_pad = block_covariance(data, window=W, overlap=0.5, padding=True).shape[0]
+    n_nopad = block_covariance(data, window=W, overlap=0.5,
+                               padding=False).shape[0]
+    assert n_pad > n_nopad
+
+
+def test_block_covariance_empty_guard():
+    """A window too large for the data raises a clear error."""
+    data = rng.standard_normal((4, 30))
+    with pytest.raises(ValueError, match="too large"):
+        block_covariance(data, window=100, padding=False)
+
+
+def test_block_covariance_no_hang_and_float_window():
+    """Zero-overlap does not hang and float windows are accepted."""
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+    X_small = raw[:, 5 * sfreq:15 * sfreq]  # 8 chans x 10 s
+
+    # win_overlap=0.0 previously looped forever (jump=0)
+    asr = ASR(sfreq=sfreq, win_overlap=0.0)
+    asr.fit(X_small)
+    M = asr.state_["M"]
+    T = asr.state_["T"]
+    assert np.isfinite(M).all()
+    assert np.isfinite(T).all()
+
+    # Float window must not break slicing (int-cast).
+    cov = block_covariance(X_small, window=100.0, overlap=0.5,
+                           estimator="scm")
+    assert np.isfinite(cov).all()
 
 
 if __name__ == "__main__":

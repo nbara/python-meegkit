@@ -24,7 +24,7 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
     window : int
         Window size.
     overlap : float
-        Overlap between successive windows.
+        Fraction of overlap between successive windows (higher = more overlap).
 
     Returns
     -------
@@ -33,19 +33,30 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
 
     """
     assert 0 <= overlap < 1, "overlap must be < 1"
+    window = int(window)  # window may be fractional
     blocks = []
     n_chans, n_samples = data.shape
     if padding:  # pad data with zeros
-        pad = np.zeros((n_chans, int(window / 2)))
+        pad = np.zeros((n_chans, window // 2))
         data = np.concatenate((pad, data, pad), axis=1)
+        n_samples = data.shape[1]  # bound against the padded length
 
-    jump = int(window * overlap)
+    jump = max(int(round(window * (1 - overlap))), 1)  # >= 1 so overlap=0 advances
     ix = 0
-    while (ix + window < n_samples):
+    while ix + window < n_samples:
         blocks.append(data[:, ix:ix + window])
-        ix = ix + jump
+        ix += jump
 
-    return covariances(np.array(blocks), estimator=estimator)
+    if len(blocks) == 0:
+        raise ValueError(
+            "block_covariance: window is too large for the given data "
+            "(no complete blocks).")
+
+    blocks = np.array(blocks)
+    if estimator == "scm":
+        # uncentered second moment E[x x.T] per block (not mean-subtracted)
+        return blocks @ blocks.transpose(0, 2, 1) / window
+    return covariances(blocks, estimator=estimator)
 
 
 def cov_lags(X, Y, shifts=None):
