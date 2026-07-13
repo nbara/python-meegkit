@@ -2,8 +2,19 @@ import numpy as np
 from numpy.testing import assert_almost_equal
 
 from meegkit.utils import convmtx, tscov, tsxcov
+from meegkit.utils.covariances import nonlinear_eigenspace
 
 rng = np.random.default_rng(10)
+
+
+def test_nonlinear_eigenspace_reproducible():
+    """nonlinear_eigenspace returns identical results across calls."""
+    A = rng.standard_normal((6, 6))
+    L = A @ A.T + np.eye(6)
+    d1, v1 = nonlinear_eigenspace(L, 6)
+    d2, v2 = nonlinear_eigenspace(L, 6)
+    np.testing.assert_array_equal(np.real(d1), np.real(d2))
+    np.testing.assert_array_equal(v1, v2)
 
 def test_tscov():
     """Test time-shift covariance."""

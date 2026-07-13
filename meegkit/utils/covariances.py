@@ -13,8 +13,6 @@ from .matrix import (
     unsqueeze,
 )
 
-rng = np.random.default_rng()
-
 
 def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov"):
     """Compute blockwise covariance.
@@ -486,9 +484,9 @@ def nonlinear_eigenspace(L, k, alpha=1):
             alpha * np.diagflat(mldivide(L, rhoX)) @ U
         return h
 
-    # Initialization as suggested in above referenced paper.
-    # randomly generate starting point for svd
-    x = rng.standard_normal((n, k))
+    # Initialization as suggested in above referenced paper. Use a fixed seed
+    # so results are reproducible (the starting point only affects convergence).
+    x = np.random.default_rng(1468432035).standard_normal((n, k))
     [U, S, V] = linalg.svd(x, full_matrices=False)
     x = U.dot(V.T)
     S0, U0 = linalg.eig(
