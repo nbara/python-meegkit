@@ -417,6 +417,15 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     return clean, sample_mask
 
 
+def _rms_window_offsets(ns, N, win_overlap):
+    """Window start indices for windowed RMS.
+
+    Rounds each window START (not the step), matching ``clean_windows`` and
+    avoiding phase drift when ``N * (1 - win_overlap)`` is non-integer.
+    """
+    return np.round(np.arange(0, ns - N, N * (1 - win_overlap))).astype(int)
+
+
 def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
                   win_overlap=0.66, max_dropout_fraction=0.1,
                   min_clean_fraction=0.25, method="euclid", estimator="scm"):
@@ -524,7 +533,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
 
     # get the threshold matrix T
     xsq = np.dot(V.T, X) ** 2
-    offsets = np.arange(0, ns - N, np.round(N * (1 - win_overlap))).astype(int)
+    offsets = _rms_window_offsets(ns, N, win_overlap)
     if len(offsets) < 2:
         raise ValueError(
             f"Only {len(offsets)} window(s) available for threshold "
@@ -604,7 +613,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
             cov = geometric_median(cov.reshape((-1, nc * nc)))
             cov = cov.reshape((nc, nc))
 
-    maxdims = int(np.fix(0.66 * nc))  # constant TODO make param
+    maxdims = int(np.floor(0.66 * nc + 0.5))  # constant TODO make param
 
     # do a PCA to find potential artifacts
     if method == "riemann":
@@ -618,7 +627,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
     # determine which components to keep (variance below directional threshold
     # or not admissible for rejection)
     keep = (D < np.sum(np.dot(T, V)**2, axis=0))
-    keep += (np.arange(nc) < nc - maxdims)
+    keep += (np.arange(nc) < nc - maxdims - 1)
 
     # update the reconstruction matrix R (reconstruct artifact components using
     # the mixing matrix)
@@ -632,7 +641,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
     if state["R"] is not None:
         # apply the reconstruction to intermediate samples (using raised-cosine
         # blending)
-        blend = (1 - np.cos(np.pi * np.arange(ns) / ns)) / 2
+        blend = (1 - np.cos(np.pi * np.arange(1, ns + 1) / ns)) / 2
         clean = blend * R.dot(X) + (1 - blend) * state["R"].dot(X)
     else:
         clean = R.dot(X)
