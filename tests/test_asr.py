@@ -8,7 +8,7 @@ import numpy as np
 import pytest
 from scipy import signal
 
-from meegkit.asr import ASR, asr_calibrate, asr_process, clean_windows
+from meegkit.asr import ASR, _round_half_away, asr_calibrate, asr_process, clean_windows
 from meegkit.utils.asr import SHAPE_RANGE, fit_eeg_distribution, yulewalk, yulewalk_filter
 from meegkit.utils.covariances import block_covariance
 from meegkit.utils.matrix import sliding_window
@@ -140,6 +140,34 @@ def test_yulewalk_filter(n_chans, show=False):
         plt.subplots_adjust(hspace=0, right=0.75)
         plt.suptitle("Before/after filter")
         plt.show()
+
+
+def test_round_half_away():
+    """_round_half_away rounds ties away from zero, unlike numpy's banker's rounding."""
+    # exact-half (tie) behavior: rounds away from zero
+    assert _round_half_away(2.5) == 3
+    assert _round_half_away(128.5) == 129
+    assert _round_half_away(-2.5) == -3
+    assert _round_half_away(0.5) == 1
+    assert _round_half_away(1.5) == 2  # np.round gives 2 here too (even)
+
+    # divergence from banker's rounding on ties
+    assert _round_half_away(2.5) != np.round(2.5)      # 3 != 2
+    assert _round_half_away(128.5) != np.round(128.5)  # 129 != 128
+
+    # non-tie values round normally
+    assert _round_half_away(2.4) == 2
+    assert _round_half_away(2.6) == 3
+    assert _round_half_away(-2.6) == -3
+
+    # int() of the result is exact for scalars
+    assert int(_round_half_away(2.5)) == 3
+    assert int(_round_half_away(-2.5)) == -3
+
+    # array input
+    ties = np.array([2.5, 128.5, -2.5, 0.5, 1.5])
+    expected = np.array([3, 129, -3, 1, 2])
+    np.testing.assert_array_equal(_round_half_away(ties), expected)
 
 
 def test_asr_functions(show=False, method="riemann"):
