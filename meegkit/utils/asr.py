@@ -333,11 +333,11 @@ def yulewalk_filter(X, sfreq, zi=None, ab=None, axis=-1):
     return out, zf
 
 
-def geometric_median(X, tol=1e-5, max_iter=500):
+def geometric_median(X, tol=1e-5, max_iter=500, sample_weight=None):
     """Geometric median.
 
-    This code is adapted from [2]_ using the Vardi and Zhang algorithm
-    described in [1]_.
+    This code is adapted from [2]_ using the (optionally weighted) Vardi and
+    Zhang algorithm described in [1]_.
 
     Parameters
     ----------
@@ -347,6 +347,10 @@ def geometric_median(X, tol=1e-5, max_iter=500):
         Tolerance (default=1.e-5)
     max_iter : int
         Max number of iterations (default=500):
+    sample_weight : array, shape=(n_observations,) | None
+        Per-observation weights (``eta_i`` in the Vardi-Zhang notation). If
+        None (default), every observation is weighted equally and the
+        iteration reduces exactly to the unweighted geometric median.
 
     Returns
     -------
@@ -360,27 +364,33 @@ def geometric_median(X, tol=1e-5, max_iter=500):
        97(4), 1423-1426. https://doi.org/10.1073/pnas.97.4.1423
     .. [2] https://stackoverflow.com/questions/30299267/
     """
-    y = np.mean(X, 0)  # initial value
+    if sample_weight is None:
+        w = np.ones(len(X))
+    else:
+        w = np.asarray(sample_weight, dtype=float)
+
+    y = np.average(X, axis=0, weights=w)  # initial value
 
     i = 0
     while i < max_iter:
         D = cdist(X, [y])
         nonzeros = (D != 0)[:, 0]
 
-        Dinv = 1. / D[nonzeros]
+        Dinv = w[nonzeros][:, None] / D[nonzeros]
         Dinvs = np.sum(Dinv)
         W = Dinv / Dinvs
         T = np.sum(W * X[nonzeros], 0)
 
-        num_zeros = len(X) - np.sum(nonzeros)
-        if num_zeros == 0:
+        # weight mass of observations coincident with the current estimate
+        eta = np.sum(w[~nonzeros])
+        if eta == 0:
             y1 = T
-        elif num_zeros == len(X):
+        elif not nonzeros.any():
             return y
         else:
             R = (T - y) * Dinvs
             r = np.linalg.norm(R)
-            rinv = 0 if r == 0 else num_zeros / r
+            rinv = 0 if r == 0 else eta / r
             y1 = max(0, 1 - rinv) * T + min(1, rinv) * y
 
         if euclidean(y, y1) < tol:

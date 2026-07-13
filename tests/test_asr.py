@@ -600,6 +600,70 @@ def test_rms_window_offsets_rounds_each_start():
         offsets[:7], np.array([0, 42, 85, 127, 170, 212, 255]))
 
 
+def test_geometric_median_weighted():
+    """Weighted geometric median: uniform weights match the unweighted result, heavy weights bias toward the point."""
+    from meegkit.utils.asr import geometric_median
+    X = rng.standard_normal((5, 3))
+
+    # (a) uniform weights == default (unweighted) result
+    gm_u = geometric_median(X)
+    gm_ones = geometric_median(X, sample_weight=np.ones(5))
+    assert np.allclose(gm_u, gm_ones)
+
+    # (b) heavily weighting one point pulls the median toward that point
+    gm_w = geometric_median(X, sample_weight=[1., 1., 1., 1., 100.])
+    assert np.linalg.norm(gm_w - X[4]) < np.linalg.norm(gm_u - X[4])
+    assert not np.allclose(gm_u, gm_w)
+
+
+def test_asr_process_euclid_uses_weights():
+    """euclid asr_process forwards sample_weight to geometric_median."""
+    nc, ns = 4, 50
+    # two clearly distinct covariance blocks
+    B1 = rng.standard_normal((nc, ns))
+    B2 = 3 * rng.standard_normal((nc, ns)) + 1
+    covs = np.stack([B1 @ B1.T / ns, B2 @ B2.T / ns])  # (2, nc, nc)
+
+    X = rng.standard_normal((nc, ns))
+    T = 0.1 * np.eye(nc)
+
+    def run(weights):
+        state = dict(M=np.eye(nc), T=T, R=None)
+        with patch(
+            "meegkit.asr.geometric_median",
+            side_effect=lambda arr, sample_weight=None: np.average(
+                arr, axis=0, weights=sample_weight),
+        ) as gm:
+            out, _ = asr_process(X, X, state, cov=covs, method="euclid",
+                                 sample_weight=weights)
+            forwarded = gm.call_args.kwargs["sample_weight"]
+            np.testing.assert_allclose(forwarded, weights)
+        return out
+
+    out_a = run([1., 1.])
+    out_b = run([0.05, 1.])
+    assert out_a.shape == out_b.shape
+
+
+def test_recency_weights_suffix_sum():
+    """Online recency weights use suffix (not prefix) sums."""
+    from meegkit.asr import _recency_weights
+    sw = np.geomspace(0.05, 1, 201)
+    counter = [5, 10, 60, 100]  # sum 175 < 200, ordered oldest->newest
+
+    # samples strictly newer than each block: [170, 160, 100, 0]
+    new = _recency_weights(counter, sw)
+    expected = [sw[-171], sw[-161], sw[-101], sw[-1]]
+    assert np.allclose(new, expected)
+    assert new[-1] == 1.0  # most-recent block keeps weight 1
+
+    # the old prefix-sum vector differs on interior blocks
+    old = [1.]
+    for c in np.cumsum(counter[1:]):
+        old = [sw[-c]] + old
+    assert not np.allclose(new, old)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
     # test_yulewalk(250, True)
