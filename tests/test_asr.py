@@ -276,6 +276,29 @@ def test_asr_class(method, reref, show=False):
     ASR(sfreq=125)
     ASR(Sfreq=150)
 
+
+def test_asr_calibrate_nonfinite_input():
+    """Non-finite calibration samples must not silently yield NaN M/T."""
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+    train_idx = np.arange(5 * sfreq, 45 * sfreq, dtype=int)
+    X = raw[:, train_idx].copy()
+    X[0, 100] = np.nan
+    X[0, 200] = np.inf
+
+    M, T = asr_calibrate(X, sfreq)
+
+    assert np.all(np.isfinite(M))
+    assert np.all(np.isfinite(T))
+
+
+def test_asr_calibrate_too_short():
+    """Calibration data shorter than one analysis window should raise."""
+    X_short = rng.standard_normal((8, 50))  # N = round(0.5 * 250) = 125
+    with pytest.raises(ValueError, match="shorter than one analysis window"):
+        asr_calibrate(X_short, 250)
+
+
 if __name__ == "__main__":
     pytest.main([__file__])
     # test_yulewalk(250, True)

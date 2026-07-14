@@ -479,11 +479,18 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     # set number of channels and number of samples
     [nc, ns] = X.shape
 
+    # avoid propagating non-finite samples into the filter and thresholds
+    X = np.where(np.isfinite(X), X, 0.0)
+
     # filter the data
     X, _zf = yulewalk_filter(X, sfreq, ab=None)
 
     # window length for calculating thresholds
     N = int(np.round(win_len * sfreq))
+    if ns < N:
+        raise ValueError(
+            f"Calibration data has {ns} samples, shorter than one analysis "
+            f"window of {N} samples (win_len={win_len} at sfreq={sfreq}).")
 
     U = block_covariance(X, window=blocksize, overlap=win_overlap,
                          estimator=estimator)
@@ -502,6 +509,11 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     # get the threshold matrix T
     xsq = np.dot(V.T, X) ** 2
     offsets = np.arange(0, ns - N, np.round(N * (1 - win_overlap))).astype(int)
+    if len(offsets) < 2:
+        raise ValueError(
+            f"Only {len(offsets)} window(s) available for threshold "
+            "estimation; at least 2 are required. Provide more calibration "
+            "data.")
 
     # root mean squared amplitude per channel (windowed sums via cumulative sum)
     csum = np.zeros((nc, ns + 1))
