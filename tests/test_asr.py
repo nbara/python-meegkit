@@ -1,4 +1,5 @@
 """ASR test."""
+import inspect
 import os
 
 import matplotlib.pyplot as plt
@@ -20,6 +21,23 @@ THIS_FOLDER = os.path.dirname(os.path.abspath(__file__))
 # raw.pick_types(eeg=True, misc=False)
 # raw = raw._data
 rng = np.random.default_rng(9)
+
+
+@pytest.mark.parametrize("obj", (ASR, clean_windows, asr_calibrate, asr_process))
+def test_docstring_parameters(obj):
+    """Documented parameters must match the signature (no stray prose)."""
+    docscrape = pytest.importorskip("numpydoc.docscrape")
+    doc = docscrape.ClassDoc(obj) if inspect.isclass(obj) else docscrape.FunctionDoc(obj)
+    documented = {p.name for p in doc["Parameters"]}
+    signature = set(inspect.signature(obj).parameters)
+    assert documented <= signature, documented - signature
+
+
+def test_docstring_attributes():
+    """ASR attribute names must not carry literal RST markup."""
+    docscrape = pytest.importorskip("numpydoc.docscrape")
+    for attr in docscrape.ClassDoc(ASR)["Attributes"]:
+        assert "`" not in attr.name, attr.name
 
 
 @pytest.mark.parametrize(argnames="sfreq", argvalues=(125, 250, 256, 2048))

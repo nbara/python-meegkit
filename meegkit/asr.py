@@ -24,7 +24,7 @@ class ASR:
     ----------
     sfreq : float
         Sampling rate of the data, in Hz.
-    cutoff: float
+    cutoff : float
         Standard deviation cutoff for rejection. X portions whose variance
         is larger than this threshold relative to the calibration data are
         considered missing data and will be removed. The most aggressive value
@@ -63,18 +63,18 @@ class ASR:
 
     Attributes
     ----------
-    ``zi_``: array, shape=(n_channels, filter_order)
+    zi_ : array, shape=(n_channels, filter_order)
         Filter initial conditions.
-    ``ab_``: 2-tuple
+    ab_ : 2-tuple
         Coefficients of an IIR filter that is used to shape the spectrum of the
         signal when calculating artifact statistics. The output signal does not
         go through this filter. This is an optional way to tune the sensitivity
         of the algorithm to each frequency component of the signal. The default
         filter is less sensitive at alpha and beta frequencies and more
         sensitive at delta (blinks) and gamma (muscle) frequencies.
-    ``cov_`` : array, shape=(channels, channels)
+    cov_ : array, shape=(channels, channels)
         Previous covariance matrix.
-    ``state_`` : dict
+    state_ : dict
         Previous ASR parameters (as derived by :func:`asr_calibrate`) for
         successive calls to :meth:`transform`. Required fields are:
 
@@ -286,11 +286,6 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
         a channel must lie (relative to a robust estimate of the clean EEG
         power distribution in the channel) for it to be considered "not bad".
         (default=[-3.5, 5]).
-
-    The following are detail parameters that usually do not have to be tuned.
-    If you can't get the function to do what you want, you might consider
-    adapting these to your data.
-
     win_len : float
         Window length that is used to check the data for artifact content.
         This is ideally as long as the expected time scale of the artifacts
@@ -315,6 +310,13 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
         Dataset with bad time periods removed.
     sample_mask : boolean array, shape=(1, n_samples)
         Mask of retained samples (logical array).
+
+    Notes
+    -----
+    ``win_len``, ``win_overlap``, ``min_clean_fraction`` and
+    ``max_dropout_fraction`` are detail parameters that usually do not have to
+    be tuned. If you can't get the function to do what you want, you might
+    consider adapting these to your data.
 
     """
     assert 0 < max_bad_chans < 1, "max_bad_chans must be a fraction !"
@@ -432,7 +434,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         or more).
     sfreq : float
         Sampling rate of the data, in Hz.
-    cutoff: float
+    cutoff : float
         Standard deviation cutoff for rejection. X portions whose variance is
         larger than this threshold relative to the calibration data are
         considered missing data and will be removed. The most aggressive value
