@@ -189,6 +189,29 @@ def test_asr_functions(show=False, method="riemann"):
         plt.show()
 
 
+@pytest.mark.parametrize(argnames="zthresholds", argvalues=([1, 2], [-5, -1]))
+def test_clean_windows_one_sided_zthresholds(zthresholds):
+    """Test clean_windows with a one-sided zthresholds.
+
+    Regression test: when zthresholds does not straddle 0 (i.e. both bounds
+    are positive, or both are negative), only one of the two rejection-mask
+    branches in clean_windows runs. The other mask must still be defined
+    (as an all-False "reject nothing" default) so that combining the masks
+    does not raise UnboundLocalError.
+    """
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+    # Use a short slice for speed; still exercises the mask logic.
+    X = raw[:, :10 * sfreq]
+
+    clean, sample_mask = clean_windows(X, sfreq, zthresholds=zthresholds)
+
+    assert clean.shape[0] == X.shape[0]
+    assert clean.shape[1] <= X.shape[1]
+    assert sample_mask.shape == (1, X.shape[1])
+    assert sample_mask.dtype == bool
+
+
 @pytest.mark.parametrize(argnames="method", argvalues=("riemann", "euclid"))
 @pytest.mark.parametrize(argnames="reref", argvalues=(False, True))
 def test_asr_class(method, reref, show=False):
