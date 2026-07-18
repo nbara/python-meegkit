@@ -50,6 +50,10 @@ class ASR:
         Window overlap fraction. The fraction of two successive windows that
         overlaps. Higher overlap ensures that fewer artifact portions are going
         to be missed, but is slower (default=0.66).
+    max_bad_chans : float
+        The maximum number or fraction of bad channels that a retained window
+        may still contain (more than this and it is removed) during
+        calibration window selection (default=0.3).
     max_dropout_fraction : float
         Maximum fraction of windows that can be subject to signal dropouts
         (e.g., sensor unplugged), used for threshold estimation (default=0.1).
@@ -100,7 +104,8 @@ class ASR:
     """
 
     def __init__(self, *, sfreq=250, cutoff=5, blocksize=100, win_len=0.5,
-                 win_overlap=0.66, max_dropout_fraction=0.1,
+                 win_overlap=0.66, max_bad_chans=0.3,
+                 max_dropout_fraction=0.1,
                  min_clean_fraction=0.25, method="euclid", memory=None,
                  estimator="scm", **kwargs):
 
@@ -110,7 +115,7 @@ class ASR:
         self.win_overlap = win_overlap
         self.max_dropout_fraction = max_dropout_fraction
         self.min_clean_fraction = min_clean_fraction
-        self.max_bad_chans = 0.3
+        self.max_bad_chans = max_bad_chans
         self.method = method
         if memory is None:
             self.memory = int(2 * sfreq)  # smoothing window for covariances
@@ -296,7 +301,7 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
         Window length that is used to check the data for artifact content.
         This is ideally as long as the expected time scale of the artifacts
         but not shorter than half a cycle of the high-pass filter that was
-        used. Default: 1.
+        used. Default: 0.5.
     win_overlap : float
         Window overlap fraction. The fraction of two successive windows that
         overlaps. Higher overlap ensures that fewer artifact portions are
@@ -336,7 +341,8 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     # set data indices
     [nc, ns] = X.shape
     N = int(win_len * sfreq)
-    offsets = np.round(np.arange(0, ns - N, (N * (1 - win_overlap))))
+    N_raw = win_len * sfreq  # non-truncated N, avoids step-size phase drift
+    offsets = np.round(np.arange(0, ns - N, N_raw * (1 - win_overlap)))
     offsets = offsets.astype(int)
     logging.debug("[ASR] Determining channel-wise rejection thresholds")
 
@@ -361,11 +367,15 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     swz = np.sort(wz, axis=0)
 
     # determine which windows to remove
+    mask1 = np.zeros(len(offsets), dtype=bool)
+    mask2 = np.zeros(len(offsets), dtype=bool)
     if np.max(zthresholds) > 0:
         mask1 = swz[-(int(max_bad_chans) + 1), :] > np.max(zthresholds)
     if np.min(zthresholds) < 0:
         mask2 = (swz[1 + int(max_bad_chans - 1), :] < np.min(zthresholds))
 
+    # extra meegkit-specific criterion: drop windows whose across-channel
+    # z-scores are nearly flat (very low MAD or std)
     bad_by_mad = mad(wz, c=1, axis=0) < .1
     bad_by_std = np.std(wz, axis=0) < .1
     mask3 = np.logical_or(bad_by_mad, bad_by_std)
@@ -485,11 +495,18 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     # set number of channels and number of samples
     [nc, ns] = X.shape
 
+    # avoid propagating non-finite samples into the filter and thresholds
+    X = np.where(np.isfinite(X), X, 0.0)
+
     # filter the data
     X, _zf = yulewalk_filter(X, sfreq, ab=None)
 
     # window length for calculating thresholds
     N = int(np.round(win_len * sfreq))
+    if ns < N:
+        raise ValueError(
+            f"Calibration data has {ns} samples, shorter than one analysis "
+            f"window of {N} samples (win_len={win_len} at sfreq={sfreq}).")
 
     U = block_covariance(X, window=blocksize, overlap=win_overlap,
                          estimator=estimator)
@@ -508,6 +525,11 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     # get the threshold matrix T
     xsq = np.dot(V.T, X) ** 2
     offsets = np.arange(0, ns - N, np.round(N * (1 - win_overlap))).astype(int)
+    if len(offsets) < 2:
+        raise ValueError(
+            f"Only {len(offsets)} window(s) available for threshold "
+            "estimation; at least 2 are required. Provide more calibration "
+            "data.")
 
     # root mean squared amplitude per channel (windowed sums via cumulative sum)
     csum = np.zeros((nc, ns + 1))
@@ -564,7 +586,7 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
         Output ASR parameters.
 
     """
-    M, T, R = state.values()
+    M, T, R = state["M"], state["T"], state["R"]
     [nc, ns] = X.shape
 
     if cov is None:

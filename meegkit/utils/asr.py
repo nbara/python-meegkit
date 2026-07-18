@@ -38,16 +38,17 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
 
     Parameters
     ----------
-    X : array, shape=(n_channels, n_samples)
-        EEG data, possibly containing artifacts.
+    X : array, shape=(n_samples,)
+        1-D vector of amplitude values (e.g., per-window RMS), possibly
+        containing artifacts.
     min_clean_fraction : float
         Minimum fraction that needs to be clean. This is the minimum fraction
         of time windows that need to contain essentially uncontaminated EEG
-        (default=0.1).
+        (default=0.25).
     max_dropout_fraction : float
         Maximum fraction that can have dropouts. This is the maximum fraction
         of time windows that may have arbitrarily low amplitude (e.g., due to
-        the sensors being unplugged) (default=0.25).
+        the sensors being unplugged) (default=0.1).
     fit_quantiles : 2-tuple
         Quantile range [lower,upper] of the truncated generalized Gaussian
         distribution that shall be fit to the EEG contents (default=[0.022
@@ -114,7 +115,9 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     opt_lu = np.inf
     opt_bounds = np.inf
     opt_beta = np.inf
-    gridsearch = np.round(n * np.arange(max_width, min_width, -step_sizes[1]))
+    # nudge the stop so min_width isn't dropped by float error (as for cols)
+    gridsearch = np.round(
+        n * np.arange(max_width, min_width - step_sizes[1] * 1e-9, -step_sizes[1]))
     for m in gridsearch.astype(int):
         mcurr = m - 1
         nbins = int(np.round(3 * np.log2(1 + m / 2)))
