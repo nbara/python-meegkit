@@ -8,7 +8,13 @@ from scipy import linalg, signal
 from statsmodels.robust.scale import mad
 
 from .utils import block_covariance, nonlinear_eigenspace
-from .utils.asr import fit_eeg_distribution, geometric_median, yulewalk, yulewalk_filter
+from .utils.asr import (
+    SHAPE_RANGE,
+    fit_eeg_distribution,
+    geometric_median,
+    yulewalk,
+    yulewalk_filter,
+)
 
 
 class ASR:
@@ -329,7 +335,7 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     # set internal variables
     truncate_quant = [0.0220, 0.6000]
     step_sizes = [0.01, 0.01]
-    shape_range = np.arange(1.7, 3.5, 0.15)
+    shape_range = SHAPE_RANGE
     max_bad_chans = np.round(X.shape[0] * max_bad_chans)
 
     # set data indices

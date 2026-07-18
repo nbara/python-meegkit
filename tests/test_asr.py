@@ -1,6 +1,7 @@
 """ASR test."""
 import inspect
 import os
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -8,7 +9,7 @@ import pytest
 from scipy import signal
 
 from meegkit.asr import ASR, asr_calibrate, asr_process, clean_windows
-from meegkit.utils.asr import yulewalk, yulewalk_filter
+from meegkit.utils.asr import SHAPE_RANGE, fit_eeg_distribution, yulewalk, yulewalk_filter
 from meegkit.utils.matrix import sliding_window
 
 # Data files
@@ -299,6 +300,43 @@ def test_asr_class(method, reref, show=False):
     ASR(sfreq=125)
     ASR(Sfreq=150)
 
+
+def test_clean_windows_uses_full_shape_range():
+    """clean_windows passes the full 13-point SHAPE_RANGE (incl beta=3.5) down.
+
+    Spies on the shape_range argument to fit_eeg_distribution (6th positional).
+    """
+    raw = np.load(os.path.join(THIS_FOLDER, "data", "eeg_raw.npy"))
+    sfreq = 250
+
+    with patch(
+        "meegkit.asr.fit_eeg_distribution", side_effect=fit_eeg_distribution
+    ) as mock_fit:
+        clean_windows(raw, sfreq)
+
+    assert mock_fit.called
+    captured = mock_fit.call_args.args[5]
+    assert len(captured) == 13
+    assert np.isclose(captured[-1], 3.5)
+    assert np.allclose(captured, SHAPE_RANGE)
+
+
+def test_fit_eeg_distribution_shape_range_materiality():
+    """Dropping the beta=3.5 endpoint changes the selected shape parameter.
+
+    A bounded, near-uniform sample drives the grid search to the largest beta.
+    """
+    # Bounded, near-uniform sample: favors the largest available beta.
+    Y = np.linspace(-1, 1, 2000)
+
+    shape_range_trunc = np.arange(1.7, 3.5, 0.15)
+
+    beta_full = fit_eeg_distribution(Y, shape_range=SHAPE_RANGE)[3]
+    beta_trunc = fit_eeg_distribution(Y, shape_range=shape_range_trunc)[3]
+
+    assert np.isclose(beta_full, 3.5)
+    assert beta_trunc <= np.max(shape_range_trunc) + 1e-9
+    assert beta_full > beta_trunc
 
 def test_asr_calibrate_nonfinite_input():
     """Non-finite calibration samples must not silently yield NaN M/T."""
