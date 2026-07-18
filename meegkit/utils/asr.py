@@ -115,7 +115,9 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
     opt_lu = np.inf
     opt_bounds = np.inf
     opt_beta = np.inf
-    gridsearch = np.round(n * np.arange(max_width, min_width, -step_sizes[1]))
+    # nudge the stop so min_width isn't dropped by float error (as for cols)
+    gridsearch = np.round(
+        n * np.arange(max_width, min_width - step_sizes[1] * 1e-9, -step_sizes[1]))
     for m in gridsearch.astype(int):
         mcurr = m - 1
         nbins = int(np.round(3 * np.log2(1 + m / 2)))

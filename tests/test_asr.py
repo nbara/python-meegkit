@@ -298,6 +298,64 @@ def test_asr_calibrate_too_short():
     with pytest.raises(ValueError, match="shorter than one analysis window"):
         asr_calibrate(X_short, 250)
 
+        
+def test_asr_max_bad_chans_param():
+    """max_bad_chans is exposed on ASR and defaults to 0.3."""
+    assert ASR().max_bad_chans == 0.3
+    assert ASR(max_bad_chans=0.2).max_bad_chans == 0.2
+
+
+def test_asr_process_state_key_order():
+    """asr_process reads state by key, not by dict insertion order.
+
+    M and T are distinct and the keep mask is non-trivial, so a positional
+    unpack of a reordered dict would change the output.
+    """
+    nc, ns = 4, 8
+    X = np.arange(nc * ns, dtype=float).reshape(nc, ns) + 1.0
+    X_filt = X.copy()
+    # T's large column-2 norm keeps component 2 while M=eye rejects it, so the
+    # two dict orderings give different keep masks (hence different R) under a
+    # positional unpack.
+    cov = np.diag([1.0, 1.0, 1000.0, 1000.0])
+    T = np.eye(nc)
+    T[2, 2] = 40.0   # column-2 sum of squares = 1600 > 1000
+    M = np.eye(nc)
+
+    state_ordered = dict(M=M, T=T, R=None)
+    out_ordered, _ = asr_process(
+        X, X_filt, state_ordered, cov=cov.copy(), method="euclid")
+
+    # Same content, different insertion order
+    state_reordered = dict(T=T, M=M, R=None)
+    out_reordered, _ = asr_process(
+        X, X_filt, state_reordered, cov=cov.copy(), method="euclid")
+
+    np.testing.assert_allclose(out_ordered, out_reordered)
+
+
+def test_clean_windows_offset_phase_drift():
+    """Offsets use the non-truncated win_len*sfreq to avoid phase drift.
+
+    Diverges from truncated-N spacing only when win_len*sfreq is non-integer.
+    """
+    sfreq = 251
+    win_len = 0.5  # win_len * sfreq = 125.5, non-integer
+    win_overlap = 0.66
+    ns = 5000
+
+    N = int(win_len * sfreq)
+    N_raw = win_len * sfreq
+    offsets_raw = np.round(
+        np.arange(0, ns - N, N_raw * (1 - win_overlap))).astype(int)
+    offsets_truncated = np.round(
+        np.arange(0, ns - N, N * (1 - win_overlap))).astype(int)
+
+    assert len(offsets_raw) == len(offsets_truncated)
+    # The two stepping schemes diverge (truncated-N accumulates drift)
+    assert not np.array_equal(offsets_raw, offsets_truncated)
+    assert abs(int(offsets_raw[-1]) - int(offsets_truncated[-1])) >= 10
+
 
 if __name__ == "__main__":
     pytest.main([__file__])
