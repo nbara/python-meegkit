@@ -8,6 +8,9 @@ This example demonstrates a full ASR workflow on short EEG data:
 2. Apply ASR in 1-second windows.
 3. Compare raw and cleaned traces and quantify amplitude reduction.
 
+This is intended as a first-pass inspection example rather than a benchmark:
+it shows how the calibration choice propagates to the cleaned output.
+
 Uses meegkit.ASR().
 
 References
@@ -32,6 +35,9 @@ sfreq = 250
 ###############################################################################
 # Calibration and processing
 # -----------------------------------------------------------------------------
+# We use the first 30 seconds as a calibration segment. In practice, this
+# segment should be as artifact-free as possible because ASR thresholds are
+# derived from it.
 
 # Train on a clean portion of data
 asr = ASR(method="euclid")
@@ -56,13 +62,14 @@ rms_ratio = rms_after / np.maximum(rms_before, np.finfo(float).eps)
 # Plot the results
 # -----------------------------------------------------------------------------
 #
-# Data was trained on a 40s window from 5s to 45s onwards (gray filled area).
-# The algorithm then removes portions of this data with high amplitude
-# artifacts before running the calibration (hatched area = good).
+# The gray overlay marks the 30-second calibration region actually used by the
+# code. The hatched overlay shows the subset of that region that ASR kept while
+# estimating its clean-data statistics.
 #
 # What to look for:
 # - After ASR, sharp bursts should be attenuated in many channels.
 # - The RMS ratio (after/before) should generally be below 1.
+# - Strong attenuation everywhere would suggest over-aggressive calibration.
 
 times = np.arange(raw.shape[-1]) / sfreq
 f, ax = plt.subplots(8, sharex=True, figsize=(9, 6))

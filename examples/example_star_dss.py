@@ -79,6 +79,9 @@ y, w, _ = star.star(x, 2)
 ###############################################################################
 # 2) Apply DSS on raw data
 # -----------------------------------------------------------------------------
+# DSS alone uses a bias covariance built from the signal minus a fitted
+# sinusoidal trend. This encourages components that resemble the oscillatory
+# target, but the strong sparse artifacts still dominate the decomposition.
 c0, _ = tscov(x)
 c1, _ = tscov(x - _sine_fit(x))
 [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
@@ -87,7 +90,8 @@ z1 = normcol(np.dot(x, todss))
 ###############################################################################
 # 3) Apply DSS on STAR-ed data
 # -----------------------------------------------------------------------------
-# Here the bias function is the original signal minus the sinusoidal trend.
+# After STAR, the same DSS bias becomes much more informative because the large
+# transient artifacts have already been suppressed.
 c0, _ = tscov(y)
 c1, _ = tscov(y - _sine_fit(y))
 [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
@@ -100,6 +104,8 @@ r_star_dss = np.corrcoef(z2[:, 0], target[:, 0])[0, 1]
 ###############################################################################
 # Plots
 # -----------------------------------------------------------------------------
+# The key comparison is not just visual denoising, but whether the recovered
+# component aligns more strongly with the known target after STAR preprocessing.
 f, (ax0, ax1, ax2, ax3) = plt.subplots(4, 1, figsize=(7, 9))
 ax0.plot(target, lw=.5)
 ax0.set_title("Target")
