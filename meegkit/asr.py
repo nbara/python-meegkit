@@ -541,7 +541,8 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     sig = np.zeros(nc)
     for ichan in reversed(range(nc)):
         mu[ichan], sig[ichan], alpha, beta = fit_eeg_distribution(
-            rms[ichan], min_clean_fraction, max_dropout_fraction)
+            rms[ichan], min_clean_fraction, max_dropout_fraction,
+            step_sizes=[0.01, 0.01])
 
     T = np.dot(np.diag(mu + cutoff * sig), V.T)
     logging.debug("[ASR] Calibration done.")

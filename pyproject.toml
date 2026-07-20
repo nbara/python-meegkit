@@ -98,6 +98,7 @@ filterwarnings = [
 addopts = """
     --color=yes
     --durations 10
+    --noplots
     """
 
 [tool.coverage.run]

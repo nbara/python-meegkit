@@ -1,7 +1,7 @@
 # simple makefile to simplify repetetive build env management tasks under posix
 # caution: testing won't work on windows, see README
 PYTHON ?= python
-PYTESTS ?= py.test
+PYTESTS ?= pytest
 CTAGS ?= ctags
 CODESPELL_SKIPS ?= "*.html,*.fif,*.eve,*.gz,*.tgz,*.zip,*.mat,*.stc,*.label,*.w,*.bz2,*.annot,*.sulc,*.log,*.local-copy,*.orig_avg,*.inflated_avg,*.gii,*.pyc,*.doctree,*.pickle,*.inv,*.png,*.edf,*.touch,*.thickness,*.nofix,*.volume,*.defect_borders,*.mgh,lh.*,rh.*,COR-*,FreeSurferColorLUT.txt,*.examples,.xdebug_mris_calc,bad.segments,BadChannels,*.hist,empty_file,*.orig,*.js,*.map,*.ipynb,searchindex.dat"
 CODESPELL_DIRS ?= meegkit/ examples/
@@ -85,21 +85,21 @@ install-dev:
 
 # Tests
 # =============================================================================
-test: in
+test:
 	rm -f .coverage
-	$(PYTESTS) -m 'not ultraslowtest' meegkit
+	$(PYTESTS) -m 'not ultraslowtest'
 
-test-verbose: in
+test-verbose:
 	rm -f .coverage
-	$(PYTESTS) -m 'not ultraslowtest' meegkit --verbose
+	$(PYTESTS) -m 'not ultraslowtest' --verbose
 
-test-fast: in
+test-fast:
 	rm -f .coverage
-	$(PYTESTS) -m 'not slowtest' meegkit
+	$(PYTESTS) -m 'not slowtest'
 
-test-full: in
+test-full:
 	rm -f .coverage
-	$(PYTESTS) meegkit
+	$(PYTESTS)
 
 .PHONY: init test
 

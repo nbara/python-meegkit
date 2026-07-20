@@ -10,7 +10,7 @@ SHAPE_RANGE = np.linspace(1.7, 3.5, 13)
 
 
 def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
-                         fit_quantiles=[0.022, 0.6], step_sizes=[0.0220, 0.6000],
+                         fit_quantiles=[0.022, 0.6], step_sizes=[0.01, 0.01],
                          shape_range=SHAPE_RANGE):
     """Estimate the mean and SD of clean EEG from contaminated data.
 
