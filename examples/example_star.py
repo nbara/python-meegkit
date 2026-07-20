@@ -5,6 +5,13 @@ Sparse time artifact removal on simulated data
 This example is similar to test_nt_star.m in Noisetools. Results are equivalent
 (within numerical precision) to the Matlab code.
 
+Uses `meegkit.star.star()`.
+
+References
+----------
+.. [1] de Cheveigne, A. (2016). Sparse time artifact removal. Journal of
+    Neuroscience Methods, 262, 14-20.
+
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,9 +62,13 @@ y, w, _ = star.star(x, 2)
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.plot(x, lw=.5)
 ax1.set_title(f"Signal + Artifacts (SNR = {SNR})")
+ax1.set_ylabel("Amplitude")
 ax2.plot(y, lw=.5)
 ax2.set_title("Denoised")
+ax2.set_ylabel("Amplitude")
 ax3.plot(demean(y) - x0, lw=.5)
 ax3.set_title("Residual")
+ax3.set_ylabel("Amplitude")
+ax3.set_xlabel("Samples")
 f.set_tight_layout(True)
 plt.show()

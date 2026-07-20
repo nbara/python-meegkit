@@ -5,6 +5,13 @@ Ringing artifact reduction example
 This example shows how to subtract the impulse response from a filter to
 reduce ringing artifacts.
 
+Uses `meegkit.detrend.reduce_ringing()`.
+
+References
+----------
+.. [1] See the method documentation for
+	`meegkit.detrend.reduce_ringing` in meegkit.
+
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -35,5 +42,8 @@ y = reduce_ringing(x, samples=np.array([500]))
 plt.figure()
 plt.plot(x + np.array([-10, 10]), "C0", label="before")
 plt.plot(y + np.array([-10, 10]), "C1:", label="after")
+plt.xlabel("Samples")
+plt.ylabel("Amplitude")
+plt.title("Ringing reduction around the discontinuity")
 plt.legend()
 plt.show()

@@ -5,6 +5,13 @@ ASR example
 Denoise data using Artifact Subspace Reconstruction.
 
 Uses meegkit.ASR().
+
+References
+----------
+.. [1] Mullen, T., Kothe, C., Chi, Y., Ojeda, A., Kerth, T., Makeig, S.,
+   Jung, T. P., & Cauwenberghs, G. (2015). Real-time neuroimaging and
+   cognitive monitoring using wearable dry EEG. IEEE Transactions on
+   Biomedical Engineering, 62(11), 2553-2567.
 """
 import os
 
@@ -59,6 +66,7 @@ for i in range(8):
     ax[i].set_ylim([-50, 50])
     ax[i].set_ylabel(f"ch{i}")
     ax[i].set_yticks([])
+ax[0].set_title("Raw and cleaned EEG traces")
 ax[i].set_xlabel("Time (s)")
 ax[0].legend(fontsize="small", bbox_to_anchor=(1.04, 1), borderaxespad=0)
 plt.subplots_adjust(hspace=0, right=0.75)

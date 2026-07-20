@@ -24,6 +24,10 @@ from scipy import signal
 from meegkit import dss
 from meegkit.utils import create_line_data, unfold
 
+seed = 42
+_ = np.random.default_rng(seed)
+np.random.seed(seed)
+
 ###############################################################################
 # Line noise removal
 # =============================================================================
