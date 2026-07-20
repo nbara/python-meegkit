@@ -301,7 +301,6 @@ def test_asr_class(method, reref, show=False):
     ASR(sfreq=125)
     ASR(Sfreq=150)
 
-
 def test_clean_windows_uses_full_shape_range():
     """clean_windows passes the full 13-point SHAPE_RANGE (incl beta=3.5) down.
 
@@ -535,6 +534,70 @@ def test_block_covariance_no_hang_and_float_window():
     cov = block_covariance(X_small, window=100.0, overlap=0.5,
                            estimator="scm")
     assert np.isfinite(cov).all()
+
+
+@pytest.mark.parametrize("nc, expected", [(8, 6), (32, 22), (64, 43), (19, 14)])
+def test_asr_process_removed_dims(nc, expected):
+    """Removed-dim count uses round-half-away maxdims and the fixed keep-mask index.
+
+    T is zeroed so the variance test is uniformly False and only the index
+    term decides how many dimensions are removed.
+    """
+    ns = 20 * nc
+    X = rng.standard_normal((nc, ns))
+    cov = X @ X.T / ns + 1e-6 * np.eye(nc)  # well-conditioned PSD
+    M = np.eye(nc)
+    T = np.zeros((nc, nc))
+    state = dict(M=M, T=T, R=None)
+
+    clean, state = asr_process(X, X, state, cov=cov[None], method="euclid")
+
+    removed = nc - np.linalg.matrix_rank(state["R"])
+    assert removed == expected
+
+
+def test_asr_process_blend_reaches_one():
+    """Raised-cosine blend reaches exactly 1.0 at the block-final sample.
+
+    Two calls so the second blends against the first reconstruction; the
+    final sample must equal the new reconstruction with no residual seam.
+    """
+    nc, ns = 6, 100
+    X1 = rng.standard_normal((nc, ns))
+    X2 = rng.standard_normal((nc, ns))
+    cov1 = X1 @ X1.T / ns + 1e-6 * np.eye(nc)
+    cov2 = X2 @ X2.T / ns + 1e-6 * np.eye(nc)
+    M = np.eye(nc)
+    T = 0.5 * np.eye(nc)  # non-trivial threshold so R is non-identity
+
+    state = dict(M=M, T=T, R=None)
+    _, state = asr_process(X1, X1, state, cov=cov1[None], method="euclid")
+    R_old = state["R"].copy()
+
+    clean2, state2 = asr_process(X2, X2, state, cov=cov2[None], method="euclid")
+    R_new = state2["R"]
+
+    # meaningfulness guard: blend is only visible when R changes.
+    assert not np.allclose(R_old, R_new)
+    assert np.allclose(clean2[:, -1], R_new.dot(X2)[:, -1], rtol=1e-9)
+
+
+def test_rms_window_offsets_rounds_each_start():
+    """RMS window starts round each start, not the step (matches clean_windows)."""
+    from meegkit.asr import _rms_window_offsets
+
+    ns, N, win_overlap = 1000, 125, 0.66  # step = 42.5 (non-integer)
+
+    # rounding the step first gives step 42 -> [0, 42, 84, ...]
+    old_step = np.round(N * (1 - win_overlap))
+    old_offsets = np.arange(0, ns - N, old_step).astype(int)
+
+    offsets = _rms_window_offsets(ns, N, win_overlap)
+
+    assert not np.array_equal(offsets, old_offsets)
+    # float step is 42.4999..., so 3*step rounds to 127 (not 128)
+    np.testing.assert_array_equal(
+        offsets[:7], np.array([0, 42, 85, 127, 170, 212, 255]))
 
 
 if __name__ == "__main__":
