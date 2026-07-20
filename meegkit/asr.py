@@ -288,6 +288,15 @@ def _recency_weights(counter, sample_weight):
     return weights
 
 
+def _round_half_away(x):
+    """Round half away from zero (MATLAB `round` semantics).
+
+    numpy's ``np.round`` rounds half to even (banker's rounding); this
+    matches MATLAB/Octave which round halves away from zero.
+    """
+    return np.floor(np.abs(x) + 0.5) * np.sign(x)
+
+
 def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
                   win_len=.5, win_overlap=0.66, min_clean_fraction=0.25,
                   max_dropout_fraction=0.1, show=False):
@@ -354,11 +363,11 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     truncate_quant = [0.0220, 0.6000]
     step_sizes = [0.01, 0.01]
     shape_range = SHAPE_RANGE
-    max_bad_chans = np.round(X.shape[0] * max_bad_chans)
+    max_bad_chans = _round_half_away(X.shape[0] * max_bad_chans)
 
     # set data indices
     [nc, ns] = X.shape
-    N = int(win_len * sfreq)
+    N = int(_round_half_away(win_len * sfreq))
     N_raw = win_len * sfreq  # non-truncated N, avoids step-size phase drift
     offsets = np.round(np.arange(0, ns - N, N_raw * (1 - win_overlap)))
     offsets = offsets.astype(int)
@@ -543,7 +552,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
     X, _zf = yulewalk_filter(X, sfreq, ab=None)
 
     # window length for calculating thresholds
-    N = int(np.round(win_len * sfreq))
+    N = int(_round_half_away(win_len * sfreq))
     if ns < N:
         raise ValueError(
             f"Calibration data has {ns} samples, shorter than one analysis "
