@@ -89,10 +89,13 @@ bins, psd = ss.welch(np.squeeze(out), sfreq, window="hamming", nperseg=nfft,
                      noverlap=125, axis=0)
 psd = psd.mean(axis=1, keepdims=True)  # average over trials
 snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
+snr = np.squeeze(np.asarray(snr))
+if snr.ndim != 1:
+    snr = snr.reshape(len(bins), -1).mean(axis=1)
 target_idx = np.argmin(np.abs(bins - target))
 neighbor_mask = np.logical_and(bins >= target - 4, bins <= target + 4)
 neighbor_mask[target_idx] = False
-target_snr = float(snr[target_idx])
+target_snr = float(np.asarray(snr[target_idx]).squeeze())
 neighbor_snr = float(np.mean(snr[neighbor_mask]))
 
 f, ax = plt.subplots(1)
