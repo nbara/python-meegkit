@@ -14,7 +14,7 @@ but the mixing matrices differed, as were the noise matrices. The SNR was set
 to 10−20, i.e. a very unfavorable SNR. The noise is of rank 9 and the signal of
 rank 1, so signal and noise are in principle linearly separable.
 
-Uses meegkit.cca.mmca()
+Uses meegkit.cca.mcca().
 
 References
 ----------

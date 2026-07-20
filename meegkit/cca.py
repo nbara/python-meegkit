@@ -394,7 +394,23 @@ def whiten_nt(C, thresh=1e-12, keep=False):
 
 
 def whiten_svd(X):
-    """SVD whitening."""
+    """Whiten data matrix with singular value decomposition.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_features)
+        Input data matrix.
+
+    Returns
+    -------
+    X_white : ndarray, shape=(n_samples, n_features)
+        Whitened matrix.
+
+    Notes
+    -----
+    This computes ``U @ Vt`` after SVD of ``X = U @ S @ Vt``.
+
+    """
     U, S, Vt = linalg.svd(X, full_matrices=False)
 
     # U and Vt are the singular matrices, and s contains the singular values.

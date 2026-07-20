@@ -5,6 +5,9 @@ Causal phase estimation example
 This example shows how to causally estimate the phase of a signal using two
 oscillator models, as described in [1]_.
 
+It compares three causal estimators against the Hilbert phase reference and
+reports mean absolute phase errors.
+
 Uses `meegkit.phase.ResOscillator()` and `meegkit.phase.NonResOscillator()`.
 
 References
@@ -47,7 +50,7 @@ def generate_multi_comp_data(npt=40000, fs=100):
 # modulations, as described in the paper [1]_.
 
 ###############################################################################
-npt = 100000
+npt = 40000
 fs = 100
 s  = generate_multi_comp_data(npt, fs)  # Generate test data
 dt = 1 / fs
@@ -86,6 +89,10 @@ osc = ResOscillator(fs, 1.1)
 r_phase, r_ampl = osc.transform(s)
 r_phase = r_phase[:, 0]
 r_phi_dif = phase_difference(ht_phase, r_phase)
+
+print(f"Mean absolute phase error, locking-based: {np.mean(np.abs(lb_phi_dif)):.3f}")
+print(f"Mean absolute phase error, nonresonant:   {np.mean(np.abs(nr_phi_dif)):.3f}")
+print(f"Mean absolute phase error, resonant:      {np.mean(np.abs(r_phi_dif)):.3f}")
 
 
 ###############################################################################

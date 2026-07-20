@@ -443,9 +443,26 @@ def polystab(a):
 
 
 def numf(h, a, nb):
-    """Find numerator B given impulse-response h of B/A and denominator A.
+    """Estimate IIR numerator coefficients from an impulse response.
 
-    NB is the numerator order.  This function is used by YULEWALK.
+    Parameters
+    ----------
+    h : ndarray
+        Target impulse response.
+    a : ndarray
+        Denominator coefficients.
+    nb : int
+        Numerator order.
+
+    Returns
+    -------
+    b : ndarray
+        Estimated numerator coefficients.
+
+    Notes
+    -----
+    This function is used by ``yulewalk``.
+
     """
     nh = np.max(h.size)
     xn = np.concatenate((1, np.zeros((1, nh - 1))), axis=None)
@@ -460,11 +477,23 @@ def numf(h, a, nb):
 
 
 def denf(R, na):
-    """Compute denominator from covariances.
+    """Estimate IIR denominator coefficients from autocovariances.
 
-    A = DENF(R,NA) computes order NA denominator A from covariances
-    R(0)...R(nr) using the Modified Yule-Walker method. This function is used
-    by YULEWALK.
+    Parameters
+    ----------
+    R : ndarray
+        Autocovariance sequence ``R[0], ..., R[n]``.
+    na : int
+        Denominator order.
+
+    Returns
+    -------
+    A : ndarray
+        Estimated denominator coefficients.
+
+    Notes
+    -----
+    Uses the modified Yule-Walker method and is used by ``yulewalk``.
 
     """
     nr = np.max(np.size(R))

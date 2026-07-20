@@ -6,6 +6,10 @@ This example shows how one can effectively combine STAR and DSS to recover
 signal components which would not have been discoverable with either these
 two techniques alone, due to the presence of strong artifacts.
 
+The key didactic point is to compare DSS alone versus STAR followed by DSS,
+and verify that STAR + DSS recovers a component that is closer to the known
+target signal.
+
 This example replicates figure 1 in [1]_.
 
 References
@@ -89,6 +93,10 @@ c1, _ = tscov(y - _sine_fit(y))
 [todss, _, pwr0, pwr1] = dss.dss0(c0, c1)
 z2 = normcol(np.dot(y, todss))
 
+# Compare how well the best recovered component matches the known target.
+r_dss = np.corrcoef(z1[:, 0], target[:, 0])[0, 1]
+r_star_dss = np.corrcoef(z2[:, 0], target[:, 0])[0, 1]
+
 ###############################################################################
 # Plots
 # -----------------------------------------------------------------------------
@@ -100,12 +108,17 @@ ax1.plot(x, lw=.5)
 ax1.set_title(f"Signal + Artifacts (SNR = {SNR})")
 
 ax2.plot(z1[:, 0], lw=.5, label="Best DSS component")
-ax2.set_title("DSS")
+ax2.set_title(f"DSS (corr with target = {r_dss:.2f})")
 ax2.legend(loc="lower right")
+ax2.set_ylabel("Amplitude")
 
 ax3.plot(z2[:, 0], lw=.5, label="Best DSS component")
-ax3.set_title("STAR + DSS")
+ax3.set_title(f"STAR + DSS (corr with target = {r_star_dss:.2f})")
 ax3.legend(loc="lower right")
+ax3.set_ylabel("Amplitude")
+ax3.set_xlabel("Samples")
 
 f.set_tight_layout(True)
+print(f"Correlation with target, DSS only:   {r_dss:.3f}")
+print(f"Correlation with target, STAR + DSS: {r_star_dss:.3f}")
 plt.show()

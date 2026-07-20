@@ -2,7 +2,11 @@
 ASR example
 ===========
 
-Denoise data using Artifact Subspace Reconstruction.
+This example demonstrates a full ASR workflow on short EEG data:
+
+1. Calibrate ASR on a mostly clean segment.
+2. Apply ASR in 1-second windows.
+3. Compare raw and cleaned traces and quantify amplitude reduction.
 
 Uses meegkit.ASR().
 
@@ -43,6 +47,11 @@ for i in range(X.shape[1]):
 raw = X.reshape(8, -1)  # reshape to (n_chans, n_times)
 clean = Y.reshape(8, -1)
 
+# A simple quality metric: root-mean-square attenuation per channel.
+rms_before = np.sqrt(np.mean(raw ** 2, axis=1))
+rms_after = np.sqrt(np.mean(clean ** 2, axis=1))
+rms_ratio = rms_after / np.maximum(rms_before, np.finfo(float).eps)
+
 ###############################################################################
 # Plot the results
 # -----------------------------------------------------------------------------
@@ -50,9 +59,13 @@ clean = Y.reshape(8, -1)
 # Data was trained on a 40s window from 5s to 45s onwards (gray filled area).
 # The algorithm then removes portions of this data with high amplitude
 # artifacts before running the calibration (hatched area = good).
+#
+# What to look for:
+# - After ASR, sharp bursts should be attenuated in many channels.
+# - The RMS ratio (after/before) should generally be below 1.
 
 times = np.arange(raw.shape[-1]) / sfreq
-f, ax = plt.subplots(8, sharex=True, figsize=(8, 5))
+f, ax = plt.subplots(8, sharex=True, figsize=(9, 6))
 for i in range(8):
     ax[i].fill_between(train_idx / sfreq, 0, 1, color="grey", alpha=.3,
                        transform=ax[i].get_xaxis_transform(),
@@ -71,4 +84,16 @@ ax[i].set_xlabel("Time (s)")
 ax[0].legend(fontsize="small", bbox_to_anchor=(1.04, 1), borderaxespad=0)
 plt.subplots_adjust(hspace=0, right=0.75)
 plt.suptitle("Before/after ASR")
+
+fig, axm = plt.subplots(1, 1, figsize=(7, 3))
+axm.bar(np.arange(raw.shape[0]), rms_ratio)
+axm.axhline(1.0, color="k", ls=":", lw=1)
+axm.set_xlabel("Channel")
+axm.set_ylabel("RMS ratio (after / before)")
+axm.set_title("Channel-wise attenuation summary")
+axm.set_xticks(np.arange(raw.shape[0]))
+axm.grid(True, axis="y", ls=":", alpha=.4)
+plt.tight_layout()
+
+print(f"Median RMS ratio across channels: {np.median(rms_ratio):.3f}")
 plt.show()
