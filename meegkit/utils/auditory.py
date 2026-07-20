@@ -42,6 +42,16 @@ def erb2hz(erb):
 def hz2erb(f):
     """Convert frequencies to the corresponding ERB-rates.
 
+    Parameters
+    ----------
+    f : array_like
+        Frequencies in Hz.
+
+    Returns
+    -------
+    ndarray
+        Values on the ERB-rate scale.
+
     Notes
     -----
     There is a round-off error in the Glasberg & Moore paper, as 1000 / (24.7 *

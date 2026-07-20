@@ -244,6 +244,9 @@ def polycoherence_2d(X, sfreq, ofreqs=None, norm=2, flim1=None, flim2=None,
         Frequency limits for f1. If None, it is set to (0, nyquist / 2)
     flim2: tuple | None
         Frequency limits for f2.
+    synthetic: tuple(float, float, float) | None
+        Synthetic signal specification ``(freq, amplitude, phase)`` for the
+        first fixed frequency.
 
     Returns
     -------

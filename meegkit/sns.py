@@ -152,7 +152,6 @@ def sns1(X, n_neighbors=None, skip=0):
         Denoised signal.
 
     """
-    """
     if X.ndim > 2:
         raise Exception("SNS1 works only with 2D matrices")
 

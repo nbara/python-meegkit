@@ -21,15 +21,21 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
         Dimensionality of noise (default=20).
     n_bad_chans : int
         Number of bad channels (default=1).
+    SNR : float
+        Signal-to-noise ratio scaling applied to the synthetic source.
     t0 : int
         Onset sample of artifact.
     fline : float
         Normalized frequency of artifact (freq/samplerate), (default=0.1).
+    show : bool
+        If True, plot source, noise, and mixture summaries.
 
     Returns
     -------
     data : ndarray, shape=(n_samples, n_chans, n_trials)
+        Synthetic data array.
     source : ndarray, shape=(n_samples,)
+        Underlying line-noise source waveform.
     """
     rng = np.random.RandomState(2022)
 

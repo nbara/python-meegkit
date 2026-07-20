@@ -213,6 +213,13 @@ def yulewalk(order, F, M):
         Magnitude breakpoints for the filter such that PLOT(F,M) would show a
         plot of the desired frequency response.
 
+    Returns
+    -------
+    B : ndarray
+        Numerator coefficients of the designed IIR filter.
+    A : ndarray
+        Denominator coefficients of the designed IIR filter.
+
     References
     ----------
     .. [1] B. Friedlander and B. Porat, "The Modified Yule-Walker Method of
@@ -300,7 +307,7 @@ def yulewalk_filter(X, sfreq, zi=None, ab=None, axis=-1):
         Sampling frequency.
     zi : array, shape=(n_channels, filter_order)
         Initial conditions.
-    a, b : 2-tuple | None
+    ab : 2-tuple | None
         Coefficients of an IIR filter that is used to shape the spectrum of the
         signal when calculating artifact statistics. The output signal does not
         go through this filter. This is an optional way to tune the sensitivity
@@ -410,7 +417,17 @@ def geometric_median(X, tol=1e-5, max_iter=500, sample_weight=None):
 
 
 def polystab(a):
-    """Polynomial stabilization.
+    """Reflect unstable polynomial roots inside the unit circle.
+
+    Parameters
+    ----------
+    a : ndarray
+        Polynomial coefficients.
+
+    Returns
+    -------
+    b : ndarray
+        Stabilized polynomial coefficients.
 
     POLYSTAB(A), where A is a vector of polynomial coefficients,
     stabilizes the polynomial with respect to the unit circle;

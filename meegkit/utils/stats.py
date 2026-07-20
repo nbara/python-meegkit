@@ -83,6 +83,8 @@ def rolling_corr(X, y, window=None, sfreq=1, step=1, axis=0):
         Sampling frequency (default=1).
     step : int
         If > 1, only compute correlations every `step` samples.
+    axis : int
+        Reserved axis argument for API compatibility.
 
     Returns
     -------

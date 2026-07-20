@@ -252,6 +252,20 @@ def hilbert_envelope(x):
 def spectral_envelope(x, sfreq, lowpass=32):
     """Compute envelope with convolution.
 
+    Parameters
+    ----------
+    x : array_like
+        One-dimensional input signal.
+    sfreq : float
+        Sampling frequency in Hz.
+    lowpass : float | None
+        Low-pass cutoff used to define the smoothing window.
+
+    Returns
+    -------
+    ndarray
+        Smoothed envelope with the same length as ``x``.
+
     Notes
     -----
     The signal is first padded to avoid edge effects. To align the envelope
@@ -290,7 +304,7 @@ def gaussfilt(data, sfreq, f, fwhm, n_harm=1, shift=0, return_empvals=False, sho
         Sampling rate in Hz.
     f : float
         Break frequency of filter.
-    fhwm : float
+    fwhm : float
         Standard deviation of filter, defined as full-width at half-maximum
         in Hz.
     n_harm : int
@@ -435,6 +449,13 @@ def slope_sum(x, w: int, axis=0):
         Input data.
     w : int
         Window.
+    axis : int
+        Axis along which to compute the slope-sum transform.
+
+    Returns
+    -------
+    ndarray
+        Slope-sum-transformed signal.
 
     References
     ----------
@@ -473,7 +494,7 @@ def stmcb(x, u_in=None, q=None, p=None, niter=5, a_in=None):
     u_in : array
     q : int
     p : int
-    n_iter : int
+    niter : int
     a_in : array
 
     Returns
@@ -571,6 +592,13 @@ def prony(h, nb, na):
         Numerator order.
     na : int
         Denominator order.
+
+    Returns
+    -------
+    b : ndarray
+        Numerator coefficients.
+    a : ndarray
+        Denominator coefficients.
 
     References
     ----------

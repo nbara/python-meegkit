@@ -25,6 +25,11 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
         Window size.
     overlap : float
         Fraction of overlap between successive windows (higher = more overlap).
+    padding : bool
+        If True, zero-pad the signal at both ends before extracting blocks.
+    estimator : str
+        Covariance estimator passed to :func:`pyriemann.geometry.covariance.covariances`.
+        Use ``"scm"`` for the uncentered second-moment path implemented here.
 
     Returns
     -------
@@ -124,8 +129,10 @@ def tsxcov(X, Y, shifts=None, weights=None, assume_centered=True):
 
     Parameters
     ----------
-    X, Y : arrays, shape=(n_times, n_chans[, n_trials])
-        Data to cross correlate. X can be 1D, 2D or 3D.
+    X : array, shape=(n_times, n_chans[, n_trials])
+        First input data array.
+    Y : array, shape=(n_times, n_chans[, n_trials])
+        Second input data array.
     shifts : array
         Time shifts.
     weights : array

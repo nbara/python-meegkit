@@ -314,6 +314,8 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
     X : array, shape=(n_channels, n_samples)
         Continuous data set, assumed to be appropriately high-passed (e.g. >
         1Hz or 0.5Hz - 2.0Hz transition band)
+    sfreq : float
+        Sampling frequency in Hz.
     max_bad_chans : float
         The maximum number or fraction of bad channels that a retained window
         may still contain (more than this and it is removed). Reasonable range
@@ -341,6 +343,8 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
         Maximum fraction that can have dropouts. This is the maximum fraction
         of time windows that may have arbitrarily low amplitude (e.g., due to
         the sensors being unplugged) (default=0.1).
+    show : bool
+        If True, plot the retained windows overlaid on the data.
 
     Returns
     -------
@@ -628,13 +632,15 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
         If True, detrend filtered data (default=False).
     method : {'euclid', 'riemann'}
         Metric to compute the covariance matrix average.
+    sample_weight : array-like | None
+        Optional weights used when averaging multiple covariance matrices.
 
     Returns
     -------
     clean : array, shape=([n_trials, ]n_channels, n_samples)
         Clean data.
-    state : 3-tuple
-        Output ASR parameters.
+    state : dict
+        Updated ASR state dictionary.
 
     """
     M, T, R = state["M"], state["T"], state["R"]

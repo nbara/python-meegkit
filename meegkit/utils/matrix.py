@@ -676,7 +676,9 @@ def matmul3d(X, mixin):
     Parameters
     ----------
     X : array, shape=(n_samples, n_chans, n_trials)
-    mixing : array, shape=(n_chans, n_components)
+        Input data.
+    mixin : array, shape=(n_chans, n_components)
+        Mixing matrix applied to each trial.
 
     Returns
     -------

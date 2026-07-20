@@ -15,6 +15,18 @@ def mrdivide(A, B):
 
     >> mldivide(B.T, A.T).T
 
+    Parameters
+    ----------
+    A : ndarray
+        Right-hand side matrix.
+    B : ndarray
+        Coefficient matrix.
+
+    Returns
+    -------
+    ndarray
+        Solution matrix ``X``.
+
     References
     ----------
     https://docs.scipy.org/doc/numpy/user/numpy-for-matlab-users.html
@@ -30,6 +42,18 @@ def mldivide(A, B):
     length of the vector AX - B:
     - linalg.solve(A, B) if A is square
     - linalg.lstsq(A, B) otherwise
+
+    Parameters
+    ----------
+    A : ndarray
+        Coefficient matrix.
+    B : ndarray
+        Right-hand side matrix.
+
+    Returns
+    -------
+    ndarray | None
+        Solution matrix, or ``None`` if no stable solution is found.
 
     References
     ----------

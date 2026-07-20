@@ -218,8 +218,10 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
     Parameters
     ----------
-    X, Y : arrays, shape=(n_times, n_chans[, n_trials])
-        Data.
+    X : array, shape=(n_times, n_chans[, n_trials])
+        First data array.
+    Y : array, shape=(n_times, n_chans[, n_trials])
+        Second data array.
     lags : array, shape=(n_lags,)
         Array of lags. A positive lag means Y delayed relative to X. If
         :attr:`sfreq` is > 1, lags are interpreted as times in seconds.

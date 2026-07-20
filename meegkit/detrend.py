@@ -32,8 +32,10 @@ def detrend(x, order, w=None, basis="polynomials", threshold=3, n_iter=4,
         Basis for regression.
     threshold : int
         Threshold for outliers, in number of standard deviations (default=3).
-    niter : int
-        Number of iterations (default=5).
+    n_iter : int
+        Number of iterations (default=4).
+    show : bool
+        If True, plot the original data, detrended data, and rejected samples.
 
     Returns
     -------
@@ -222,13 +224,15 @@ def reduce_ringing(X, samples, order=10, n_samples=100, extra=50, threshold=3,
         Sample indices where to find ringing artifacts.
     order : int
         Order of polynomial trend (default=10).
-    n_samples = 100
+    n_samples : int
         Number of samples over which to estimate impulse response
         (default=100).
     extra : int
         Samples before stimulus to anchor trend (default=50).
-    threshold: float
+    threshold : float
         Threshold for robust detrending (default=3).
+    show : bool
+        If True, plot the detected ringing segments and the corrected output.
 
     Returns
     -------
