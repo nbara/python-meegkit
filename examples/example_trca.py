@@ -11,6 +11,10 @@ https://github.com/mnakanishi/TRCA-SSVEP
 
 Uses `meegkit.trca.TRCA()`.
 
+This example focuses on interpretation rather than implementation details:
+the main outputs are classification accuracy and information transfer rate
+(ITR) across leave-one-block-out folds.
+
 References
 ----------
 .. [1] M. Nakanishi, Y. Wang, X. Chen, Y.-T. Wang, X. Gao, and T.-P. Jung,
@@ -164,4 +168,23 @@ if is_ensemble:
 else:
     ensemble = "TRCA-based method"
 
+fig, axes = plt.subplots(1, 2, figsize=(8, 3.5))
+axes[0].bar(np.arange(n_blocks), accs)
+axes[0].axhline(np.mean(accs), color="k", ls=":", lw=1)
+axes[0].set_title("Accuracy by block")
+axes[0].set_xlabel("Block")
+axes[0].set_ylabel("Accuracy (%)")
+
+axes[1].bar(np.arange(n_blocks), itrs)
+axes[1].axhline(np.mean(itrs), color="k", ls=":", lw=1)
+axes[1].set_title("ITR by block")
+axes[1].set_xlabel("Block")
+axes[1].set_ylabel("ITR")
+
+plt.suptitle(f"TRCA summary: {ensemble}")
+plt.tight_layout()
+
 print(f"\nElapsed time: {time.time()-t:.1f} seconds")
+print("Interpretation: stable performance across blocks suggests the learned")
+print("spatial filters generalize well across repetitions.")
+plt.show()

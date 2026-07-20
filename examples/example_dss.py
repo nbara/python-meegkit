@@ -5,6 +5,10 @@ DSS example
 Find the linear combinations of multichannel data that maximize repeatability
 over trials.
 
+This example uses synthetic data with a known repeated source, so we can check
+whether the first DSS component better matches the ground truth than the raw
+trial average.
+
 Uses meegkit.dss0().
 
 References
@@ -66,23 +70,34 @@ z = fold(np.dot(unfold(data), todss), epoch_size=n_samples)
 
 # Find best components
 best_comp = np.mean(z[:, 0, :], -1)
+raw_average = np.mean(np.mean(data, 2), axis=1)
+
+# Compare the recovered component to the known source waveform.
+source_corr_raw = np.corrcoef(source[:, 0], raw_average)[0, 1]
+source_corr_dss = np.corrcoef(source[:, 0], best_comp)[0, 1]
 
 ###############################################################################
 # Plot results
 # -----------------------------------------------------------------------------
+# What to look for:
+# - The raw trial average should still be visibly noisy.
+# - The first DSS component should follow the known source more closely.
+# - The reported correlation with the source should improve after DSS.
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.plot(source, label="source")
 ax1.set_ylabel("Amplitude")
 ax1.set_title("Ground-truth source")
 ax2.plot(np.mean(data, 2), label="data")
 ax2.set_ylabel("Amplitude")
-ax2.set_title("Trial-averaged observed data")
+ax2.set_title(f"Trial-averaged observed data (corr = {source_corr_raw:.2f})")
 ax3.plot(best_comp, label="recovered")
 ax3.set_ylabel("Amplitude")
 ax3.set_xlabel("Samples")
-ax3.set_title("Recovered DSS component")
+ax3.set_title(f"Recovered DSS component (corr = {source_corr_dss:.2f})")
 ax1.legend(loc="upper right", fontsize="small")
 ax2.legend(loc="upper right", fontsize="small")
 ax3.legend(loc="upper right", fontsize="small")
 plt.tight_layout()
+print(f"Correlation with source, raw trial average: {source_corr_raw:.3f}")
+print(f"Correlation with source, first DSS component: {source_corr_dss:.3f}")
 plt.show()
