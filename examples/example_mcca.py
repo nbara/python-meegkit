@@ -9,7 +9,7 @@ Uses meegkit.cca.mcca().
 References
 ----------
 .. [1] de Cheveigne, A., Parra, L. C., & Bialek, W. (2018). Multiset canonical
-	correlation analysis. NeuroImage, 186, 728-740.
+   correlation analysis. NeuroImage, 186, 728-740.
 
 """
 import matplotlib.pyplot as plt

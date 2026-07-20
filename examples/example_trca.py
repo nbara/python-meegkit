@@ -38,9 +38,6 @@ from meegkit.trca import TRCA
 from meegkit.utils.trca import itr, normfit, round_half_up
 
 t = time.time()
-seed = 42
-_ = np.random.default_rng(seed)
-np.random.seed(seed)
 
 ###############################################################################
 # Parameters
