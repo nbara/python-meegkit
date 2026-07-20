@@ -444,6 +444,20 @@ def _rms_window_offsets(ns, N, win_overlap):
     return np.round(np.arange(0, ns - N, N * (1 - win_overlap))).astype(int)
 
 
+def _psd_sqrtm(A):
+    """Real symmetric positive-semidefinite matrix square root.
+
+    Symmetrizes ``A`` and clamps negative eigenvalues to zero before taking
+    the square root, so the result stays real even for a slightly-indefinite
+    input (where ``scipy.linalg.sqrtm`` would return a complex matrix).
+    """
+    A = np.real(A)
+    A = (A + A.T) / 2
+    evals, evecs = linalg.eigh(A)
+    evals = np.clip(evals, 0, None)
+    return (evecs * np.sqrt(evals)) @ evecs.T
+
+
 def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
                   win_overlap=0.66, max_dropout_fraction=0.1,
                   min_clean_fraction=0.25, method="euclid", estimator="scm"):
@@ -544,7 +558,7 @@ def asr_calibrate(X, sfreq, cutoff=5, blocksize=100, win_len=0.5,
         Uavg = mean_covariance(U, metric="riemann")
 
     # get the mixing matrix M
-    M = linalg.sqrtm(np.real(Uavg))
+    M = _psd_sqrtm(Uavg)
     D, Vtmp = linalg.eigh(M)
     # D, Vtmp = nonlinear_eigenspace(M, nc)  TODO
     V = Vtmp[:, np.argsort(D)]

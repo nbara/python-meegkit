@@ -214,6 +214,34 @@ def test_clean_windows_one_sided_zthresholds(zthresholds):
     assert sample_mask.dtype == bool
 
 
+def test_psd_sqrtm_real_on_indefinite():
+    """_psd_sqrtm stays real on a slightly indefinite matrix (unlike scipy sqrtm)."""
+    from scipy import linalg
+
+    from meegkit.asr import _psd_sqrtm
+
+    # Build a symmetric matrix with one tiny negative eigenvalue.
+    B = rng.standard_normal((5, 5))
+    A = B @ B.T  # PSD
+    evals, evecs = linalg.eigh(A)
+    evals[0] = -1e-8
+    A_indef = (evecs * evals) @ evecs.T
+
+    M = _psd_sqrtm(A_indef)
+
+    # The result must stay real...
+    assert np.isrealobj(M)
+
+    # ...and square back to the clamped PSD matrix.
+    evals_clamped = np.clip(evals, 0, None)
+    A_psd = (evecs * evals_clamped) @ evecs.T
+    assert np.allclose(M @ M, A_psd, atol=1e-8)
+
+    # plain sqrtm(real(A)) on the indefinite matrix still returns a complex root
+    M_bad = linalg.sqrtm(np.real(A_indef))
+    assert np.iscomplexobj(M_bad) and not np.allclose(M_bad.imag, 0)
+
+
 @pytest.mark.parametrize(argnames="method", argvalues=("riemann", "euclid"))
 @pytest.mark.parametrize(argnames="reref", argvalues=(False, True))
 def test_asr_class(method, reref, show=False):
