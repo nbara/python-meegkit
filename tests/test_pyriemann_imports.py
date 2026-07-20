@@ -45,10 +45,14 @@ def test_block_covariance_uses_pyriemann_covariances():
     from pyriemann.geometry.covariance import covariances
 
     data = 0.1 + 0.01 * (1 + np.arange(24, dtype=float).reshape(3, 8))
+    window = 4
+    overlap = 0.5
+    jump = max(int(round(window * (1 - overlap))), 1)
+    n_samples = data.shape[1]
     expected_blocks = np.array(
-        [data[:, start:start + 4] for start in range(0, 4, 2)]
+        [data[:, start:start + window] for start in range(0, n_samples - window + 1, jump)]
     )
 
-    actual = block_covariance(data, window=4, overlap=0.5, padding=False)
+    actual = block_covariance(data, window=window, overlap=overlap, padding=False)
 
     np.testing.assert_allclose(actual, covariances(expected_blocks, estimator="cov"))
