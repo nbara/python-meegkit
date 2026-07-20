@@ -470,7 +470,28 @@ def shiftnd(X, shift, fill_value=0, axis=None):
 
 
 def theshapeof(X):
-    """Return the shape of X."""
+    """Return a normalized 3D view of an array shape.
+
+    Parameters
+    ----------
+    X : ndarray
+        Input array with up to 3 dimensions.
+
+    Returns
+    -------
+    n_samples : int
+        Number of samples.
+    n_chans : int
+        Number of channels.
+    n_trials : int
+        Number of trials.
+
+    Notes
+    -----
+    One- and two-dimensional inputs are promoted logically to
+    ``(n_samples, n_chans, n_trials)`` with singleton trailing dimensions.
+
+    """
     X = _check_data(X)
     # if not isinstance(X, np.ndarray):
     #     raise AttributeError('X must be a numpy array')
@@ -486,7 +507,19 @@ def theshapeof(X):
 
 
 def unsqueeze(X):
-    """Append singleton dimensions to an array."""
+    """Reshape an array to its normalized 3D form.
+
+    Parameters
+    ----------
+    X : ndarray
+        Input array.
+
+    Returns
+    -------
+    ndarray
+        Reshaped array with explicit sample, channel, and trial dimensions.
+
+    """
     X = _check_data(X)
     if X.shape != theshapeof(X):
         return X.reshape(theshapeof(X))
@@ -495,7 +528,22 @@ def unsqueeze(X):
 
 
 def fold(X, epoch_size):
-    """Fold 2D (n_times, n_channels) X into 3D (n_times, n_chans, n_trials)."""
+    """Fold a 2D array into epochs.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_times, n_chans) or (n_times,)
+        Input data.
+    epoch_size : int
+        Number of samples per epoch.
+
+    Returns
+    -------
+    ndarray
+        Folded data with shape ``(epoch_size, n_chans, n_trials)`` when at
+        least one full epoch is available.
+
+    """
     if X.ndim == 1:
         X = X[:, np.newaxis]
     if X.ndim > 2:
@@ -510,7 +558,20 @@ def fold(X, epoch_size):
 
 
 def unfold(X):
-    """Unfold 3D X into 2D (concatenate trials)."""
+    """Concatenate trials of a 3D array into a 2D matrix.
+
+    Parameters
+    ----------
+    X : ndarray
+        Input array with up to 3 dimensions.
+
+    Returns
+    -------
+    ndarray
+        Unfolded array with shape ``(n_samples * n_trials, n_chans)`` when
+        trials are present.
+
+    """
     n_samples, n_chans, n_trials = theshapeof(X)
     if X.size == 0:
         return X
@@ -615,7 +676,9 @@ def matmul3d(X, mixin):
     Parameters
     ----------
     X : array, shape=(n_samples, n_chans, n_trials)
-    mixing : array, shape=(n_chans, n_components)
+        Input data.
+    mixin : array, shape=(n_chans, n_components)
+        Mixing matrix applied to each trial.
 
     Returns
     -------

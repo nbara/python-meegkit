@@ -135,6 +135,22 @@ def sns1(X, n_neighbors=None, skip=0):
     """Sensor Noise Suppression 1.
 
     This version of SNS first regresses out major shared components.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_chans)
+        Input data matrix.
+    n_neighbors : int | None
+        Number of nearest channels to include in each channel projection.
+        If ``None``, all channels except skipped/self channels are used.
+    skip : int
+        Number of top-correlated neighbors to skip before regression.
+
+    Returns
+    -------
+    y : ndarray, shape=(n_samples, n_chans)
+        Denoised signal.
+
     """
     if X.ndim > 2:
         raise Exception("SNS1 works only with 2D matrices")

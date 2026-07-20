@@ -13,12 +13,46 @@ rng = np.random.default_rng()
 
 
 def rms(X, axis=0):
-    """Root-mean-square along given axis."""
+    """Compute root-mean-square values along an axis.
+
+    Parameters
+    ----------
+    X : ndarray
+        Input array.
+    axis : int | tuple of int
+        Axis (or axes) over which to compute RMS.
+
+    Returns
+    -------
+    ndarray
+        RMS values with dimensions preserved along reduced axes.
+
+    """
     return np.sqrt(np.mean(X ** 2, axis=axis, keepdims=True))
 
 
 def robust_mean(X, axis=0, percentile=[5, 95]):
-    """Do robust mean based on JR Kings implementation."""
+    """Compute a percentile-trimmed mean.
+
+    Values below the lower percentile or above the upper percentile are masked
+    as NaN before averaging.
+
+    Parameters
+    ----------
+    X : array_like
+        Input data.
+    axis : int | None
+        Axis over which to compute the robust mean. If ``None``, the input is
+        flattened.
+    percentile : list[float] | tuple[float, float]
+        Lower and upper percentile used for trimming.
+
+    Returns
+    -------
+    ndarray
+        Robust mean values.
+
+    """
     X = np.array(X)
     axis_ = axis
     # force axis to be 0 for facilitation
@@ -49,6 +83,9 @@ def rolling_corr(X, y, window=None, sfreq=1, step=1, axis=0):
         Sampling frequency (default=1).
     step : int
         If > 1, only compute correlations every `step` samples.
+    axis : int
+        Currently unused. It is retained for API compatibility with older
+        calling code.
 
     Returns
     -------

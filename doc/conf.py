@@ -88,7 +88,7 @@ html_theme_options = {
    "logo": {
       "image_light": "_static/logo.png",
       "image_dark": "_static/logo-dark.png",
-      "text": "meegkit",
+        "text": f"meegkit v{version}",
    },
     "show_toc_level": 1,
     "external_links": [
@@ -126,7 +126,7 @@ sphinx_gallery_conf = {
     "examples_dirs": "../examples",   # path to your example scripts
     "gallery_dirs": "auto_examples",  # path to where to save gallery generated output
     "filename_pattern": "/example_",
-    "ignore_pattern": "config.py",
+    "ignore_pattern": r"(config|run_all_notebooks)\.py",
     "run_stale_examples": False,
 }
 

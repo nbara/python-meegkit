@@ -218,8 +218,10 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
     Parameters
     ----------
-    X, Y : arrays, shape=(n_times, n_chans[, n_trials])
-        Data.
+    X : array, shape=(n_times, n_chans[, n_trials])
+        First data array.
+    Y : array, shape=(n_times, n_chans[, n_trials])
+        Second data array.
     lags : array, shape=(n_lags,)
         Array of lags. A positive lag means Y delayed relative to X. If
         :attr:`sfreq` is > 1, lags are interpreted as times in seconds.
@@ -328,9 +330,22 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
 
 def whiten(C, fudge=1e-18):
-    """Whiten covariance matrix C of X.
+    """Compute a whitening matrix from a covariance matrix.
 
-    If X has shape=(observations, components), X_white = np.dot(X, W).
+    If ``X`` has shape ``(observations, components)``, then
+    ``X_white = X @ W``.
+
+    Parameters
+    ----------
+    C : ndarray, shape=(n_features, n_features)
+        Covariance matrix.
+    fudge : float
+        Small regularization term added to eigenvalues.
+
+    Returns
+    -------
+    W : ndarray, shape=(n_features, n_features)
+        Whitening matrix.
 
     References
     ----------
@@ -359,6 +374,11 @@ def whiten_nt(C, thresh=1e-12, keep=False):
     keep : bool
         If True, infrathreshold components are set to zero. If False (default),
         infrathreshold components are truncated.
+
+    Returns
+    -------
+    W : ndarray
+        Whitening matrix in the Noisetools convention.
 
     """
     d, V = linalg.eigh(C)  # eigh if matrix symmetric, eig otherwise
@@ -394,7 +414,23 @@ def whiten_nt(C, thresh=1e-12, keep=False):
 
 
 def whiten_svd(X):
-    """SVD whitening."""
+    """Whiten data matrix with singular value decomposition.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_features)
+        Input data matrix.
+
+    Returns
+    -------
+    X_white : ndarray, shape=(n_samples, n_features)
+        Whitened matrix.
+
+    Notes
+    -----
+    This computes ``U @ Vt`` after SVD of ``X = U @ S @ Vt``.
+
+    """
     U, S, Vt = linalg.svd(X, full_matrices=False)
 
     # U and Vt are the singular matrices, and s contains the singular values.

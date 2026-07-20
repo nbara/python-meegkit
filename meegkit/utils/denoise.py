@@ -66,7 +66,23 @@ def demean(X, weights=None, return_mean=False, inplace=False):
 
 
 def mean_over_trials(X, weights=None):
-    """Compute weighted mean over trials (last dimension)."""
+    """Compute the mean across trials, optionally with weights.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_chans, n_trials)
+        Input data.
+    weights : ndarray | None
+        Optional weights with the same trial structure as ``X``.
+
+    Returns
+    -------
+    y : ndarray, shape=(n_samples, n_chans)
+        Mean signal across trials.
+    tw : ndarray
+        Average effective weights per sample and channel.
+
+    """
     if weights is None:
         weights = np.array([])
     else:
@@ -99,7 +115,23 @@ def mean_over_trials(X, weights=None):
 
 
 def wpwr(X, weights=None):
-    """Weighted power."""
+    """Compute weighted signal power.
+
+    Parameters
+    ----------
+    X : ndarray
+        Input data.
+    weights : ndarray | None
+        Optional weights broadcastable to ``X`` after unfolding.
+
+    Returns
+    -------
+    y : float
+        Sum of squared weighted samples.
+    tweight : float
+        Total effective weight.
+
+    """
     if weights is None:
         weights = np.array([])
 
@@ -118,7 +150,24 @@ def wpwr(X, weights=None):
 
 
 def find_outlier_samples(X, toobig1, toobig2=[]):
-    """Find outlier trials using an absolute threshold."""
+    """Detect outlier samples by absolute and relative thresholds.
+
+    Parameters
+    ----------
+    X : ndarray, shape=(n_samples, n_chans[, n_trials])
+        Input data.
+    toobig1 : float | None
+        Absolute threshold. Samples exceeding this value are iteratively
+        masked.
+    toobig2 : float | list | ndarray
+        Relative threshold applied after re-centering.
+
+    Returns
+    -------
+    weights : ndarray, shape=(n_samples, n_chans, n_trials)
+        Binary weights equal to 0 for outlier samples and 1 elsewhere.
+
+    """
     n_samples, n_chans, n_trials = theshapeof(X)
     X = unfold(X)
 

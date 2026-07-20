@@ -244,6 +244,9 @@ def polycoherence_2d(X, sfreq, ofreqs=None, norm=2, flim1=None, flim2=None,
         Frequency limits for f1. If None, it is set to (0, nyquist / 2)
     flim2: tuple | None
         Frequency limits for f2.
+    synthetic: tuple(float, float, float) | None
+        Synthetic signal specification ``(freq, amplitude, phase)`` for the
+        first fixed frequency.
 
     Returns
     -------
@@ -289,6 +292,16 @@ def compute_spectrogram(X, sfreq, **kwargs):
     """Compute the complex spectrogram of X.
 
     Simple wrapper around scipy.signal.spectrogram.
+
+    Parameters
+    ----------
+    X : ndarray
+        Input signal.
+    sfreq : float
+        Sampling frequency in Hz.
+    **kwargs
+        Additional keyword arguments passed to
+        :func:`scipy.signal.spectrogram`.
 
     Returns
     -------
@@ -349,7 +362,26 @@ def norm_spectrum(spec, P1, P2, P12, time_axis=-2):
 
 
 def plot_polycoherence(freq1, freq2, bicoh, ax=None):
-    """Plot polycoherence."""
+    """Plot a 2D polycoherence map.
+
+    Parameters
+    ----------
+    freq1 : ndarray
+        Frequency grid for the first axis.
+    freq2 : ndarray
+        Frequency grid for the second axis.
+    bicoh : ndarray
+        Polycoherence values to display.
+    ax : matplotlib.axes.Axes | None
+        Existing axes to draw on. If ``None``, a new figure and axes are
+        created.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        Axes containing the pseudocolor plot.
+
+    """
     df1 = freq1[1] - freq1[0]  # resolution
     df2 = freq2[1] - freq2[0]
     freq1 = np.append(freq1, freq1[-1] + df1) - 0.5 * df1
@@ -365,14 +397,45 @@ def plot_polycoherence(freq1, freq2, bicoh, ax=None):
     return ax
 
 def plot_polycoherence_1d(freq, coh):
-    """Plot polycoherence for fixed frequencies."""
+    """Plot 1D polycoherence values.
+
+    Parameters
+    ----------
+    freq : ndarray
+        Frequency axis.
+    coh : ndarray
+        Coherence values evaluated along ``freq``.
+
+    Returns
+    -------
+    None
+        The function creates a matplotlib figure as a side effect.
+
+    """
     plt.figure()
     plt.plot(freq, coh)
     plt.xlabel("freq (Hz)")
 
 
 def plot_signal(t, signal, ax=None):
-    """Plot signal and spectrum."""
+    """Plot a time-domain signal together with its magnitude spectrum.
+
+    Parameters
+    ----------
+    t : ndarray
+        Time vector.
+    signal : ndarray
+        Signal samples.
+    ax : array-like of matplotlib.axes.Axes | None
+        Two axes for time and frequency plots. If ``None``, a new figure is
+        created.
+
+    Returns
+    -------
+    array-like of matplotlib.axes.Axes
+        Axes used for the time-domain and spectral plots.
+
+    """
     if ax is None:
         f, ax = plt.subplots(2, 1)
 
@@ -417,7 +480,8 @@ def synthetic_signal(t, synthetic):
 
     Returns
     -------
-    Complex signal.
+    ndarray
+        Complex synthetic signal.
 
     """
     return np.prod([amp * np.exp(2j * np.pi * freq * t + phase)

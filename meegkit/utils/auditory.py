@@ -22,13 +22,35 @@ def erb_bandwidth(fc):
 
 
 def erb2hz(erb):
-    """Convert ERB-rate values to the corresponding frequencies in Hz."""
+    """Convert ERB-rate values to frequencies in Hz.
+
+    Parameters
+    ----------
+    erb : array_like
+        Values on the ERB-rate scale.
+
+    Returns
+    -------
+    ndarray
+        Frequencies in Hz.
+
+    """
     f = (1. / 0.00437) * np.sign(erb) * (np.exp(np.abs(erb) / 9.2645) - 1)
     return f
 
 
 def hz2erb(f):
     """Convert frequencies to the corresponding ERB-rates.
+
+    Parameters
+    ----------
+    f : array_like
+        Frequencies in Hz.
+
+    Returns
+    -------
+    ndarray
+        Values on the ERB-rate scale.
 
     Notes
     -----
@@ -42,7 +64,25 @@ def hz2erb(f):
 
 
 def erbspace(flow, fhigh, n):
-    """Generate n equidistantly spaced points on ERB scale."""
+    """Generate points uniformly spaced on the ERB-rate scale.
+
+    Parameters
+    ----------
+    flow : float
+        Lower frequency bound in Hz.
+    fhigh : float
+        Upper frequency bound in Hz.
+    n : int
+        Number of frequencies.
+
+    Returns
+    -------
+    y : ndarray
+        Frequencies in Hz.
+    bw : float
+        Step size in ERB-rate units.
+
+    """
     audlimits = hz2erb([flow, fhigh])
     y = erb2hz(np.linspace(audlimits[0], audlimits[1], n))
 
@@ -216,7 +256,22 @@ class GammatoneFilterbank:
 
 
 class AuditoryFilterbank(GammatoneFilterbank):
-    """Special case of Gammatone filterbank with preset center frequencies."""
+    """Gammatone filterbank with standard audiometric center frequencies.
+
+    Parameters
+    ----------
+    sfreq : float
+        Sampling frequency of the signals to filter.
+    b : float
+        Beta value of the gammatone filters.
+    order : int
+        Filter order.
+    q : float
+        ERB Q factor.
+    min_bw : float
+        Minimum equivalent rectangular bandwidth.
+
+    """
 
     def __init__(self, sfreq, b=1.019, order=1, q=9.26449, min_bw=24.7):
 

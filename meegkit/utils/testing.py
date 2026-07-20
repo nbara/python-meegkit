@@ -6,7 +6,8 @@ from meegkit.utils import fold, rms, unfold
 
 
 def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
-                     n_bad_chans=1, SNR=.1, fline=0.1, t0=None, show=False):
+                     n_bad_chans=1, SNR=.1, fline=0.1, t0=None, show=False,
+                     rng=None):
     """Create synthetic data.
 
     Parameters
@@ -21,17 +22,31 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
         Dimensionality of noise (default=20).
     n_bad_chans : int
         Number of bad channels (default=1).
+    SNR : float
+        Signal-to-noise ratio scaling applied to the synthetic source.
     t0 : int
         Onset sample of artifact.
     fline : float
         Normalized frequency of artifact (freq/samplerate), (default=0.1).
+    show : bool
+        If True, plot source, noise, and mixture summaries.
+    rng : numpy.random.Generator | numpy.random.RandomState | None
+        Random number generator used to synthesize the example. If ``None``, a
+        deterministic internal generator is used.
 
     Returns
     -------
     data : ndarray, shape=(n_samples, n_chans, n_trials)
-    source : ndarray, shape=(n_samples,)
+        Synthetic data array.
+    source : ndarray, shape=(n_samples, 1)
+        Underlying line-noise source waveform stored as a column vector.
     """
-    rng = np.random.RandomState(2022)
+    if rng is None:
+        rng = np.random.RandomState(2022)
+
+    sample_normal = getattr(rng, "standard_normal", None)
+    if sample_normal is None:
+        sample_normal = rng.randn
 
     if t0 is None:
         t0 = n_samples // 3
@@ -45,7 +60,7 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
     source = source[:, None]
 
     # mix source in channels
-    s = source * rng.randn(1, n_chans)
+    s = source * sample_normal((1, n_chans))
     s = s[:, :, np.newaxis]
     s = np.tile(s, (1, 1, n_trials))  # create trials
 
@@ -54,8 +69,8 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
 
     # noise
     noise = np.dot(
-        unfold(rng.randn(n_samples, noise_dim, n_trials)),
-        rng.randn(noise_dim, n_chans))
+        unfold(sample_normal((n_samples, noise_dim, n_trials))),
+        sample_normal((noise_dim, n_chans)))
     noise = fold(noise, n_samples)
 
     # mix signal and noise

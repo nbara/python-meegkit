@@ -213,6 +213,13 @@ def yulewalk(order, F, M):
         Magnitude breakpoints for the filter such that PLOT(F,M) would show a
         plot of the desired frequency response.
 
+    Returns
+    -------
+    B : ndarray
+        Numerator coefficients of the designed IIR filter.
+    A : ndarray
+        Denominator coefficients of the designed IIR filter.
+
     References
     ----------
     .. [1] B. Friedlander and B. Porat, "The Modified Yule-Walker Method of
@@ -300,7 +307,7 @@ def yulewalk_filter(X, sfreq, zi=None, ab=None, axis=-1):
         Sampling frequency.
     zi : array, shape=(n_channels, filter_order)
         Initial conditions.
-    a, b : 2-tuple | None
+    ab : 2-tuple | None
         Coefficients of an IIR filter that is used to shape the spectrum of the
         signal when calculating artifact statistics. The output signal does not
         go through this filter. This is an optional way to tune the sensitivity
@@ -410,7 +417,17 @@ def geometric_median(X, tol=1e-5, max_iter=500, sample_weight=None):
 
 
 def polystab(a):
-    """Polynomial stabilization.
+    """Reflect unstable polynomial roots inside the unit circle.
+
+    Parameters
+    ----------
+    a : ndarray
+        Polynomial coefficients.
+
+    Returns
+    -------
+    b : ndarray
+        Stabilized polynomial coefficients.
 
     POLYSTAB(A), where A is a vector of polynomial coefficients,
     stabilizes the polynomial with respect to the unit circle;
@@ -443,9 +460,26 @@ def polystab(a):
 
 
 def numf(h, a, nb):
-    """Find numerator B given impulse-response h of B/A and denominator A.
+    """Estimate IIR numerator coefficients from an impulse response.
 
-    NB is the numerator order.  This function is used by YULEWALK.
+    Parameters
+    ----------
+    h : ndarray
+        Target impulse response.
+    a : ndarray
+        Denominator coefficients.
+    nb : int
+        Numerator order.
+
+    Returns
+    -------
+    b : ndarray
+        Estimated numerator coefficients.
+
+    Notes
+    -----
+    This function is used by ``yulewalk``.
+
     """
     nh = np.max(h.size)
     xn = np.concatenate((1, np.zeros((1, nh - 1))), axis=None)
@@ -460,11 +494,23 @@ def numf(h, a, nb):
 
 
 def denf(R, na):
-    """Compute denominator from covariances.
+    """Estimate IIR denominator coefficients from autocovariances.
 
-    A = DENF(R,NA) computes order NA denominator A from covariances
-    R(0)...R(nr) using the Modified Yule-Walker method. This function is used
-    by YULEWALK.
+    Parameters
+    ----------
+    R : ndarray
+        Autocovariance sequence ``R[0], ..., R[n]``.
+    na : int
+        Denominator order.
+
+    Returns
+    -------
+    A : ndarray
+        Estimated denominator coefficients.
+
+    Notes
+    -----
+    Uses the modified Yule-Walker method and is used by ``yulewalk``.
 
     """
     nr = np.max(np.size(R))
