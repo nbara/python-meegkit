@@ -28,27 +28,27 @@ from meegkit.phase import NonResOscillator, ResOscillator, locking_based_phase
 
 
 def phase_difference(phi1, phi2):
-       """Compute circular phase difference between two phase arrays."""
-       cos_phi_dif = np.cos(phi1) * np.cos(phi2) + np.sin(phi1) * np.sin(phi2)
-       sin_phi_dif = np.sin(phi1) * np.cos(phi2) - np.cos(phi1) * np.sin(phi2)
-       return np.arctan2(sin_phi_dif, cos_phi_dif)
+    """Compute circular phase difference between two phase arrays."""
+    cos_phi_dif = np.cos(phi1) * np.cos(phi2) + np.sin(phi1) * np.sin(phi2)
+    sin_phi_dif = np.sin(phi1) * np.cos(phi2) - np.cos(phi1) * np.sin(phi2)
+    return np.arctan2(sin_phi_dif, cos_phi_dif)
 
 
 def generate_multi_comp_data(npt=40000, fs=100):
-       """Generate multi-component data with frequency modulation."""
-       dt = 1 / fs
-       t = np.arange(1, npt + 1) * dt
-       omega1 = np.sqrt(2) / 30
-       omega2 = np.sqrt(5) / 60
-       amp = 1 + 0.95 * np.cos(omega1 * t)
-       p = t + 5 * np.sin(omega2 * t)
-       s = (
-              np.cos(p)
-              + 0.2 * np.cos(2 * p + np.pi / 6)
-              + 0.1 * np.cos(3 * p + np.pi / 3)
-       )
-       s *= amp
-       return s
+    """Generate multi-component data with frequency modulation."""
+    dt = 1 / fs
+    t = np.arange(1, npt + 1) * dt
+    omega1 = np.sqrt(2) / 30
+    omega2 = np.sqrt(5) / 60
+    amp = 1 + 0.95 * np.cos(omega1 * t)
+    p = t + 5 * np.sin(omega2 * t)
+    s = (
+        np.cos(p)
+        + 0.2 * np.cos(2 * p + np.pi / 6)
+        + 0.1 * np.cos(3 * p + np.pi / 3)
+    )
+    s *= amp
+    return s
 
 ###############################################################################
 # Build data
