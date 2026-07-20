@@ -10,6 +10,9 @@ reports mean absolute phase errors.
 
 Uses `meegkit.phase.ResOscillator()` and `meegkit.phase.NonResOscillator()`.
 
+The comparison is easiest to read through the phase-difference traces and the
+printed mean absolute phase errors.
+
 References
 ----------
 .. [1] Rosenblum, M., Pikovsky, A., Kühn, A.A. et al. Real-time estimation
@@ -93,6 +96,8 @@ r_phi_dif = phase_difference(ht_phase, r_phase)
 print(f"Mean absolute phase error, locking-based: {np.mean(np.abs(lb_phi_dif)):.3f}")
 print(f"Mean absolute phase error, nonresonant:   {np.mean(np.abs(nr_phi_dif)):.3f}")
 print(f"Mean absolute phase error, resonant:      {np.mean(np.abs(r_phi_dif)):.3f}")
+print("Interpretation: smaller mean absolute phase error indicates a closer")
+print("match to the Hilbert phase reference.")
 
 
 ###############################################################################

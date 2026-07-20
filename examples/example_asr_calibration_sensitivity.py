@@ -9,6 +9,9 @@ We fit ASR on three candidate calibration windows and compare the resulting
 channel-wise RMS attenuation. This helps users choose a calibration strategy in
 real datasets.
 
+The main question is whether the cleaning result is stable across plausible
+calibration windows, or whether one window yields much stronger attenuation.
+
 Uses `meegkit.asr.ASR()`.
 
 References
@@ -86,5 +89,10 @@ plt.tight_layout()
 
 for label, ratio in ratios.items():
     print(f"{label:>16}: median ratio = {np.median(ratio):.3f}")
+
+best_label = min(ratios, key=lambda key: np.median(ratios[key]))
+print(f"Most aggressive calibration in this example: {best_label}")
+print("Interpretation: large separation between curves means the ASR result")
+print("depends strongly on which segment is treated as clean calibration data.")
 
 plt.show()

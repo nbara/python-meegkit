@@ -8,6 +8,9 @@ reduce ringing artifacts around a sharp event.
 The script reports a simple quantitative proxy: mean absolute amplitude in a
 window around the artifact, before versus after correction.
 
+The goal is not only to see a smaller oscillatory tail, but also to verify
+that the correction remains local to the ringing event.
+
 Uses `meegkit.detrend.reduce_ringing()`.
 
 References
@@ -58,4 +61,6 @@ plt.tight_layout()
 print(f"Mean absolute amplitude around event (before): {mad_before:.3f}")
 print(f"Mean absolute amplitude around event (after):  {mad_after:.3f}")
 print(f"Relative change (after/before): {mad_after / mad_before:.3f}")
+print("Interpretation: values below 1 indicate that the ringing energy around")
+print("the discontinuity was reduced by the correction.")
 plt.show()
