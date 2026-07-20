@@ -125,11 +125,16 @@ def fit_eeg_distribution(X, min_clean_fraction=0.25, max_dropout_fraction=0.1,
         H = newX[:m] * cols
 
         # per-column histogram over integer bins [0, 1, ..., nbins]
+        # a tied/flat run (e.g. a dead channel) can make a column's baseline
+        # value 0, so H may contain inf/nan; such entries are counted in no
+        # bin instead of crashing the cast to int
         ncol = H.shape[1]
-        binidx = np.minimum(H.astype(int), nbins - 1)
+        finite = np.isfinite(H)
+        binidx = np.minimum(np.where(finite, H, 0).astype(int), nbins - 1)
         flat = binidx + np.arange(ncol) * nbins
         hist_all = np.bincount(
-            flat.ravel(), minlength=nbins * ncol).reshape(ncol, nbins).T
+            flat.ravel(), weights=finite.ravel(),
+            minlength=nbins * ncol).reshape(ncol, nbins).T
         hist_all = np.vstack((hist_all, np.zeros(ncol, dtype=int)))
         logq = np.log(hist_all + 0.01)
 
