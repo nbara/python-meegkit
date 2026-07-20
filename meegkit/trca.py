@@ -194,8 +194,6 @@ def trca(X):
     ----------
     X : array, shape=(n_samples, n_chans[, n_trials])
         Training data.
-    method : str
-        Covariance estimator name passed to pyRiemann.
 
     Returns
     -------

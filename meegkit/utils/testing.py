@@ -38,8 +38,8 @@ def create_line_data(n_samples=100 * 3, n_chans=30, n_trials=100, noise_dim=20,
     -------
     data : ndarray, shape=(n_samples, n_chans, n_trials)
         Synthetic data array.
-    source : ndarray, shape=(n_samples,)
-        Underlying line-noise source waveform.
+    source : ndarray, shape=(n_samples, 1)
+        Underlying line-noise source waveform stored as a column vector.
     """
     if rng is None:
         rng = np.random.RandomState(2022)

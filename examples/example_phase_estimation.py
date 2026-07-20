@@ -42,7 +42,11 @@ def generate_multi_comp_data(npt=40000, fs=100):
        omega2 = np.sqrt(5) / 60
        amp = 1 + 0.95 * np.cos(omega1 * t)
        p = t + 5 * np.sin(omega2 * t)
-       s = np.cos(p) + 0.2 * np.cos(2 * p + np.pi / 6) + 0.1 * np.cos(3 * p + np.pi / 3)
+       s = (
+              np.cos(p)
+              + 0.2 * np.cos(2 * p + np.pi / 6)
+              + 0.1 * np.cos(3 * p + np.pi / 3)
+       )
        s *= amp
        return s
 
