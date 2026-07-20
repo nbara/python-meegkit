@@ -8,6 +8,10 @@ domain.
 
 Uses `meegkit.RESS()`.
 
+Because the simulation contains a known oscillatory target at 12 Hz, the main
+sanity check is whether the target-frequency SNR stands out more clearly after
+RESS than the surrounding spectrum.
+
 References
 ----------
 .. [1] Cohen, M. X., & Gulbinaite, R. (2017). Rhythmic entrainment source
@@ -85,6 +89,11 @@ bins, psd = ss.welch(np.squeeze(out), sfreq, window="hamming", nperseg=nfft,
                      noverlap=125, axis=0)
 psd = psd.mean(axis=1, keepdims=True)  # average over trials
 snr = snr_spectrum(psd, bins, skipbins=2, n_avg=2)
+target_idx = np.argmin(np.abs(bins - target))
+neighbor_mask = np.logical_and(bins >= target - 4, bins <= target + 4)
+neighbor_mask[target_idx] = False
+target_snr = float(snr[target_idx])
+neighbor_snr = float(np.mean(snr[neighbor_mask]))
 
 f, ax = plt.subplots(1)
 ax.plot(bins, snr, "o", label="SNR")
@@ -112,5 +121,9 @@ for c in range(n_chans):
 
 ax[0, 0].set_title("Trial average (before)")
 ax[0, 1].set_title("Trial average (after)")
+print(f"Target-bin SNR after RESS: {target_snr:.3f}")
+print(f"Mean neighboring SNR:      {neighbor_snr:.3f}")
+print("Interpretation: the target-bin SNR should exceed the nearby spectral")
+print("background if RESS successfully isolates the rhythmic response.")
 plt.show()
 

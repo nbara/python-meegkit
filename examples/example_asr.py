@@ -11,6 +11,9 @@ This example demonstrates a full ASR workflow on short EEG data:
 This is intended as a first-pass inspection example rather than a benchmark:
 it shows how the calibration choice propagates to the cleaned output.
 
+The most useful outputs are the calibration retention mask and the channel-wise
+RMS attenuation summary.
+
 Uses meegkit.ASR().
 
 References
@@ -43,6 +46,7 @@ sfreq = 250
 asr = ASR(method="euclid")
 train_idx = np.arange(0 * sfreq, 30 * sfreq, dtype=int)
 _, sample_mask = asr.fit(raw[:, train_idx])
+selected_fraction = np.mean(sample_mask)
 
 # Apply filter using sliding (non-overlapping) windows
 X = sliding_window(raw, window=int(sfreq), step=int(sfreq))
@@ -103,4 +107,7 @@ axm.grid(True, axis="y", ls=":", alpha=.4)
 plt.tight_layout()
 
 print(f"Median RMS ratio across channels: {np.median(rms_ratio):.3f}")
+print(f"Fraction of calibration samples retained: {selected_fraction:.3f}")
+print("Interpretation: if only a small fraction of the calibration window is")
+print("retained, the chosen segment may not be clean enough for stable ASR.")
 plt.show()

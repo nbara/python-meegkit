@@ -7,6 +7,10 @@ This example is similar to test_nt_star.m in Noisetools. Results are equivalent
 
 Uses `meegkit.star.star()`.
 
+The important comparison is between the contaminated signal and the residual
+after STAR. Because the ground-truth clean signal is known here, we can also
+quantify how much the denoised output approaches it.
+
 References
 ----------
 .. [1] de Cheveigne, A. (2016). Sparse time artifact removal. Journal of
@@ -55,20 +59,29 @@ x = x0 + 10 * artifact
 # Apply STAR
 # -----------------------------------------------------------------------------
 y, w, _ = star.star(x, 2)
+residual = demean(y) - x0
+source_corr_before = np.corrcoef(x[:, 0], x0[:, 0])[0, 1]
+source_corr_after = np.corrcoef(y[:, 0], x0[:, 0])[0, 1]
 
 ###############################################################################
 # Plot results
 # -----------------------------------------------------------------------------
+# What to look for:
+# - Local spikes should be strongly reduced after STAR.
+# - The residual should be dominated by artifact remnants, not the target.
+# - Correlation with the clean reference should improve after denoising.
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.plot(x, lw=.5)
-ax1.set_title(f"Signal + Artifacts (SNR = {SNR})")
+ax1.set_title(f"Signal + Artifacts (SNR = {SNR}, corr = {source_corr_before:.2f})")
 ax1.set_ylabel("Amplitude")
 ax2.plot(y, lw=.5)
-ax2.set_title("Denoised")
+ax2.set_title(f"Denoised (corr = {source_corr_after:.2f})")
 ax2.set_ylabel("Amplitude")
-ax3.plot(demean(y) - x0, lw=.5)
+ax3.plot(residual, lw=.5)
 ax3.set_title("Residual")
 ax3.set_ylabel("Amplitude")
 ax3.set_xlabel("Samples")
 f.set_tight_layout(True)
+print(f"Correlation with clean reference before STAR: {source_corr_before:.3f}")
+print(f"Correlation with clean reference after STAR:  {source_corr_after:.3f}")
 plt.show()
