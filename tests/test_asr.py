@@ -360,7 +360,7 @@ def test_asr_calibrate_too_short():
     with pytest.raises(ValueError, match="shorter than one analysis window"):
         asr_calibrate(X_short, 250)
 
-        
+
 def test_asr_max_bad_chans_param():
     """max_bad_chans is exposed on ASR and defaults to 0.3."""
     assert ASR().max_bad_chans == 0.3
@@ -468,7 +468,7 @@ def test_block_covariance_uncentered_scm():
     n_samples = data.shape[1]
     ref, centered = [], []
     ix = 0
-    while ix + W < n_samples:
+    while ix + W <= n_samples:
         B = data[:, ix:ix + W]
         ref.append(B @ B.T / W)          # uncentered second moment
         centered.append(np.cov(B, bias=True))  # mean-subtracted
@@ -506,6 +506,15 @@ def test_block_covariance_empty_guard():
     data = rng.standard_normal((4, 30))
     with pytest.raises(ValueError, match="too large"):
         block_covariance(data, window=100, padding=False)
+
+
+def test_block_covariance_exact_one_window():
+    """When n_samples equals window, exactly one block is returned."""
+    data = rng.standard_normal((4, 100))
+    cov = block_covariance(data, window=100, overlap=0.5, padding=False,
+                           estimator="scm")
+
+    assert cov.shape == (1, 4, 4)
 
 
 def test_block_covariance_no_hang_and_float_window():

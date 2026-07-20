@@ -43,7 +43,7 @@ def block_covariance(data, window=128, overlap=0.5, padding=True, estimator="cov
 
     jump = max(int(round(window * (1 - overlap))), 1)  # >= 1 so overlap=0 advances
     ix = 0
-    while ix + window < n_samples:
+    while ix + window <= n_samples:
         blocks.append(data[:, ix:ix + window])
         ix += jump
 
