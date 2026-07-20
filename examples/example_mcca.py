@@ -4,7 +4,12 @@ Multiway canonical correlation analysis (mCCA)
 
 Find a set of components which are shared between different datasets.
 
-Uses meegkit.cca.mmca()
+Uses meegkit.cca.mcca().
+
+References
+----------
+.. [1] de Cheveigne, A., Parra, L. C., & Bialek, W. (2018). Multiset canonical
+	correlation analysis. NeuroImage, 186, 728-740.
 
 """
 import matplotlib.pyplot as plt
@@ -39,13 +44,23 @@ z = x.dot(A)
 f, axes = plt.subplots(1, 3, figsize=(12, 4))
 axes[0].imshow(A, aspect="auto")
 axes[0].set_title("mCCA transform matrix")
+axes[0].set_xlabel("Components")
+axes[0].set_ylabel("Original channels")
 axes[1].imshow(A.T.dot(C.dot(A)), aspect="auto")
 axes[1].set_title("Covariance of\ntransformed data")
+axes[1].set_xlabel("Components")
+axes[1].set_ylabel("Components")
 axes[2].imshow(x.T.dot(x.dot(A)), aspect="auto")
 axes[2].set_title("Cross-correlation between\nraw & transformed data")
 axes[2].set_xlabel("transformed")
 axes[2].set_ylabel("raw")
-plt.plot(np.mean(z ** 2, axis=0))
+f2, ax = plt.subplots(1, 1, figsize=(6, 3))
+ax.plot(np.mean(z ** 2, axis=0), "o-")
+ax.set_title("Mean power of transformed components")
+ax.set_xlabel("Component")
+ax.set_ylabel("Mean power")
+ax.grid(True, ls=":", alpha=.4)
+plt.tight_layout()
 plt.show()
 
 ###############################################################################

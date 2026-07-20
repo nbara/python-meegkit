@@ -6,6 +6,11 @@ Find the linear combinations of multichannel data that maximize repeatability
 over trials.
 
 Uses meegkit.dss0().
+
+References
+----------
+.. [1] de Cheveigne, A., & Parra, L. C. (2014). Joint decorrelation, a
+    versatile tool for multichannel data analysis. NeuroImage, 98, 487-505.
 """
 import matplotlib.pyplot as plt
 import numpy as np
@@ -67,7 +72,17 @@ best_comp = np.mean(z[:, 0, :], -1)
 # -----------------------------------------------------------------------------
 f, (ax1, ax2, ax3) = plt.subplots(3, 1)
 ax1.plot(source, label="source")
+ax1.set_ylabel("Amplitude")
+ax1.set_title("Ground-truth source")
 ax2.plot(np.mean(data, 2), label="data")
+ax2.set_ylabel("Amplitude")
+ax2.set_title("Trial-averaged observed data")
 ax3.plot(best_comp, label="recovered")
-plt.legend()
+ax3.set_ylabel("Amplitude")
+ax3.set_xlabel("Samples")
+ax3.set_title("Recovered DSS component")
+ax1.legend(loc="upper right", fontsize="small")
+ax2.legend(loc="upper right", fontsize="small")
+ax3.legend(loc="upper right", fontsize="small")
+plt.tight_layout()
 plt.show()

@@ -16,6 +16,11 @@ rank 1, so signal and noise are in principle linearly separable.
 
 Uses meegkit.cca.mmca()
 
+References
+----------
+.. [1] de Cheveigne, A., Parra, L. C., & Bialek, W. (2018). Multiset canonical
+    correlation analysis. NeuroImage, 186, 728-740.
+
 """
 import matplotlib.pyplot as plt
 import numpy as np

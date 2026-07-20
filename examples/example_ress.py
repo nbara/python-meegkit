@@ -7,6 +7,12 @@ signal-to-noise ratio of the narrow-band steady-state response in the frequency
 domain.
 
 Uses `meegkit.RESS()`.
+
+References
+----------
+.. [1] Cohen, M. X., & Gulbinaite, R. (2017). Rhythmic entrainment source
+    separation: Optimizing analyses of neural responses to rhythmic sensory
+    stimulation. NeuroImage, 147, 43-56.
 """
 
 import matplotlib.pyplot as plt
@@ -57,6 +63,10 @@ f, ax = plt.subplots(3)
 ax[0].plot(signal[:, 0, 0], c="C0", label="source")
 ax[1].plot(noise[:, 1, 0], c="C1", label="noise")
 ax[2].plot(data[:, 1, 0], c="C2", label="mixture")
+ax[0].set_ylabel("Amplitude")
+ax[1].set_ylabel("Amplitude")
+ax[2].set_ylabel("Amplitude")
+ax[2].set_xlabel("Samples")
 ax[0].legend()
 ax[1].legend()
 ax[2].legend()
@@ -84,6 +94,7 @@ ax.axvline(target, ls=":", c="grey", zorder=0)
 ax.set_ylabel("SNR (a.u.)")
 ax.set_xlabel("Frequency (Hz)")
 ax.set_xlim([0, 40])
+ax.set_title("SNR spectrum after RESS")
 
 ###############################################################################
 # Project components back into sensor space to see the effects of RESS on the
