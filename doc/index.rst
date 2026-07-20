@@ -15,10 +15,31 @@ in mind that this is mostly development code, and as such is likely to change
 without any notice. Also, while most of the methods have been fairly robustly
 tested, bugs can (and should!) be expected.
 
+The package is most useful for readers who want practical reference
+implementations of denoising and component-analysis methods, together with
+worked examples that show how to interpret the outputs.
+
 The source code of the project is hosted on Github at the following address:
 https://github.com/nbara/python-meegkit
 
-To get started, follow the installation instructions `in the README <https://github.com/nbara/python-meegkit#installation>`_.
+Quick start
+-----------
+
+Install the package with ``pip``:
+
+.. code-block:: bash
+
+   pip install meegkit
+
+Some ASR-related functionality requires optional dependencies. To install those
+as well, use:
+
+.. code-block:: bash
+
+   pip install 'meegkit[extra]'
+
+For development, documentation building, or testing, see the fuller
+installation guidance `in the README <https://github.com/nbara/python-meegkit#installation>`_.
 
 Available modules
 -----------------
@@ -49,7 +70,16 @@ Here is a list of the methods and techniques available in ``meegkit``:
 Examples gallery
 ----------------
 
-A number of example scripts and notebooks are available:
+A number of example scripts and notebooks are available.
+
+If you are new to the package, a good starting sequence is:
+
+1. ``example_asr`` for a full artifact-removal workflow.
+2. ``example_dss`` for a simple synthetic component-recovery example.
+3. ``example_trca`` or ``example_ress`` for task-oriented spatial filtering.
+
+Many examples are synthetic sanity checks with known ground truth, which makes
+them useful for understanding what each method is expected to recover.
 
 
 .. toctree::
