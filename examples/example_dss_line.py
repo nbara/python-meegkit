@@ -31,13 +31,15 @@ from meegkit.utils import create_line_data, unfold
 ###############################################################################
 # Remove line noise with dss_line()
 # -----------------------------------------------------------------------------
-# We first generate some noisy data to work with
+# We first generate some noisy data to work with. The seeded RNG is intentional:
+# it keeps the rendered example visually stable across documentation rebuilds.
+rng = np.random.default_rng(42)
 sfreq = 250
 fline = 50
 nsamples = 10000
 nchans = 10
 data = create_line_data(n_samples=3 * nsamples, n_chans=nchans,
-                        n_trials=1, fline=fline / sfreq, SNR=2)[0]
+                        n_trials=1, fline=fline / sfreq, SNR=2, rng=rng)[0]
 data = data[..., 0]  # only take first trial
 
 # Apply dss_line (ZapLine)
