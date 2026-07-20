@@ -328,9 +328,22 @@ def nt_cca(X=None, Y=None, lags=None, C=None, m=None, thresh=1e-12, sfreq=1):
 
 
 def whiten(C, fudge=1e-18):
-    """Whiten covariance matrix C of X.
+    """Compute a whitening matrix from a covariance matrix.
 
-    If X has shape=(observations, components), X_white = np.dot(X, W).
+    If ``X`` has shape ``(observations, components)``, then
+    ``X_white = X @ W``.
+
+    Parameters
+    ----------
+    C : ndarray, shape=(n_features, n_features)
+        Covariance matrix.
+    fudge : float
+        Small regularization term added to eigenvalues.
+
+    Returns
+    -------
+    W : ndarray, shape=(n_features, n_features)
+        Whitening matrix.
 
     References
     ----------
@@ -359,6 +372,11 @@ def whiten_nt(C, thresh=1e-12, keep=False):
     keep : bool
         If True, infrathreshold components are set to zero. If False (default),
         infrathreshold components are truncated.
+
+    Returns
+    -------
+    W : ndarray
+        Whitening matrix in the Noisetools convention.
 
     """
     d, V = linalg.eigh(C)  # eigh if matrix symmetric, eig otherwise
