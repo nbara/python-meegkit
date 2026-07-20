@@ -256,10 +256,11 @@ class ASR:
                 break
 
         # Exponential covariance weights – the most recent covariance has a
-        # weight of 1, while the oldest one in memory has a weight of 5%
-        weights = [1, ]
-        for c in np.cumsum(self._counter[1:]):
-            weights = [self.sample_weight[-c]] + weights
+        # weight of 1, while the oldest one in memory has a weight of ~5%. A
+        # block's weight is set by the number of MORE-RECENT samples following
+        # it (a suffix sum of per-block sample counts), so that unequal chunk
+        # sizes are weighted by their true recency.
+        weights = _recency_weights(self._counter, self.sample_weight)
 
         # Clean data, using covariances weighted by sample_weight
         out, self.state_ = asr_process(X, X_filt, self.state_,
@@ -268,6 +269,23 @@ class ASR:
                                        sample_weight=weights)
 
         return out
+
+
+def _recency_weights(counter, sample_weight):
+    """Exponential recency weights for stored covariance blocks.
+
+    A block's weight is set by the number of MORE-RECENT samples that follow
+    it (the suffix sum of ``counter``), so unequal chunk sizes are weighted by
+    true recency. The most recent block gets ``sample_weight[-1]`` (== 1);
+    older blocks decay toward 5%. ``counter`` is ordered oldest->newest.
+    """
+    weights = []
+    newer = 0
+    for count in reversed(counter):
+        idx = min(newer, len(sample_weight) - 1)
+        weights.insert(0, sample_weight[-(idx + 1)])
+        newer += count
+    return weights
 
 
 def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
@@ -610,7 +628,8 @@ def asr_process(X, X_filt, state, cov=None, detrend=False, method="riemann",
             cov = mean_covariance(
                 cov, metric="riemann", sample_weight=sample_weight)
         else:
-            cov = geometric_median(cov.reshape((-1, nc * nc)))
+            cov = geometric_median(cov.reshape((-1, nc * nc)),
+                                   sample_weight=sample_weight)
             cov = cov.reshape((nc, nc))
 
     maxdims = int(np.floor(0.66 * nc + 0.5))  # constant TODO make param
