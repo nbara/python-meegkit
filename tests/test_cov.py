@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from numpy.testing import assert_almost_equal
 
 from meegkit.utils import convmtx, tscov, tsxcov
@@ -98,6 +99,32 @@ def test_convmtx():
                   [0.,  0.,  0.,  0.,  0.,  0.,  1.],
                   ])
     )
+
+
+def test_nonlinear_eigenspace_consistent_eigpairs():
+    """Each returned eigenvalue must match the Rayleigh quotient of its column."""
+    pytest.importorskip("pymanopt")
+    from meegkit.utils.covariances import nonlinear_eigenspace
+
+    A = rng.standard_normal((6, 6))
+    L = A.T @ A + np.eye(6) * 1e-6
+
+    S, X = nonlinear_eigenspace(L, 6)
+    # X.T @ L @ X should be (near) diagonal; check the diagonal matches S
+    # element-wise so a permutation between S and X columns cannot slip through.
+    rayleigh = np.real(np.diag(X.T @ L @ X))
+
+    np.testing.assert_allclose(
+        S,
+        rayleigh,
+        rtol=1e-3,
+        atol=1e-6,
+    )
+
+    # Off-diagonal entries of the projected matrix should be negligible.
+    proj = X.T @ L @ X
+    off_diag = proj - np.diag(np.diag(proj))
+    assert np.max(np.abs(off_diag)) < 1e-6 * np.max(np.abs(np.diag(proj)))
 
 if __name__ == "__main__":
     import pytest
