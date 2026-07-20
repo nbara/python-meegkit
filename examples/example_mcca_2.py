@@ -14,6 +14,9 @@ but the mixing matrices differed, as were the noise matrices. The SNR was set
 to 10−20, i.e. a very unfavorable SNR. The noise is of rank 9 and the signal of
 rank 1, so signal and noise are in principle linearly separable.
 
+The useful question here is whether the first recovered shared component still
+resembles the known sinusoidal target despite the poor SNR.
+
 Uses meegkit.cca.mcca().
 
 References
@@ -94,10 +97,15 @@ x_recovered = x_recovered / x_recovered.std()
 
 # Compute variance across SCs
 variance = np.var(x.dot(A), axis=0)
+target_corr = np.corrcoef(target_signal, x_recovered)[0, 1]
 
 ###############################################################################
 # Plot the results
 # -----------------------------------------------------------------------------
+# What to look for:
+# - One or a few shared components should dominate the variance plot.
+# - The recovered signal should visibly resemble the sinusoidal target.
+# - The printed correlation with the target should remain clearly positive.
 fig, ax = plt.subplots(1, 4, figsize=(12, 4))
 ax[0].plot(target_signal)
 ax[0].set_title("Target")
@@ -111,8 +119,9 @@ ax[2].plot(variance, "o-k")
 ax[2].set_xlabel("SC")
 ax[2].set_ylabel("Variance")
 ax[3].plot(x_recovered)
-ax[3].set_title("Recovered")
+ax[3].set_title(f"Recovered (corr = {target_corr:.2f})")
 ax[3].set_ylabel("Amplitude")
 ax[3].set_xlabel("Sample")
 plt.tight_layout()
+print(f"Correlation with target signal: {target_corr:.3f}")
 plt.show()

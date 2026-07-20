@@ -6,6 +6,9 @@ Find a spatial filter to get rid of line noise [1]_.
 
 Uses meegkit.dss_line().
 
+The key diagnostic is whether the narrow spectral peak at the line frequency is
+reduced while the surrounding spectrum remains broadly similar.
+
 References
 ----------
 .. [1] de Cheveigné, A. (2019). ZapLine: A simple and effective method to remove
@@ -44,19 +47,27 @@ data = data[..., 0]  # only take first trial
 
 # Apply dss_line (ZapLine)
 out, _ = dss.dss_line(data, fline, sfreq, nkeep=1)
+freq_before, psd_before = signal.welch(
+   data, sfreq, nperseg=500, axis=0, return_onesided=True)
+freq_after, psd_after = signal.welch(
+   out, sfreq, nperseg=500, axis=0, return_onesided=True)
+line_bin_before = np.argmin(np.abs(freq_before - fline))
+line_bin_after = np.argmin(np.abs(freq_after - fline))
+mean_before = float(np.mean(psd_before[line_bin_before]))
+mean_after = float(np.mean(psd_after[line_bin_after]))
 
 ###############################################################################
 # Plot before/after
 f, ax = plt.subplots(1, 2, sharey=True)
-f, Pxx = signal.welch(data, sfreq, nperseg=500, axis=0, return_onesided=True)
-ax[0].semilogy(f, Pxx)
-f, Pxx = signal.welch(out, sfreq, nperseg=500, axis=0, return_onesided=True)
-ax[1].semilogy(f, Pxx)
+ax[0].semilogy(freq_before, psd_before)
+ax[1].semilogy(freq_after, psd_after)
 ax[0].set_xlabel("frequency [Hz]")
 ax[1].set_xlabel("frequency [Hz]")
 ax[0].set_ylabel("PSD [V**2/Hz]")
 ax[0].set_title("before")
 ax[1].set_title("after")
+print(f"Mean line-bin power before ZapLine: {mean_before:.6f}")
+print(f"Mean line-bin power after ZapLine:  {mean_after:.6f}")
 plt.show()
 
 
@@ -93,4 +104,6 @@ ax[0].set_ylabel("PSD [V**2/Hz]")
 ax[0].set_title("dss_line")
 ax[1].set_title("dss_line_iter")
 plt.tight_layout()
+print("Interpretation: iterative removal should help when the line artifact")
+print("spans more than one dominant component.")
 plt.show()
