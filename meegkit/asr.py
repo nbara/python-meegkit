@@ -4,8 +4,7 @@ import logging
 import numpy as np
 import pyriemann
 from pyriemann.geometry.mean import gmean as mean_covariance
-from scipy import linalg, signal
-from statsmodels.robust.scale import mad
+from scipy import linalg, signal, stats
 
 from .utils import block_covariance, nonlinear_eigenspace
 from .utils.asr import (
@@ -407,7 +406,7 @@ def clean_windows(X, sfreq, max_bad_chans=0.2, zthresholds=[-3.5, 5],
 
     # extra meegkit-specific criterion: drop windows whose across-channel
     # z-scores are nearly flat (very low MAD or std)
-    bad_by_mad = mad(wz, c=1, axis=0) < .1
+    bad_by_mad = stats.median_abs_deviation(wz, axis=0) < .1
     bad_by_std = np.std(wz, axis=0) < .1
     mask3 = np.logical_or(bad_by_mad, bad_by_std)
 
