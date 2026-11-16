@@ -356,7 +356,7 @@ def geometric_median(X, tol=1e-5, max_iter=500, sample_weight=None):
     X : array, shape=(n_observations, n_variables)
         The data.
     tol : float
-        Tolerance (default=1.e-5)
+        Relative tolerance (default=1.e-5)
     max_iter : int
         Max number of iterations (default=500):
     sample_weight : array, shape=(n_observations,) | None
@@ -405,7 +405,7 @@ def geometric_median(X, tol=1e-5, max_iter=500, sample_weight=None):
             rinv = 0 if r == 0 else eta / r
             y1 = max(0, 1 - rinv) * T + min(1, rinv) * y
 
-        if euclidean(y, y1) < tol:
+        if euclidean(y, y1) < tol * np.linalg.norm(y1):
             return y1
 
         y = y1
