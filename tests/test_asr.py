@@ -716,6 +716,16 @@ def test_geometric_median_weighted():
     assert not np.allclose(gm_u, gm_w)
 
 
+def test_geometric_median_scale():
+    """Geometric median scales with the data."""
+    from meegkit.utils.asr import geometric_median
+    X = rng.standard_normal((200, 4))
+    X[:20] += 50
+    gm = geometric_median(X)
+    for c in (1e-6, 1e6):
+        np.testing.assert_allclose(geometric_median(c * X) / c, gm, rtol=1e-4)
+
+
 def test_asr_process_euclid_uses_weights():
     """euclid asr_process forwards sample_weight to geometric_median."""
     nc, ns = 4, 50
